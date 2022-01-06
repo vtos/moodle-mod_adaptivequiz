@@ -53,7 +53,7 @@ been to China as it would be answered incorrectly by an advanced speaker who com
 from Taiwan -- where a different currency is used. Such questions should not be
 included in the question-pool.
 
-Questions must be tagged tagged with a 'difficulty score' using the format
+Questions must be tagged with a 'difficulty score' using the format
 'adpq\_*n*' where *n* is a positive integer, e.g. 'adpq\_1' or 'adpq\_57'. The range
 of the scale is arbitrary (e.g. 1-10, 0-99, 1-1000), but should have enough levels to
 distinguish between
@@ -82,8 +82,6 @@ met. The possible stopping conditions are as follows:
  * There are no remaining harder questions to ask after a correct answer.
  * The standard error in the measure has become precise enough to stop.
  * The maximum number of questions has been exceeded.
-
-![Graph of an attempt](https://raw.github.com/middlebury/adaptivequiz/master/pix/attemptgraph.png)
 
 Test Parameters and Operation
 ==============================

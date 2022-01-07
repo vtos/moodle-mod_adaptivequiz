@@ -18,13 +18,17 @@ Come."][2] *MESA Memorandum No. 69 (2000)*.
 [1]: http://www.rasch.org/rmt/rmt22g.htm
 [2]: http://www.rasch.org/memo69.pdf
 
-This Moodle activity module was created as a collaborative effort between [Middlebury
-College][3] and [Remote Learner][4]. The latest code, documentation, and bug-tracker
-can be found at [https://github.com/middlebury/moodle-mod_adaptivequiz][5].
+This Moodle activity module was originally created as a collaborative effort between [Middlebury
+College][3] and [Remote Learner][4]. The current repository was forked from
+[https://github.com/middlebury/moodle-mod_adaptivequiz][5].
+
+The [MOODLE_311][6] branch of the repository is compatible with Moodle 3.11.3 currently.
+Further support and development of the plugin to be expected. 
 
 [3]: http://www.middlebury.edu/
 [4]: http://remote-learner.net/
 [5]: https://github.com/middlebury/moodle-mod_adaptivequiz
+[6]: https://github.com/vtos/moodle-mod_adaptivequiz/tree/MOODLE_311
 
 The Question Bank
 -----------------

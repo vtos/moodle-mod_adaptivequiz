@@ -102,5 +102,10 @@ Feature: Attempt an adaptive quiz
     # First scoring table with no caption, "Right/Wrong" column
     And I should see "r" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(1) td.c2" "css_element"
     And I should see "r" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(2) td.c2" "css_element"
+    # First scoring table with no caption, "Standard Error (± x%)" column
+    And I should see "38.1%" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(1) td.c4" "css_element"
+    And I should see "33.7%" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(2) td.c4" "css_element"
     # Second scoring table with no caption, "Num right" column
     And I should see "2" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(1) td.c1" "css_element"
+    # Second scoring table with no caption, "Num wrong" column
+    And I should see "0" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(1) td.c2" "css_element"

@@ -1,25 +1,27 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is not a part of Moodle - http://moodle.org/.
+// This is a non-core contributed module. The module had been created
+// as a collaborative effort between Middlebury College and Remote Learner.
+// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
+// with new Moodle versions and let it acquire new features.
 //
-// Moodle is free software: you can redistribute it and/or modify
+// This is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Moodle is distributed in the hope that it will be useful,
+// This is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
 
 /**
  * fetch question PHPUnit tests
  *
- * @package    mod_adaptivequiz
- * @category   phpunit
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -45,10 +47,14 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
     /**
      * This function loads data into the PHPUnit tables for testing
+     *
      * @return void
+     * @throws coding_exception
      */
     protected function setup_test_data_xml() {
-        $this->loadDataSet($this->createXMLDataSet(__DIR__.'/fixtures/mod_adaptivequiz_findquestion.xml'));
+        $this->dataset_from_files(
+            [__DIR__.'/fixtures/mod_adaptivequiz_findquestion.xml']
+        )->to_database();
     }
 
     /**

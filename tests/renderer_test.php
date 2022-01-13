@@ -1,27 +1,27 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is not a part of Moodle - http://moodle.org/.
+// This is a non-core contributed module. The module had been created
+// as a collaborative effort between Middlebury College and Remote Learner.
+// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
+// with new Moodle versions and let it acquire new features.
 //
-// Moodle is free software: you can redistribute it and/or modify
+// This is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Moodle is distributed in the hope that it will be useful,
+// This is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
 
 /**
- * PHPUnit tests for renderer class
+ * PHPUnit tests for the renderer class.
  *
- * This module was created as a collaborative effort between Middlebury College
- * and Remote Learner.
- *
- * @package    mod_adaptivequiz
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -45,14 +45,14 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
         $output = $renderer->display_start_attempt_form(9999);
 
-        $this->assertContains('<form', $output);
-        $this->assertContains('/mod/adaptivequiz/attempt.php?cmid=9999', $output);
-        $this->assertContains('<input', $output);
-        $this->assertContains('type="submit"', $output);
-        $this->assertContains('class="submitbtns adaptivequizbtn"', $output);
-        $this->assertContains('type="hidden"', $output);
-        $this->assertContains('name="sesskey"', $output);
-        $this->assertContains('</form>', $output);
+        $this->assertStringContainsString('<form', $output);
+        $this->assertStringContainsString('/mod/adaptivequiz/attempt.php?cmid=9999', $output);
+        $this->assertStringContainsString('<input', $output);
+        $this->assertStringContainsString('type="submit"', $output);
+        $this->assertStringContainsString('class="submitbtns adaptivequizbtn"', $output);
+        $this->assertStringContainsString('type="hidden"', $output);
+        $this->assertStringContainsString('name="sesskey"', $output);
+        $this->assertStringContainsString('</form>', $output);
     }
 
     /**
@@ -65,11 +65,11 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
         $output = $renderer->display_view_report_form(9999);
 
-        $this->assertContains('<form', $output);
-        $this->assertContains('/mod/adaptivequiz/viewreport.php?cmid=9999', $output);
-        $this->assertContains('type="submit"', $output);
-        $this->assertContains('class="submitbtns adaptivequizbtn"', $output);
-        $this->assertContains('</form>', $output);
+        $this->assertStringContainsString('<form', $output);
+        $this->assertStringContainsString('/mod/adaptivequiz/viewreport.php?cmid=9999', $output);
+        $this->assertStringContainsString('type="submit"', $output);
+        $this->assertStringContainsString('class="submitbtns adaptivequizbtn"', $output);
+        $this->assertStringContainsString('</form>', $output);
     }
 
     /**
@@ -101,33 +101,32 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
 
-        $mockquba = $this->createMock('question_usage_by_activity', array('render_question'), array(), '', false);
-
+        $mockquba = $this->createPartialMock('question_usage_by_activity', ['render_question']);
         $mockquba->expects($this->once())
-                ->method('render_question')
-                ->withAnyParameters()
-                ->will($this->returnValue('output'));
+            ->method('render_question')
+            ->withAnyParameters()
+            ->willReturn('output');
 
         $output = $renderer->create_submit_form(9999, $mockquba, 8888, 7777);
 
         // Test form attributes
-        $this->assertContains('<form', $output);
-        $this->assertContains('enctype="multipart/form-data"', $output);
-        $this->assertContains('accept-charset="utf-8"', $output);
-        $this->assertContains('id="responseform"', $output);
+        $this->assertStringContainsString('<form', $output);
+        $this->assertStringContainsString('enctype="multipart/form-data"', $output);
+        $this->assertStringContainsString('accept-charset="utf-8"', $output);
+        $this->assertStringContainsString('id="responseform"', $output);
 
         // Test submit button and class
-        $this->assertContains('type="submit"', $output);
-        $this->assertContains('class="submitbtns adaptivequizbtn"', $output);
+        $this->assertStringContainsString('type="submit"', $output);
+        $this->assertStringContainsString('class="submitbtns adaptivequizbtn"', $output);
 
         // Test output contains required elements
-        $this->assertContains('name="cmid"', $output);
-        $this->assertContains('name="uniqueid"', $output);
-        $this->assertContains('name="sesskey"', $output);
-        $this->assertContains('name="slots"', $output);
-        $this->assertContains('name="dl"', $output);
+        $this->assertStringContainsString('name="cmid"', $output);
+        $this->assertStringContainsString('name="uniqueid"', $output);
+        $this->assertStringContainsString('name="sesskey"', $output);
+        $this->assertStringContainsString('name="slots"', $output);
+        $this->assertStringContainsString('name="dl"', $output);
 
-        $this->assertContains('</form>', $output);
+        $this->assertStringContainsString('</form>', $output);
     }
 
     /**
@@ -141,18 +140,18 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $output = $renderer->create_attemptfeedback('Test attempt feedback', 99);
 
         // Test form attributes
-        $this->assertContains('<form', $output);
-        $this->assertContains('/mod/adaptivequiz/view.php', $output);
-        $this->assertContains('id="attemptfeedback"', $output);
+        $this->assertStringContainsString('<form', $output);
+        $this->assertStringContainsString('/mod/adaptivequiz/view.php', $output);
+        $this->assertStringContainsString('id="attemptfeedback"', $output);
 
         // Test submit button and class
-        $this->assertContains('type="submit"', $output);
-        $this->assertContains('class="submitbtns adaptivequizfeedback"', $output);
+        $this->assertStringContainsString('type="submit"', $output);
+        $this->assertStringContainsString('class="submitbtns adaptivequizfeedback"', $output);
 
         // Test output contains required elements
-        $this->assertContains('name="id"', $output);
+        $this->assertStringContainsString('name="id"', $output);
 
-        $this->assertContains('</form>', $output);
+        $this->assertStringContainsString('</form>', $output);
     }
 
     /**
@@ -184,22 +183,22 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $sortdir = 'ASC';
 
         $output = $renderer->create_report_table($records, $cm, $sort, $sortdir);
-        $this->assertContains('<table', $output);
-        $this->assertContains('/mod/adaptivequiz/viewreport.php', $output);
+        $this->assertStringContainsString('<table', $output);
+        $this->assertStringContainsString('/mod/adaptivequiz/viewreport.php', $output);
         /* Check table row */
-        $this->assertContains('test firstname', $output);
-        $this->assertContains('test lastname', $output);
-        $this->assertContains('test@example.edu', $output);
-        $this->assertContains('/user/profile.php?id=1', $output);
-        $this->assertContains('6.3', $output);
-        $this->assertContains('&plusmn; 4%', $output);
-        $this->assertContains('5', $output);
+        $this->assertStringContainsString('test firstname', $output);
+        $this->assertStringContainsString('test lastname', $output);
+        $this->assertStringContainsString('test@example.edu', $output);
+        $this->assertStringContainsString('/user/profile.php?id=1', $output);
+        $this->assertStringContainsString('6.3', $output);
+        $this->assertStringContainsString('&plusmn; 4%', $output);
+        $this->assertStringContainsString('5', $output);
         /* Check table column headers */
-        $this->assertContains('sort=firstname', $output);
-        $this->assertContains('sort=lastname', $output);
-        $this->assertContains('sort=email', $output);
-        $this->assertContains('sort=attempts', $output);
-        $this->assertContains('sort=stderror', $output);
+        $this->assertStringContainsString('sort=firstname', $output);
+        $this->assertStringContainsString('sort=lastname', $output);
+        $this->assertStringContainsString('sort=email', $output);
+        $this->assertStringContainsString('sort=attempts', $output);
+        $this->assertStringContainsString('sort=stderror', $output);
     }
 
     /**
@@ -210,11 +209,10 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
 
-        $mockquba = $this->createMock('question_usage_by_activity', array('render_question_head_html'), array(), '', false);
-
+        $mockquba = $this->createPartialMock('question_usage_by_activity', ['render_question_head_html']);
         $mockquba->expects($this->once())
-                ->method('render_question_head_html')
-                ->will($this->returnValue(''));
+            ->method('render_question_head_html')
+            ->willReturn('');
 
         // Only testing that the mock object's method is called once
         $renderer->init_metadata($mockquba, 1);
@@ -228,11 +226,12 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
 
-        $mockquba = $this->createMock('question_usage_by_activity', array('get_slots'), array(), '', false);
-
+        $mockquba = $this->createPartialMock('question_usage_by_activity', ['get_slots']);
         $mockquba->expects($this->once())
-                ->method('get_slots')
-                ->will($this->returnValue(array(1, 2, 3)));
+            ->method('get_slots')
+            ->willReturn(
+                [1, 2, 3]
+            );
 
         $output = $renderer->print_questions_for_review_pager($mockquba, 0, 1, 1);
         $this->assertEquals('', $output);
@@ -246,24 +245,24 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
 
-        $mockquba = $this->createMock('question_usage_by_activity', array('get_slots'), array(), '', false);
-
-        $mockpages = array_keys(array_fill(0, 25, 1));
+        $mockquba = $this->createPartialMock('question_usage_by_activity', ['get_slots']);
         $mockquba->expects($this->once())
                 ->method('get_slots')
-                ->will($this->returnValue($mockpages));
+                ->willReturn(
+                    array_keys(array_fill(0, 25, 1))
+                );
 
         // Unable to mock quba->get_id()
 
         $output = $renderer->print_questions_for_review_pager($mockquba, 0, 1, 1);
 
-        $this->assertContains('/mod/adaptivequiz/reviewattempt.php', $output);
-        $this->assertContains('cmid=1', $output);
-        $this->assertContains('userid=1', $output);
-        $this->assertContains('<span class="viewattemptreportpages">1</span>', $output);
-        $this->assertContains('page=1', $output);
-        $this->assertContains('page=2', $output);
-        $this->assertNotContains('page=3', $output);
+        $this->assertStringContainsString('/mod/adaptivequiz/reviewattempt.php', $output);
+        $this->assertStringContainsString('cmid=1', $output);
+        $this->assertStringContainsString('userid=1', $output);
+        $this->assertStringContainsString('<span class="viewattemptreportpages">1</span>', $output);
+        $this->assertStringContainsString('page=1', $output);
+        $this->assertStringContainsString('page=2', $output);
+        $this->assertStringNotContainsString('page=3', $output);
     }
 
     /**
@@ -274,21 +273,21 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
 
-        $mockquba = $this->createMock('question_usage_by_activity', array('get_slots'), array(), '', false);
-
-        $mockpages = array_keys(array_fill(0, 11, 1));
+        $mockquba = $this->createPartialMock('question_usage_by_activity', ['get_slots']);
         $mockquba->expects($this->once())
-                ->method('get_slots')
-                ->will($this->returnValue($mockpages));
+            ->method('get_slots')
+            ->willReturn(
+                array_keys(array_fill(0, 11, 1))
+            );
 
         $output = $renderer->print_questions_for_review_pager($mockquba, 0, 1, 1);
 
-        $this->assertContains('/mod/adaptivequiz/reviewattempt.php', $output);
-        $this->assertContains('cmid=1', $output);
-        $this->assertContains('userid=1', $output);
-        $this->assertContains('<span class="viewattemptreportpages">1</span>', $output);
-        $this->assertContains('page=1', $output);
-        $this->assertNotContains('page=2', $output);
+        $this->assertStringContainsString('/mod/adaptivequiz/reviewattempt.php', $output);
+        $this->assertStringContainsString('cmid=1', $output);
+        $this->assertStringContainsString('userid=1', $output);
+        $this->assertStringContainsString('<span class="viewattemptreportpages">1</span>', $output);
+        $this->assertStringContainsString('page=1', $output);
+        $this->assertStringNotContainsString('page=2', $output);
     }
 
     /**
@@ -299,67 +298,78 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
 
-        $mockquba = $this->createMock('question_usage_by_activity', array('get_slots'), array(), '', false);
-
-        $mockpages = array_keys(array_fill(0, 11, 1));
+        $mockquba = $this->createPartialMock('question_usage_by_activity', ['get_slots']);
         $mockquba->expects($this->once())
-                ->method('get_slots')
-                ->will($this->returnValue($mockpages));
+            ->method('get_slots')
+            ->willReturn(
+                array_keys(array_fill(0, 11, 1))
+            );
 
         $output = $renderer->print_questions_for_review_pager($mockquba, 1, 1, 1);
 
-        $this->assertContains('/mod/adaptivequiz/reviewattempt.php', $output);
-        $this->assertContains('cmid=1', $output);
-        $this->assertContains('userid=1', $output);
-        $this->assertContains('<span class="viewattemptreportpages">2</span>', $output);
-        $this->assertContains('page=0', $output);
-        $this->assertNotContains('page=2', $output);
-        $this->assertNotContains('page=1', $output);
+        $this->assertStringContainsString('/mod/adaptivequiz/reviewattempt.php', $output);
+        $this->assertStringContainsString('cmid=1', $output);
+        $this->assertStringContainsString('userid=1', $output);
+        $this->assertStringContainsString('<span class="viewattemptreportpages">2</span>', $output);
+        $this->assertStringContainsString('page=0', $output);
+        $this->assertStringNotContainsString('page=2', $output);
+        $this->assertStringNotContainsString('page=1', $output);
     }
 
     /**
-     * This function tests the output from print_questions_for_review_pager().  Mostly this function is testing the functions are alled the correct number of times.
+     * This function tests the output from print_questions_for_review_pager().
+     * Mostly this function is testing the functions are called the correct number of times.
      */
     public function test_print_questions_for_review() {
         global $DB;
-        $user = $DB->get_record('user', array('id' => 2));
 
-        $renderer = $this->createMock('mod_adaptivequiz_renderer', array('init_metadata', 'heading'), array(), '', false);
+        $user = $DB->get_record('user', ['id' => 2]);
 
+        $renderer = $this
+            ->getMockBuilder(mod_adaptivequiz_renderer::class)
+            ->onlyMethods(
+                ['init_metadata']
+            )
+            ->addMethods(
+                ['heading']
+            )
+            ->setConstructorArgs(
+                [new moodle_page(), 'mod_adaptivequiz']
+            )
+            ->getMock();
         $renderer->expects($this->once())
-                ->method('init_metadata')
-                ->will($this->returnValue(''));
-
+            ->method('init_metadata')
+            ->willReturn('');
         $renderer->expects($this->once())
-                ->method('heading')
-                ->will($this->returnValue('phpunit test heading'));
+            ->method('heading')
+            ->willReturn('phpunit test heading');
 
-        $mockquestattempt = $this->createMock('question_attempt', array('get_question'), array(), '', false);
+        $mockquestattempt = $this->createPartialMock('question_attempt', ['get_question']);
 
         $dummy = new stdClass();
         $dummy->id = 1;
         $mockquestattempt->expects($this->exactly(3))
-                ->method('get_question')
-                ->will($this->returnValue($dummy));
+            ->method('get_question')
+            ->willReturn($dummy);
 
-        $mockquba = $this->createMock('question_usage_by_activity', array('get_slots', 'render_question', 'get_question_attempt'), array(), '', false);
-
+        $mockquba = $this->createPartialMock('question_usage_by_activity', ['get_slots',
+            'render_question', 'get_question_attempt']);
         $mockquba->expects($this->once())
-                ->method('get_slots')
-                ->will($this->returnValue(array(1, 2, 3)));
-
+            ->method('get_slots')
+            ->willReturn(
+                [1, 2, 3]
+            );
         $mockquba->expects($this->exactly(3))
-                ->method('render_question')
-                ->will($this->returnValue('mock render question output'));
-
+            ->method('render_question')
+            ->willReturn('mock render question output');
         $mockquba->expects($this->exactly(3))
-                ->method('get_question_attempt')
-                ->will($this->returnValue($mockquestattempt));
+            ->method('get_question_attempt')
+            ->willReturn($mockquestattempt);
 
         $output = $renderer->print_questions_for_review($mockquba, 0, $user, 12345);
 
-        $this->assertContains('mock render question output', $output);
-        $this->assertContains('phpunit test heading', $output);
+        $this->assertStringContainsString('mock render question output', $output);
+        $this->assertStringContainsString('phpunit test heading', $output);
     }
 
     /**
@@ -373,15 +383,15 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $text = 'phpunit test button';
 
         $output = $renderer->print_form_and_button($url, $text);
-        $this->assertContains('<form', $output);
-        $this->assertContains('<input', $output);
-        $this->assertContains('type="submit"', $output);
-        $this->assertContains('/test/phpunittest/test.php', $output);
-        $this->assertContains('cmid=99', $output);
-        $this->assertContains('phpunit test button', $output);
-        $this->assertContains('<center>', $output);
-        $this->assertContains('</center>', $output);
-        $this->assertContains('</form>', $output);
+        $this->assertStringContainsString('<form', $output);
+        $this->assertStringContainsString('<input', $output);
+        $this->assertStringContainsString('type="submit"', $output);
+        $this->assertStringContainsString('/test/phpunittest/test.php', $output);
+        $this->assertStringContainsString('cmid=99', $output);
+        $this->assertStringContainsString('phpunit test button', $output);
+        $this->assertStringContainsString('<center>', $output);
+        $this->assertStringContainsString('</center>', $output);
+        $this->assertStringContainsString('</form>', $output);
     }
 
     /**
@@ -413,16 +423,16 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $cm->id = 1;
 
         $output = $renderer->print_attempt_report_table($records, $cm, new stdClass);
-        $this->assertContains('<table', $output);
-        $this->assertContains('/mod/adaptivequiz/reviewattempt.php', $output);
-        $this->assertContains('uniqueid=123', $output);
-        $this->assertContains('userid=1', $output);
-        $this->assertContains('cmid=1', $output);
+        $this->assertStringContainsString('<table', $output);
+        $this->assertStringContainsString('/mod/adaptivequiz/reviewattempt.php', $output);
+        $this->assertStringContainsString('uniqueid=123', $output);
+        $this->assertStringContainsString('userid=1', $output);
+        $this->assertStringContainsString('cmid=1', $output);
         /* Check table row */
-        $this->assertContains('stopped for some reason', $output);
-        $this->assertContains('6.3 &plusmn; 4%', $output);
-        $this->assertContains('12', $output);
-        $this->assertContains('</table>', $output);
+        $this->assertStringContainsString('stopped for some reason', $output);
+        $this->assertStringContainsString('6.3 &plusmn; 4%', $output);
+        $this->assertStringContainsString('12', $output);
+        $this->assertStringContainsString('</table>', $output);
     }
 
     /**
@@ -437,18 +447,18 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
 
         $output = $renderer->format_report_table_headers($dummycm, 'stderror', 'ASC');
         $this->assertEquals(6, count($output));
-        $this->assertContains('/mod/adaptivequiz/viewreport.php', $output[0]);
-        $this->assertContains('sort=firstname&amp;sortdir=ASC', $output[0]);
-        $this->assertContains('sort=lastname&amp;sortdir=ASC', $output[0]);
-        $this->assertContains('/mod/adaptivequiz/viewreport.php', $output[1]);
-        $this->assertContains('sort=email&amp;sortdir=ASC', $output[1]);
-        $this->assertContains('/mod/adaptivequiz/viewreport.php', $output[2]);
-        $this->assertContains('sort=attempts&amp;sortdir=ASC', $output[2]);
-        $this->assertContains('/mod/adaptivequiz/viewreport.php', $output[3]);
-        $this->assertContains('sort=measure&amp;sortdir=ASC', $output[3]);
-        $this->assertContains('/mod/adaptivequiz/viewreport.php', $output[4]);
-        $this->assertContains('sort=stderror&amp;sortdir=DESC', $output[4]);
-        $this->assertContains('/mod/adaptivequiz/viewreport.php', $output[5]);
-        $this->assertContains('sort=timemodified&amp;sortdir=ASC', $output[5]);
+        $this->assertStringContainsString('/mod/adaptivequiz/viewreport.php', $output[0]);
+        $this->assertStringContainsString('sort=firstname&amp;sortdir=ASC', $output[0]);
+        $this->assertStringContainsString('sort=lastname&amp;sortdir=ASC', $output[0]);
+        $this->assertStringContainsString('/mod/adaptivequiz/viewreport.php', $output[1]);
+        $this->assertStringContainsString('sort=email&amp;sortdir=ASC', $output[1]);
+        $this->assertStringContainsString('/mod/adaptivequiz/viewreport.php', $output[2]);
+        $this->assertStringContainsString('sort=attempts&amp;sortdir=ASC', $output[2]);
+        $this->assertStringContainsString('/mod/adaptivequiz/viewreport.php', $output[3]);
+        $this->assertStringContainsString('sort=measure&amp;sortdir=ASC', $output[3]);
+        $this->assertStringContainsString('/mod/adaptivequiz/viewreport.php', $output[4]);
+        $this->assertStringContainsString('sort=stderror&amp;sortdir=DESC', $output[4]);
+        $this->assertStringContainsString('/mod/adaptivequiz/viewreport.php', $output[5]);
+        $this->assertStringContainsString('sort=timemodified&amp;sortdir=ASC', $output[5]);
     }
 }

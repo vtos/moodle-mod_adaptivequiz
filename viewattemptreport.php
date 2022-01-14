@@ -43,6 +43,8 @@ $context = context_module::instance($cm->id);
 
 require_capability('mod/adaptivequiz:viewreport', $context);
 
+$PAGE->set_url('/mod/adaptivequiz/viewattemptreport.php', ['cmid' => $cm->id, 'userid' => $userid]);
+
 $param = array('instance' => $cm->instance, 'userid' => $userid);
 $sql = "SELECT aa.id, aa.userid, aa.uniqueid, aa.attemptstopcriteria, aa.measure, aa.attemptstate, aa.questionsattempted,
                aa.timemodified, aa.standarderror AS stderror, a.highestlevel, a.lowestlevel, a.name, aa.timecreated
@@ -61,7 +63,6 @@ if (empty($records)) {
 
 $record = current($records);
 
-$PAGE->set_url('/mod/adaptivequiz/viewattemptreport.php', array('cmid' => $cm->id));
 $PAGE->set_title(format_string($record->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);

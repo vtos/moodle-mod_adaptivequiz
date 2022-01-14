@@ -1,8 +1,8 @@
-@mod @mod_adaptivequiz
-Feature: Attempt an adaptive quiz
-  In order to control what results students have on attempting adaptive quizzes
+@mod @mod_adaptivequiz @adaptivequiz_delete_attempt
+Feature: Delete an attempt on adaptive quiz
+  In order to keep the results of adaptive quiz relevant
   As a teacher
-  I need an access to attempts reporting
+  I need to be able to delete students' attempts
 
   Background:
     Given the following "users" exist:
@@ -61,51 +61,10 @@ Feature: Attempt an adaptive quiz
     And I log out
 
   @javascript
-  Scenario: Attempts report
-    When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "teacher1"
-    And I press "View report"
-    Then I should see "Attempts report"
-    And "Peter The Student" "table_row" should exist
-    And "Peter The Student" row "Number of attempts" column of "quizsummaryofattempt" table should contain "1"
-
-  @javascript
-  Scenario: Individual user attempts report
+  Scenario: Delete an individual attempt
     When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "teacher1"
     And I press "View report"
     And I click on "1" "link" in the "Peter The Student" "table_row"
-    Then I should see "Individual user attempts report for Peter The Student"
-    And "Completed" "table_row" should exist
-    And "Completed" row "Reason for stopping attempt" column of "quizsummaryofuserattempt" table should contain "Unable to fetch a questions for level 5"
-    And "Completed" row "Sum of questions attempted" column of "quizsummaryofuserattempt" table should contain "2"
-
-  @javascript
-  Scenario: Review individual user attempt
-    When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "teacher1"
-    And I press "View report"
-    And I click on "1" "link" in the "Peter The Student" "table_row"
-    And I click on "Review attempt" "link" in the "Completed" "table_row"
-    Then I should see "Attempt Summary"
-    And I should see "Question Details"
-    # Info on the first question
-    And I should see "Correct" in the "[id^=question-][id$=-1] .info .state" "css_element"
-    # Info on the second question
-    And I should see "Correct" in the "[id^=question-][id$=-2] .info .state" "css_element"
-
-  @javascript
-  Scenario: View scoring tables on attempt
-    When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "teacher1"
-    And I press "View report"
-    And I click on "1" "link" in the "Peter The Student" "table_row"
-    And I click on "Review attempt" "link" in the "Completed" "table_row"
-    And I click on "#adpq_scoring_table_link" "css_element"
-    Then "#adpq_scoring_table" "css_element" should be visible
-    # First scoring table with no caption, "Right/Wrong" column
-    And I should see "r" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(1) td.c2" "css_element"
-    And I should see "r" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(2) td.c2" "css_element"
-    # First scoring table with no caption, "Standard Error (± x%)" column
-    And I should see "38.1%" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(1) td.c4" "css_element"
-    And I should see "33.7%" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(2) td.c4" "css_element"
-    # Second scoring table with no caption, "Num right" column
-    And I should see "2" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(1) td.c1" "css_element"
-    # Second scoring table with no caption, "Num wrong" column
-    And I should see "0" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(1) td.c2" "css_element"
+    And I click on "Delete attempt" "link" in the "Completed" "table_row"
+    And I press "Continue"
+    And I should see "No attempt records for this student"

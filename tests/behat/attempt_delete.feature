@@ -1,4 +1,4 @@
-@mod @mod_adaptivequiz @adaptivequiz_delete_attempt
+@mod @mod_adaptivequiz
 Feature: Delete an attempt on adaptive quiz
   In order to keep the results of adaptive quiz relevant
   As a teacher

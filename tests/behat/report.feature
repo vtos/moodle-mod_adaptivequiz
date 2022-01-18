@@ -92,6 +92,15 @@ Feature: Attempt an adaptive quiz
     And I should see "Correct" in the "[id^=question-][id$=-2] .info .state" "css_element"
 
   @javascript
+  Scenario: View attempt graphs
+    When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "teacher1"
+    And I press "View report"
+    And I click on "1" "link" in the "Peter The Student" "table_row"
+    And I click on "Review attempt" "link" in the "Completed" "table_row"
+    Then "img.adaptivequiz-attemptgraph" "css_element" should be visible
+    And "img.adaptivequiz-answerdistributiongraph" "css_element" should be visible
+
+  @javascript
   Scenario: View scoring tables on attempt
     When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "teacher1"
     And I press "View report"
@@ -99,13 +108,24 @@ Feature: Attempt an adaptive quiz
     And I click on "Review attempt" "link" in the "Completed" "table_row"
     And I click on "#adpq_scoring_table_link" "css_element"
     Then "#adpq_scoring_table" "css_element" should be visible
+    #First scoring table with no caption, "Question Level" column
+    And I should see "2" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(1) td.c1" "css_element"
+    And I should see "3" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(2) td.c1" "css_element"
     # First scoring table with no caption, "Right/Wrong" column
     And I should see "r" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(1) td.c2" "css_element"
     And I should see "r" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(2) td.c2" "css_element"
+    # First scoring table with no caption, "Ability Measure" column
+    And I should see "2" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(1) td.c3" "css_element"
+    And I should see "4.26" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(2) td.c3" "css_element"
     # First scoring table with no caption, "Standard Error (± x%)" column
     And I should see "38.1%" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(1) td.c4" "css_element"
     And I should see "33.7%" in the "#adpq_scoring_table .generaltable:nth-of-type(1) tr:nth-of-type(2) td.c4" "css_element"
+    # Second scoring table with no caption, "Question Level" column
+    And I should see "2" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(2) td.c0" "css_element"
+    And I should see "3" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(3) td.c0" "css_element"
     # Second scoring table with no caption, "Num right" column
-    And I should see "2" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(1) td.c1" "css_element"
+    And I should see "1" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(2) td.c1" "css_element"
+    And I should see "1" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(3) td.c1" "css_element"
     # Second scoring table with no caption, "Num wrong" column
-    And I should see "0" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(1) td.c2" "css_element"
+    And I should see "0" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(2) td.c2" "css_element"
+    And I should see "0" in the "#adpq_scoring_table .generaltable:nth-of-type(2) tr:nth-of-type(3) td.c2" "css_element"

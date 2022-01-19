@@ -20,9 +20,9 @@ Feature: Attempt an adaptive quiz
       | contextlevel | reference | name                    |
       | Course       | C1        | Adaptive Quiz Questions |
     And the following "questions" exist:
-      | questioncategory        | qtype     | name | questiontext    | answer 1 | grade |
-      | Adaptive Quiz Questions | truefalse | TF1  | First question  | True     | 100%  |
-      | Adaptive Quiz Questions | truefalse | TF2  | Second question | True     | 100%  |
+      | questioncategory        | qtype     | name | questiontext    | answer |
+      | Adaptive Quiz Questions | truefalse | TF1  | First question  | True   |
+      | Adaptive Quiz Questions | truefalse | TF2  | Second question | True   |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
     And I add a "Adaptive Quiz" to section "1"

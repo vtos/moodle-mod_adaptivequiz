@@ -21,8 +21,8 @@ Feature: Attempt an adaptive quiz
       | Course       | C1        | Adaptive Quiz Questions |
     And the following "questions" exist:
       | questioncategory        | qtype     | name | questiontext    |
-      | Adaptive Quiz Questions | truefalse | TF1  | First question  |
-      | Adaptive Quiz Questions | truefalse | TF2  | Second question |
+      | Adaptive Quiz Questions | truefalse | Q1   | First question  |
+      | Adaptive Quiz Questions | truefalse | Q2   | Second question |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
     And I add a "Adaptive Quiz" to section "1"
@@ -30,19 +30,25 @@ Feature: Attempt an adaptive quiz
       | Name                         | Adaptive Quiz              |
       | Description                  | Adaptive quiz description. |
       | Question pool                | Adaptive Quiz Questions    |
-      | Starting level of difficulty | 3                          |
+      | Starting level of difficulty | 1                          |
       | Lowest level of difficulty   | 1                          |
-      | Highest level of difficulty  | 10                         |
-      | Minimum number of questions  | 2                          |
-      | Maximum number of questions  | 20                         |
-      | Standard Error to stop       | 5                          |
+      | Highest level of difficulty  | 2                          |
+      | Minimum number of questions  | 1                          |
+      | Maximum number of questions  | 2                          |
+      | Standard Error to stop       | 20                         |
     And I click on "Save and return to course" "button"
     And I am on "Course 1" course homepage
     And I navigate to "Question bank > Questions" in current page administration
     And I set the field "Select a category" to "Adaptive Quiz Questions (2)"
-    And I choose "Manage tags" action for "TF1" in the question bank
+    And I choose "Edit question" action for "Q1" in the question bank
+    And I expand all fieldsets
     And I set the field "Tags" to "adpq_1"
-    And I press "Save changes"
+    And I press "id_submitbutton"
+    And I wait until the page is ready
+    And I choose "Edit question" action for "Q2" in the question bank
+    And I expand all fieldsets
+    And I set the field "Tags" to "adpq_2"
+    And I press "id_submitbutton"
     And I log out
 
   @javascript
@@ -50,3 +56,13 @@ Feature: Attempt an adaptive quiz
     When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
     And I press "Start attempt"
     Then I should see "First question"
+
+  @javascript
+  Scenario: Return to a started attempt
+    When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
+    And I press "Start attempt"
+    And I click on "True" "radio"
+    And I press "Submit answer"
+    And I am on the "Adaptive Quiz" "adaptivequiz activity" page
+    And I press "Start attempt"
+    Then I should see "Second question"

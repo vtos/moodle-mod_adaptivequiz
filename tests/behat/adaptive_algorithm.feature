@@ -157,6 +157,7 @@ Feature: Adaptive quiz content
     And I click on "False" "radio"
     And I press "Submit answer"
     And "Continue" "button" should be visible
+
   @javascript
   Scenario: 20% standard error, user performs on the highest level
     Given I am on the "C1" "Course" page logged in as "teacher1"

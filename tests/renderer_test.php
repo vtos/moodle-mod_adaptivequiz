@@ -49,7 +49,7 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $this->assertStringContainsString('/mod/adaptivequiz/attempt.php?cmid=9999', $output);
         $this->assertStringContainsString('<input', $output);
         $this->assertStringContainsString('type="submit"', $output);
-        $this->assertStringContainsString('class="submitbtns adaptivequizbtn"', $output);
+        $this->assertStringContainsString('class="submitbtns adaptivequizbtn btn btn-secondary"', $output);
         $this->assertStringContainsString('type="hidden"', $output);
         $this->assertStringContainsString('name="sesskey"', $output);
         $this->assertStringContainsString('</form>', $output);
@@ -125,31 +125,6 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $this->assertStringContainsString('name="sesskey"', $output);
         $this->assertStringContainsString('name="slots"', $output);
         $this->assertStringContainsString('name="dl"', $output);
-
-        $this->assertStringContainsString('</form>', $output);
-    }
-
-    /**
-     * This function tests the output from create_attemptfeedback
-     */
-    public function test_create_attemptfeedback() {
-        $dummypage = new moodle_page();
-        $target = 'mod_adaptivequiz';
-        $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
-
-        $output = $renderer->create_attemptfeedback('Test attempt feedback', 99);
-
-        // Test form attributes
-        $this->assertStringContainsString('<form', $output);
-        $this->assertStringContainsString('/mod/adaptivequiz/view.php', $output);
-        $this->assertStringContainsString('id="attemptfeedback"', $output);
-
-        // Test submit button and class
-        $this->assertStringContainsString('type="submit"', $output);
-        $this->assertStringContainsString('class="submitbtns adaptivequizfeedback"', $output);
-
-        // Test output contains required elements
-        $this->assertStringContainsString('name="id"', $output);
 
         $this->assertStringContainsString('</form>', $output);
     }

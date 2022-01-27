@@ -1,19 +1,38 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is not a part of Moodle - http://moodle.org/.
+// This is a non-core contributed module. The module had been created
+// as a collaborative effort between Middlebury College and Remote Learner.
+// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
+// with new Moodle versions and let it acquire new features.
 //
-// Moodle is free software: you can redistribute it and/or modify
+// This is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Moodle is distributed in the hope that it will be useful,
+// This is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
 
+/**
+ * Strings for the English language.
+ *
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+$string['abilityestimated'] = 'Estimated ability';
+$string['abilityestimated_help'] = 'The estimated ability of a test-taker aligns with the question difficulty at which the test-taker has a 50% probability of answering the question correctly. To identify the performance level, match the ability value with the questions level range (see the range after the \'/\' symbol).';
+$string['attemptfeedbackdefaulttext'] = 'You\'ve finished the attempt, thank you for taking the quiz!';
+$string['attemptquestion_ability'] = 'Ability Measure';
+$string['attempt_summary'] = 'Attempt Summary';
+$string['attemptsuserprevious'] = 'Your previous attempts';
+$string['showabilitymeasure'] = 'Show ability measure to students';
+$string['showabilitymeasure_help'] = 'Sometimes it may be useful to reveal ability estimations to students after taking an adaptive quiz. With this setting enabled a student may see ability estimation in the attempts summary and right after finishing an attempt as well.';
 $string['modulenameplural'] = 'Adaptive Quiz';
 $string['modulename'] = 'Adaptive Quiz';
 $string['modulename_help'] = 'The Adaptive Quiz activity enables a teacher to create quizes that efficiently measure the takers\' abilities. Adaptive quizes are comprised  of questions selected from the question bank that are tagged with a score of their difficulty. The questions are chosen to match the estimated ability level of the  current test-taker. If the test-taker succeeds on a question, a more challenging question is presented next. If the test-taker answers a question incorrectly, a less-challenging question is presented next. This technique will develop into a sequence of questions converging on the test-taker\'s effective ability level. The quiz stops when the test-taker\'s ability is determined to the required accuracy.
@@ -132,7 +151,6 @@ $string['reviewattemptreport'] = 'Reviewing attempt by {$a->fullname} submitted 
 $string['score'] = 'Score';
 $string['bestscore'] = 'Best Score';
 $string['bestscorestderror'] = 'Standard Error';
-$string['attempt_summary'] = 'Attempt Summary';
 $string['scoring_table'] = 'Scoring Tables';
 $string['attempt_questiondetails'] = 'Question Details';
 $string['attemptstarttime'] = 'Attempt start time';
@@ -142,7 +160,6 @@ $string['attempt_state'] = 'Attempt state';
 $string['attemptquestion_num'] = '#';
 $string['attemptquestion_level'] = 'Question Level';
 $string['attemptquestion_rightwrong'] = 'Right/Wrong';
-$string['attemptquestion_ability'] = 'Ability Measure';
 $string['attemptquestion_error'] = 'Standard Error (&plusmn;&nbsp;x%)';
 $string['attemptquestion_difficulty'] = 'Question Difficulty (logits)';
 $string['attemptquestion_diffsum'] = 'Difficulty Sum';

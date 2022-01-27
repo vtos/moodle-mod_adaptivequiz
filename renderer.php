@@ -25,8 +25,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once($CFG->dirroot.'/mod/adaptivequiz/requiredpassword.class.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/catalgo.class.php');
+require_once $CFG->dirroot . '/mod/adaptivequiz/requiredpassword.class.php';
+require_once $CFG->dirroot . '/mod/adaptivequiz/catalgo.class.php';
+
+use mod_adaptivequiz\output\ability_measure;
+use mod_adaptivequiz\output\user_attempt_summary;
 
 class mod_adaptivequiz_renderer extends plugin_renderer_base {
     /** @var string $sortdir the sorting direction being used */
@@ -58,9 +61,11 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     public function display_start_attempt_form($cmid) {
         $html = '';
 
-        $param = array('cmid' => $cmid);
+        $param = ['cmid' => $cmid];
         $target = new moodle_url('/mod/adaptivequiz/attempt.php', $param);
-        $attributes = array('method' => 'POST', 'action' => $target);
+        $attributes = ['method' => 'POST', 'action' => $target];
+
+        $html .= html_writer::start_div('text-center');
 
         $html .= html_writer::start_tag('form', $attributes);
 
@@ -68,11 +73,14 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $html .= html_writer::empty_tag('br');
 
         $buttonlabel = get_string('startattemptbtn', 'adaptivequiz');
-        $params = array('type' => 'submit', 'value' => $buttonlabel, 'class' => 'submitbtns adaptivequizbtn');
+        $params = ['type' => 'submit', 'value' => $buttonlabel,
+            'class' => 'submitbtns adaptivequizbtn btn btn-secondary'];
         $html .= html_writer::empty_tag('input', $params);
-        $params = array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey());
+        $params = ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()];
         $html .= html_writer::empty_tag('input', $params);
         $html .= html_writer::end_tag('form');
+
+        $html .= html_writer::end_div();
 
         return $html;
     }
@@ -231,47 +239,42 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * This function the attempt feedback
-     * @param string $attemptfeedback attempt feedback
-     * @param int $cmid course module id
-     * @param bool $popup true if the attempt is using a popup window
-     * @return string HTML markup
+     * @throws coding_exception
      */
-    public function print_attemptfeedback($attemptfeedback, $cmid, $popup = false) {
-        $output = '';
-        $output .= $this->header();
-        $output .= $this->create_attemptfeedback($attemptfeedback, $cmid, $popup);
-        $output .= $this->footer();
-        return $output;
-    }
+    public function attempt_feedback(string $attemptfeedback, int $cmid, ?ability_measure $abilitymeasure,
+        bool $popup = false): string {
 
-    /**
-     * This function the attempt feedback
-     * @param string $attemptfeedback attempt feedback
-     * @param int $cmid course module id
-     * @param bool $popup true if the attempt is using a popup window
-     * @return string HTML markup
-     */
-    public function create_attemptfeedback($attemptfeedback, $cmid, $popup = false) {
-        $output = '';
+        $output = html_writer::start_div('text-center');
+
         $url = new moodle_url('/mod/adaptivequiz/view.php');
-        $attr = array('action' => $url, 'method' => 'post', 'id' => 'attemptfeedback');
+        $attr = ['action' => $url, 'method' => 'post', 'id' => 'attemptfeedback'];
         $output .= html_writer::start_tag('form', $attr);
-        $output .= html_writer::tag('p', s($attemptfeedback), array('class' => 'submitbtns adaptivequizfeedback'));
+
+        if (empty(trim($attemptfeedback))) {
+            $attemptfeedback = get_string('attemptfeedbackdefaulttext', 'adaptivequiz');
+        }
+        $output .= html_writer::tag('p', s($attemptfeedback), ['class' => 'submitbtns adaptivequizfeedback']);
+
+        if ($abilitymeasure) {
+            $output .= $this->render($abilitymeasure);
+        }
 
         if (empty($popup)) {
-            $attr = array('type' => 'submit', 'name' => 'attemptfinished', 'value' => get_string('continue'));
+            $attr = ['type' => 'submit', 'name' => 'attemptfinished', 'value' => get_string('continue'),
+                'class' => 'btn btn-primary'];
             $output .= html_writer::empty_tag('input', $attr);
         } else {
             // In a 'secure' popup window.
-            $this->page->requires->js_init_call('M.mod_adaptivequiz.secure_window.init_close_button', array($url),
+            $this->page->requires->js_init_call('M.mod_adaptivequiz.secure_window.init_close_button', [$url],
                 $this->adaptivequiz_get_js_module());
-            $output .= html_writer::empty_tag('input', array('type' => 'button', 'value' => get_string('continue'),
-                'id' => 'secureclosebutton'));
+            $output .= html_writer::empty_tag('input', ['type' => 'button', 'value' => get_string('continue'),
+                'id' => 'secureclosebutton']);
         }
 
-        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'id', 'value' => $cmid));
+        $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $cmid]);
         $output .= html_writer::end_tag('form');
+
+        $output .= html_writer::end_div();
 
         return $output;
     }
@@ -650,12 +653,12 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @return string HTML markup for a button
      */
     public function display_start_attempt_form_scured($cmid) {
-        $param = array('cmid' => $cmid);
+        $param = ['cmid' => $cmid];
         $url = new moodle_url('/mod/adaptivequiz/attempt.php', $param);
 
         $buttonlabel = get_string('startattemptbtn', 'adaptivequiz');
         $button = new single_button($url, $buttonlabel);
-        $button->class .= ' adaptivequizstartbuttondiv';
+        $button->class .= ' adaptivequizstartbuttondiv btn btn-secondary';
 
         $this->page->requires->js_module($this->adaptivequiz_get_js_module());
         $this->page->requires->js('/mod/adaptivequiz/module.js');
@@ -663,13 +666,13 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $popupaction = new popup_action('click', $url, 'adaptivequizpopup', self::$popupoptions);
         $button->class .= ' adaptivequizsecuremoderequired';
         $button->add_action(new component_action('click',
-                'M.mod_adaptivequiz.secure_window.start_attempt_action', array(
+                'M.mod_adaptivequiz.secure_window.start_attempt_action', [
                     'url' => $url->out(false),
                     'windowname' => 'adaptivequizpopup',
                     'options' => $popupaction->get_js_options(),
                     'fullscreen' => true,
                     'startattemptwarning' => '',
-                )));
+                ]));
 
         $warning = html_writer::tag('noscript', $this->heading(get_string('noscript', 'quiz')));
 
@@ -1012,6 +1015,70 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
                 $rightanswers[$key],
                 $wronganswers[$key],
             );
+        }
+
+        return html_writer::table($table);
+    }
+
+    protected function render_ability_measure(ability_measure $measure): string {
+        $output = html_writer::start_div('box py-3');
+
+        $abilitymeasurecontents = get_string('abilityestimated', 'adaptivequiz') . ': ' .
+            html_writer::tag('strong', $this->format_measure($measure->as_object_to_format())) . ' / ' .
+            $measure->lowestquestiondifficulty . ' - ' . $measure->highestquestiondifficulty .
+            $this->help_icon('abilityestimated', 'adaptivequiz');
+        $output .= $this->heading($abilitymeasurecontents, 3);
+
+        $output .= html_writer::end_div();
+
+        return $output;
+    }
+
+    protected function render_user_attempt_summary(user_attempt_summary $summary): string {
+        $table = new html_table();
+        $table->attributes['class'] = 'generaltable attemptsummarytable';
+
+        $row = new html_table_row();
+
+        $headercell = new html_table_cell(get_string('attempt_state', 'adaptivequiz'));
+        $headercell->header = true;
+
+        $datacell = new html_table_cell(get_string('recent' . $summary->attemptstate, 'adaptivequiz'));
+        $datacell->id = 'attemptstatecell';
+
+        $row->cells = [$headercell, $datacell];
+        $table->data[] = $row;
+
+        $row = new html_table_row();
+
+        $headercell = new html_table_cell(get_string('attemptfinishedtimestamp', 'adaptivequiz'));
+        $headercell->header = true;
+
+        $datacell = ($summary->attemptstate == ADAPTIVEQUIZ_ATTEMPT_COMPLETED)
+            ? userdate($summary->timefinished)
+            : '-';
+
+        $row->cells = [$headercell, $datacell];
+        $table->data[] = $row;
+
+        if (!empty($summary->abilitymeasure)) {
+            $row = new html_table_row();
+
+            $headercell = new html_table_cell(get_string('attemptquestion_ability', 'adaptivequiz') .
+                $this->help_icon('abilityestimated', 'adaptivequiz'));
+            $headercell->header = true;
+
+            $formatmeasure = new stdClass();
+            $formatmeasure->measure = $summary->abilitymeasure;
+            $formatmeasure->lowestlevel = $summary->lowestquestiondifficulty;
+            $formatmeasure->highestlevel = $summary->highestquestiondifficulty;
+
+            $datacell = new html_table_cell(html_writer::tag('strong', $this->format_measure($formatmeasure))
+                . ' / ' . $summary->lowestquestiondifficulty . ' - ' . $summary->highestquestiondifficulty);
+            $datacell->id = 'abilitymeasurecell';
+
+            $row->cells = [$headercell, $datacell];
+            $table->data[] = $row;
         }
 
         return html_writer::table($table);

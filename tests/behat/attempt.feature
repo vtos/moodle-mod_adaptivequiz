@@ -36,6 +36,7 @@ Feature: Attempt an adaptive quiz
       | Minimum number of questions  | 1                          |
       | Maximum number of questions  | 2                          |
       | Standard Error to stop       | 20                         |
+      | Attempts allowed             | 1                          |
     And I click on "Save and return to course" "button"
     And I am on "Course 1" course homepage
     And I navigate to "Question bank > Questions" in current page administration
@@ -66,3 +67,16 @@ Feature: Attempt an adaptive quiz
     And I am on the "Adaptive Quiz" "adaptivequiz activity" page
     And I press "Start attempt"
     Then I should see "Second question"
+
+  @javascript
+  Scenario: A student cannot attempt an adaptive quiz if no more attempts are allowed
+    Given I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
+    And I press "Start attempt"
+    And I click on "True" "radio" in the "First question" "question"
+    And I press "Submit answer"
+    And I click on "True" "radio" in the "Second question" "question"
+    And I press "Submit answer"
+    And I press "Continue"
+    When I am on the "Adaptive Quiz" "adaptivequiz activity" page
+    Then "Start attempt" "button" should not be visible
+    And I should see "No more attempts allowed at this activity"

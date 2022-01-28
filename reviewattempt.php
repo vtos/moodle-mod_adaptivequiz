@@ -1,33 +1,33 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is not a part of Moodle - http://moodle.org/.
+// This is a non-core contributed module. The module had been created
+// as a collaborative effort between Middlebury College and Remote Learner.
+// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
+// with new Moodle versions and let it acquire new features.
 //
-// Moodle is free software: you can redistribute it and/or modify
+// This is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Moodle is distributed in the hope that it will be useful,
+// This is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
 
 /**
  * Adaptive quiz view attempted questions
  *
- * This module was created as a collaborative effort between Middlebury College
- * and Remote Learner.
- *
- * @package    mod_adaptivequiz
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__).'/../../config.php');
-require_once($CFG->dirroot.'/tag/lib.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
+require_once __DIR__ . '/../../config.php';
+require_once $CFG->dirroot . '/tag/lib.php';
+require_once $CFG->dirroot . '/mod/adaptivequiz/locallib.php';
 
 $id = required_param('cmid', PARAM_INT);
 $uniqueid = required_param('uniqueid', PARAM_INT);
@@ -66,11 +66,6 @@ $output = $PAGE->get_renderer('mod_adaptivequiz');
 
 $PAGE->requires->js_init_call('M.mod_adaptivequiz.init_reviewattempt', null, false, $output->adaptivequiz_get_js_module());
 
-
-/* print header information */
-$header = $output->print_header();
-/* Output footer information */
-$footer = $output->print_footer();
 /* Load question usage by activity object */
 $quba = question_engine::load_questions_usage_by_activity($uniqueid);
 /* render pager links */
@@ -87,7 +82,7 @@ if (!$user) {
     $user->lastname = '#'.$userid;
 }
 
-echo $header;
+echo $output->print_header();
 
 echo html_writer::tag('h2', get_string('attempt_summary', 'adaptivequiz'));
 echo $output->get_attempt_summary_listing($adaptivequiz, $user);
@@ -122,4 +117,4 @@ echo $output->print_questions_for_review($quba, $page, $user, $adaptivequiz->tim
 echo $button;
 echo html_writer::empty_tag('br');
 echo $pager;
-echo $footer;
+echo $output->print_footer();

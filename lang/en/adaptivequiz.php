@@ -33,6 +33,7 @@ $string['attempt_summary'] = 'Attempt Summary';
 $string['attemptsuserprevious'] = 'Your previous attempts';
 $string['showabilitymeasure'] = 'Show ability measure to students';
 $string['showabilitymeasure_help'] = 'Sometimes it may be useful to reveal ability estimations to students after taking an adaptive quiz. With this setting enabled a student may see ability estimation in the attempts summary and right after finishing an attempt as well.';
+$string['questionspoolerrornovalidquestions'] = 'The selected questions categories do not contain questions which are properly tagged for an adaptive quiz.';
 $string['modulenameplural'] = 'Adaptive Quiz';
 $string['modulename'] = 'Adaptive Quiz';
 $string['modulename_help'] = 'The Adaptive Quiz activity enables a teacher to create quizes that efficiently measure the takers\' abilities. Adaptive quizes are comprised  of questions selected from the question bank that are tagged with a score of their difficulty. The questions are chosen to match the estimated ability level of the  current test-taker. If the test-taker succeeds on a question, a more challenging question is presented next. If the test-taker answers a question incorrectly, a less-challenging question is presented next. This technique will develop into a sequence of questions converging on the test-taker\'s effective ability level. The quiz stops when the test-taker\'s ability is determined to the required accuracy.

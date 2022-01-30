@@ -30,6 +30,8 @@ defined('MOODLE_INTERNAL') || die();
 require_once $CFG->dirroot . '/course/moodleform_mod.php';
 require_once $CFG->dirroot . '/mod/adaptivequiz/locallib.php';
 
+use mod_adaptivequiz\local\repository\questions_repository;
+
 /**
  * Module instance settings form
  */
@@ -175,6 +177,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
      * @param array $files Array of file data.
      * @return array Array of form elements that didn't pass validation.
      * @throws coding_exception
+     * @throws dml_exception
      */
     public function validation($data, $files) {
         $errors = [];
@@ -221,6 +224,21 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
             $errors['startinglevel'] = get_string('formstartleveloutofbounds', 'adaptivequiz');
         }
 
+        if ($questionspoolerrormsg = $this->validate_questions_pool($data['questionpool'])) {
+            $errors['questionpool'] = $questionspoolerrormsg;
+        }
+
         return $errors;
+    }
+
+    /**
+     * @param int[] $qcategoryidlist A list of id of selected questions categories.
+     * @return string An error message if any.
+     * @throws coding_exception
+     */
+    private function validate_questions_pool(array $qcategoryidlist): string {
+        return questions_repository::count_adaptive_questions_in_pool($qcategoryidlist) > 0
+            ? ''
+            : get_string('questionspoolerrornovalidquestions', 'adaptivequiz');
     }
 }

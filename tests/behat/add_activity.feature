@@ -16,23 +16,62 @@ Feature: Add an adaptive quiz
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
+    And the following "question categories" exist:
+      | contextlevel | reference | name                    |
+      | Course       | C1        | Adaptive Quiz Questions |
+    And the following "questions" exist:
+      | questioncategory        | qtype     | name | questiontext    |
+      | Adaptive Quiz Questions | truefalse | TF1  | First question  |
+      | Adaptive Quiz Questions | truefalse | TF2  | Second question |
 
   @javascript
-  Scenario: Add an adaptive quiz to a course to be visible by a student
+  Scenario: Add an adaptive quiz to a course to be visible to a student
     When I log in as "teacher1"
+    And I am on "Course 1" course homepage with editing mode on
+    And I navigate to "Question bank > Questions" in current page administration
+    And I set the field "Select a category" to "Adaptive Quiz Questions (2)"
+    And I choose "Edit question" action for "TF1" in the question bank
+    And I expand all fieldsets
+    And I set the field "Tags" to "adpq_1"
+    And I press "id_submitbutton"
     And I am on "Course 1" course homepage with editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
       | Name                         | Adaptive Quiz              |
       | Description                  | Adaptive quiz description. |
-      | Question pool                | Default for C1             |
-      | Starting level of difficulty | 3                          |
+      | Question pool                | Adaptive Quiz Questions    |
+      | Starting level of difficulty | 1                          |
       | Lowest level of difficulty   | 1                          |
-      | Highest level of difficulty  | 10                         |
-      | Minimum number of questions  | 2                          |
-      | Maximum number of questions  | 20                         |
-      | Standard Error to stop       | 5                          |
+      | Highest level of difficulty  | 2                          |
+      | Minimum number of questions  | 1                          |
+      | Maximum number of questions  | 2                          |
+      | Standard Error to stop       | 25                         |
     And I click on "Save and return to course" "button"
     And I log out
     And I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
     Then "Start attempt" "button" should exist
+
+  @javascript
+  Scenario: It is impossible to create an adaptive quiz without properly tagged questions
+    When I log in as "teacher1"
+    And I am on "Course 1" course homepage with editing mode on
+    And I navigate to "Question bank > Questions" in current page administration
+    And I set the field "Select a category" to "Adaptive Quiz Questions (2)"
+    And I choose "Edit question" action for "TF1" in the question bank
+    And I expand all fieldsets
+    And I set the field "Tags" to "truefalse"
+    And I press "id_submitbutton"
+    And I am on "Course 1" course homepage with editing mode on
+    And I add a "Adaptive Quiz" to section "1"
+    And I set the following fields to these values:
+      | Name                         | Adaptive Quiz              |
+      | Description                  | Adaptive quiz description. |
+      | Question pool                | Adaptive Quiz Questions    |
+      | Starting level of difficulty | 1                          |
+      | Lowest level of difficulty   | 1                          |
+      | Highest level of difficulty  | 2                          |
+      | Minimum number of questions  | 1                          |
+      | Maximum number of questions  | 2                          |
+      | Standard Error to stop       | 25                         |
+    And I click on "Save and return to course" "button"
+    Then I should see "The selected questions categories do not contain questions which are properly tagged for an adaptive quiz."

@@ -20,23 +20,10 @@ Feature: Delete an attempt on adaptive quiz
       | contextlevel | reference | name                    |
       | Course       | C1        | Adaptive Quiz Questions |
     And the following "questions" exist:
-      | questioncategory        | qtype     | name | questiontext    | answer 1 | grade |
-      | Adaptive Quiz Questions | truefalse | TF1  | First question  | True     | 100%  |
-      | Adaptive Quiz Questions | truefalse | TF2  | Second question | True     | 100%  |
+      | questioncategory        | qtype     | name | questiontext    |
+      | Adaptive Quiz Questions | truefalse | TF1  | First question  |
+      | Adaptive Quiz Questions | truefalse | TF2  | Second question |
     And I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I set the following fields to these values:
-      | Name                         | Adaptive Quiz              |
-      | Description                  | Adaptive quiz description. |
-      | Question pool                | Adaptive Quiz Questions    |
-      | Starting level of difficulty | 2                          |
-      | Lowest level of difficulty   | 1                          |
-      | Highest level of difficulty  | 10                         |
-      | Minimum number of questions  | 2                          |
-      | Maximum number of questions  | 20                         |
-      | Standard Error to stop       | 5                          |
-    And I click on "Save and return to course" "button"
     And I am on "Course 1" course homepage
     And I navigate to "Question bank > Questions" in current page administration
     And I set the field "Select a category" to "Adaptive Quiz Questions (2)"
@@ -49,6 +36,19 @@ Feature: Delete an attempt on adaptive quiz
     And I expand all fieldsets
     And I set the field "Tags" to "adpq_3"
     And I press "id_submitbutton"
+    And I am on "Course 1" course homepage with editing mode on
+    And I add a "Adaptive Quiz" to section "1"
+    And I set the following fields to these values:
+      | Name                         | Adaptive Quiz               |
+      | Description                  | Adaptive quiz description.  |
+      | Question pool                | Adaptive Quiz Questions (2) |
+      | Starting level of difficulty | 2                           |
+      | Lowest level of difficulty   | 1                           |
+      | Highest level of difficulty  | 10                          |
+      | Minimum number of questions  | 2                           |
+      | Maximum number of questions  | 20                          |
+      | Standard Error to stop       | 5                           |
+    And I click on "Save and return to course" "button"
     And I log out
     And I log in as "student1"
     And I am on the "Adaptive Quiz" "adaptivequiz activity" page

@@ -92,15 +92,15 @@ Feature: Adaptive quiz content
     And I turn editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
-      | Name                         | Adaptive Quiz              |
-      | Description                  | Adaptive quiz description. |
-      | Question pool                | Adaptive Quiz Questions    |
-      | Starting level of difficulty | 2                          |
-      | Lowest level of difficulty   | 1                          |
-      | Highest level of difficulty  | 5                          |
-      | Minimum number of questions  | 1                          |
-      | Maximum number of questions  | 10                         |
-      | Standard Error to stop       | 20                         |
+      | Name                         | Adaptive Quiz                |
+      | Description                  | Adaptive quiz description.   |
+      | Question pool                | Adaptive Quiz Questions (10) |
+      | Starting level of difficulty | 2                            |
+      | Lowest level of difficulty   | 1                            |
+      | Highest level of difficulty  | 5                            |
+      | Minimum number of questions  | 1                            |
+      | Maximum number of questions  | 10                           |
+      | Standard Error to stop       | 20                           |
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
@@ -131,15 +131,15 @@ Feature: Adaptive quiz content
     And I turn editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
-      | Name                         | Adaptive Quiz              |
-      | Description                  | Adaptive quiz description. |
-      | Question pool                | Adaptive Quiz Questions    |
-      | Starting level of difficulty | 2                          |
-      | Lowest level of difficulty   | 1                          |
-      | Highest level of difficulty  | 5                          |
-      | Minimum number of questions  | 1                          |
-      | Maximum number of questions  | 10                         |
-      | Standard Error to stop       | 20                         |
+      | Name                         | Adaptive Quiz                |
+      | Description                  | Adaptive quiz description.   |
+      | Question pool                | Adaptive Quiz Questions (10) |
+      | Starting level of difficulty | 2                            |
+      | Lowest level of difficulty   | 1                            |
+      | Highest level of difficulty  | 5                            |
+      | Minimum number of questions  | 1                            |
+      | Maximum number of questions  | 10                           |
+      | Standard Error to stop       | 20                           |
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
@@ -164,15 +164,15 @@ Feature: Adaptive quiz content
     And I turn editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
-      | Name                         | Adaptive Quiz              |
-      | Description                  | Adaptive quiz description. |
-      | Question pool                | Adaptive Quiz Questions    |
-      | Starting level of difficulty | 2                          |
-      | Lowest level of difficulty   | 1                          |
-      | Highest level of difficulty  | 5                          |
-      | Minimum number of questions  | 1                          |
-      | Maximum number of questions  | 10                         |
-      | Standard Error to stop       | 20                         |
+      | Name                         | Adaptive Quiz                |
+      | Description                  | Adaptive quiz description.   |
+      | Question pool                | Adaptive Quiz Questions (10) |
+      | Starting level of difficulty | 2                            |
+      | Lowest level of difficulty   | 1                            |
+      | Highest level of difficulty  | 5                            |
+      | Minimum number of questions  | 1                            |
+      | Maximum number of questions  | 10                           |
+      | Standard Error to stop       | 20                           |
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"

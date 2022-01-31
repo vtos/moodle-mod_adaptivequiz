@@ -24,20 +24,6 @@ Feature: Attempt feedback
       | Adaptive Quiz Questions | truefalse | Q1   | First question  | True   |
       | Adaptive Quiz Questions | truefalse | Q2   | Second question | True   |
     And I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I set the following fields to these values:
-      | Name                             | Adaptive Quiz              |
-      | Description                      | Adaptive quiz description. |
-      | Question pool                    | Adaptive Quiz Questions    |
-      | Starting level of difficulty     | 1                          |
-      | Lowest level of difficulty       | 1                          |
-      | Highest level of difficulty      | 2                          |
-      | Minimum number of questions      | 1                          |
-      | Maximum number of questions      | 2                          |
-      | Standard Error to stop           | 20                         |
-      | Show ability measure to students | Yes                        |
-    And I click on "Save and return to course" "button"
     And I am on "Course 1" course homepage
     And I navigate to "Question bank > Questions" in current page administration
     And I set the field "Select a category" to "Adaptive Quiz Questions (2)"
@@ -50,6 +36,20 @@ Feature: Attempt feedback
     And I expand all fieldsets
     And I set the field "Tags" to "adpq_2"
     And I press "id_submitbutton"
+    And I am on "Course 1" course homepage with editing mode on
+    And I add a "Adaptive Quiz" to section "1"
+    And I set the following fields to these values:
+      | Name                             | Adaptive Quiz               |
+      | Description                      | Adaptive quiz description.  |
+      | Question pool                    | Adaptive Quiz Questions (2) |
+      | Starting level of difficulty     | 1                           |
+      | Lowest level of difficulty       | 1                           |
+      | Highest level of difficulty      | 2                           |
+      | Minimum number of questions      | 1                           |
+      | Maximum number of questions      | 2                           |
+      | Standard Error to stop           | 20                          |
+      | Show ability measure to students | Yes                         |
+    And I click on "Save and return to course" "button"
     And I log out
 
     @javascript

@@ -37,15 +37,15 @@ Feature: Add an adaptive quiz
     And I am on "Course 1" course homepage with editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
-      | Name                         | Adaptive Quiz              |
-      | Description                  | Adaptive quiz description. |
-      | Question pool                | Adaptive Quiz Questions    |
-      | Starting level of difficulty | 1                          |
-      | Lowest level of difficulty   | 1                          |
-      | Highest level of difficulty  | 2                          |
-      | Minimum number of questions  | 1                          |
-      | Maximum number of questions  | 2                          |
-      | Standard Error to stop       | 25                         |
+      | Name                         | Adaptive Quiz               |
+      | Description                  | Adaptive quiz description.  |
+      | Question pool                | Adaptive Quiz Questions (2) |
+      | Starting level of difficulty | 1                           |
+      | Lowest level of difficulty   | 1                           |
+      | Highest level of difficulty  | 2                           |
+      | Minimum number of questions  | 1                           |
+      | Maximum number of questions  | 2                           |
+      | Standard Error to stop       | 25                          |
     And I click on "Save and return to course" "button"
     And I log out
     And I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
@@ -64,14 +64,14 @@ Feature: Add an adaptive quiz
     And I am on "Course 1" course homepage with editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
-      | Name                         | Adaptive Quiz              |
-      | Description                  | Adaptive quiz description. |
-      | Question pool                | Adaptive Quiz Questions    |
-      | Starting level of difficulty | 1                          |
-      | Lowest level of difficulty   | 1                          |
-      | Highest level of difficulty  | 2                          |
-      | Minimum number of questions  | 1                          |
-      | Maximum number of questions  | 2                          |
-      | Standard Error to stop       | 25                         |
+      | Name                         | Adaptive Quiz               |
+      | Description                  | Adaptive quiz description.  |
+      | Question pool                | Adaptive Quiz Questions (2) |
+      | Starting level of difficulty | 1                           |
+      | Lowest level of difficulty   | 1                           |
+      | Highest level of difficulty  | 2                           |
+      | Minimum number of questions  | 1                           |
+      | Maximum number of questions  | 2                           |
+      | Standard Error to stop       | 25                          |
     And I click on "Save and return to course" "button"
     Then I should see "The selected questions categories do not contain questions which are properly tagged for an adaptive quiz."

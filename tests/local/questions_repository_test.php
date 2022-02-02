@@ -1,21 +1,17 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -29,8 +25,8 @@ use context_course;
 use core_question_generator;
 use mod_adaptivequiz\local\repository\questions_repository;
 
-final class questions_repository_test extends advanced_testcase
-{
+final class questions_repository_test extends advanced_testcase {
+
     /**
      * @test
      */
@@ -55,13 +51,17 @@ final class questions_repository_test extends advanced_testcase
         $questionsgenerator->create_question_tag(
             ['questionid' => $question2->id, 'tag' => 'adpq_2',]
         );
+        $question3 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
+        $questionsgenerator->create_question_tag(
+            ['questionid' => $question3->id, 'tag' => 'adpq_001',]
+        );
 
         $questionscat2 = $questionsgenerator->create_question_category(
             ['contextid' => context_course::instance($course->id)->id,]
         );
 
-        $this->assertEquals(2, questions_repository::count_adaptive_questions_in_pool(
-            [$questionscat1->id, $questionscat2->id,]
+        $this->assertEquals(1, questions_repository::count_adaptive_questions_in_pool_with_level(
+            [$questionscat1->id, $questionscat2->id,], 1
         ));
 
         $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat2->id]);
@@ -70,16 +70,16 @@ final class questions_repository_test extends advanced_testcase
             ['questionid' => $question2->id, 'tag' => 'truefalse_1',]
         );
 
-        $this->assertEquals(2, questions_repository::count_adaptive_questions_in_pool(
-            [$questionscat1->id, $questionscat2->id,]
+        $this->assertEquals(1, questions_repository::count_adaptive_questions_in_pool_with_level(
+            [$questionscat1->id, $questionscat2->id,], 1
         ));
 
         $questionscat3 = $questionsgenerator->create_question_category(
             ['contextid' => context_course::instance($course->id)->id,]
         );
 
-        $this->assertEquals(0, questions_repository::count_adaptive_questions_in_pool(
-            [$questionscat3->id,]
+        $this->assertEquals(0, questions_repository::count_adaptive_questions_in_pool_with_level(
+            [$questionscat3->id,], 1
         ));
     }
 }

@@ -1,21 +1,17 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Definition of activity settings form.
@@ -224,7 +220,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
             $errors['startinglevel'] = get_string('formstartleveloutofbounds', 'adaptivequiz');
         }
 
-        if ($questionspoolerrormsg = $this->validate_questions_pool($data['questionpool'])) {
+        if ($questionspoolerrormsg = $this->validate_questions_pool($data['questionpool'], $data['startinglevel'])) {
             $errors['questionpool'] = $questionspoolerrormsg;
         }
 
@@ -236,9 +232,9 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
      * @return string An error message if any.
      * @throws coding_exception
      */
-    private function validate_questions_pool(array $qcategoryidlist): string {
-        return questions_repository::count_adaptive_questions_in_pool($qcategoryidlist) > 0
+    private function validate_questions_pool(array $qcategoryidlist, int $startinglevel): string {
+        return questions_repository::count_adaptive_questions_in_pool_with_level($qcategoryidlist, $startinglevel) > 0
             ? ''
-            : get_string('questionspoolerrornovalidquestions', 'adaptivequiz');
+            : get_string('questionspoolerrornovalidstartingquestions', 'adaptivequiz');
     }
 }

@@ -1,29 +1,27 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Strings for the English language.
  *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
 
 $string['abilityestimated'] = 'Estimated ability';
 $string['abilityestimated_help'] = 'The estimated ability of a test-taker aligns with the question difficulty at which the test-taker has a 50% probability of answering the question correctly. To identify the performance level, match the ability value with the questions level range (see the range after the \'/\' symbol).';
@@ -31,9 +29,10 @@ $string['attemptfeedbackdefaulttext'] = 'You\'ve finished the attempt, thank you
 $string['attemptquestion_ability'] = 'Ability Measure';
 $string['attempt_summary'] = 'Attempt Summary';
 $string['attemptsuserprevious'] = 'Your previous attempts';
+$string['attemptnofirstquestion'] = 'Sorry, but couldn\'t define the first question to start the attempt, the quiz is possibly misconfigured. ';
 $string['showabilitymeasure'] = 'Show ability measure to students';
 $string['showabilitymeasure_help'] = 'Sometimes it may be useful to reveal ability estimations to students after taking an adaptive quiz. With this setting enabled a student may see ability estimation in the attempts summary and right after finishing an attempt as well.';
-$string['questionspoolerrornovalidquestions'] = 'The selected questions categories do not contain questions which are properly tagged for an adaptive quiz.';
+$string['questionspoolerrornovalidstartingquestions'] = 'The selected questions categories do not contain questions which are properly tagged to match the selected starting level of difficulty.';
 $string['modulenameplural'] = 'Adaptive Quiz';
 $string['modulename'] = 'Adaptive Quiz';
 $string['modulename_help'] = 'The Adaptive Quiz activity enables a teacher to create quizes that efficiently measure the takers\' abilities. Adaptive quizes are comprised  of questions selected from the question bank that are tagged with a score of their difficulty. The questions are chosen to match the estimated ability level of the  current test-taker. If the test-taker succeeds on a question, a more challenging question is presented next. If the test-taker answers a question incorrectly, a less-challenging question is presented next. This technique will develop into a sequence of questions converging on the test-taker\'s effective ability level. The quiz stops when the test-taker\'s ability is determined to the required accuracy.
@@ -102,7 +101,6 @@ $string['nopermission'] = 'You don\t have permission to view this resource';
 $string['maxquestattempted'] = 'Maximum number of questions attempted';
 $string['notyourattempt'] = 'This is not your attempt at the activity';
 $string['noattemptsallowed'] = 'No more attempts allowed at this activity';
-$string['completeattempterror'] = 'Error trying to complete attempt record';
 $string['updateattempterror'] = 'Error trying to update attempt record';
 $string['numofattemptshdr'] = 'Number of attempts';
 $string['standarderrorhdr'] = 'Standard error';

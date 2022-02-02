@@ -3,8 +3,7 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,16 +11,13 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive testing version information.
+ * Some utility functions for the adaptive quiz activity.
  *
- * This module was created as a collaborative effort between Middlebury College
- * and Remote Learner.
- *
- * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -224,31 +220,25 @@ function adaptivequiz_update_attempt_data($uniqueid, $instance, $userid, $level,
 }
 
 /**
- * This function sets the complete status for an attempt
- * @throws dml_exception A DML specific exception
- * @param int $uniqueid uniqueid value of the adaptivequiz_attempt record
- * @param int $instance instance value of the adaptivequiz_attempt record
- * @param int $userid unerid value of the adaptivequiz_attempt record
- * @param string $standarderror the status message to log for the attempt
- * @param string $statusmessage the status message to log for the attempt
- * @return bool true of update successful, otherwise false
+ * This function sets the complete status for an attempt.
+ *
+ * @param int $uniqueid uniqueid value of the {adaptivequiz_attempt} record.
+ * @param int $instance instance value of the {adaptivequiz_attempt} record.
+ * @param int $userid userid value of the {adaptivequiz_attempt} record.
+ * @param string $standarderror
+ * @param string $statusmessage The status message to log for the attempt.
+ * @throws dml_exception
+ * @throws coding_exception
  */
-function adaptivequiz_complete_attempt($uniqueid, $instance, $userid, $standarderror, $statusmessage) {
+function adaptivequiz_complete_attempt($uniqueid, $instance, $userid, $standarderror, $statusmessage): void {
     global $DB;
 
-    $param = array('uniqueid' => $uniqueid, 'instance' => $instance, 'userid' => $userid);
-
-    try {
-        $attempt = $DB->get_record('adaptivequiz_attempt', $param, '*', MUST_EXIST);
-    } catch (dml_exception $e) {
-        $debuginfo = '';
-
-        if (!empty($e->debuginfo)) {
-            $debuginfo = $e->debuginfo;
-        }
-
-        print_error('completeattempterror', 'adaptivequiz', '', $e->getMessage(), $debuginfo);
+    if ($uniqueid < 1) {
+        throw new coding_exception("Unique id of an attempt to complete must be a positive integer, got $uniqueid.");
     }
+
+    $attempt = $DB->get_record('adaptivequiz_attempt',
+        ['uniqueid' => $uniqueid, 'instance' => $instance, 'userid' => $userid], '*', MUST_EXIST);
 
     $attempt->attemptstate = ADAPTIVEQUIZ_ATTEMPT_COMPLETED;
     $attempt->attemptstopcriteria = $statusmessage;
@@ -259,8 +249,6 @@ function adaptivequiz_complete_attempt($uniqueid, $instance, $userid, $standarde
     // Update the gradebook entries.
     $adaptivequiz = $DB->get_record('adaptivequiz', array('id' => $instance));
     adaptivequiz_update_grades($adaptivequiz, $userid);
-
-    return true;
 }
 
 /**

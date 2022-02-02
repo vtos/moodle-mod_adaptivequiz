@@ -1,21 +1,17 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Adaptive locallib.php PHPUnit tests
@@ -273,23 +269,28 @@ class mod_adaptivequiz_locallib_testcase extends advanced_testcase {
     }
 
     /**
-     * This function tests completing an attempt
-     *
-     * @group failing
+     * This function tests completing an attempt.
      */
     public function test_adaptivequiz_complete_attempt() {
         global $DB;
 
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
         $this->setup_test_data_xml();
 
-        $result = adaptivequiz_complete_attempt(3, 13, 3, 1, 'php unit test');
-        $record = $DB->get_record('adaptivequiz_attempt', array('id' => 2));
+        adaptivequiz_complete_attempt(3, 13, 3, 1, 'php unit test');
+        $record = $DB->get_record('adaptivequiz_attempt', ['id' => 2]);
 
-        $this->assertTrue($result);
         $this->assertEquals('php unit test', $record->attemptstopcriteria);
         $this->assertEquals(ADAPTIVEQUIZ_ATTEMPT_COMPLETED, $record->attemptstate);
         $this->assertEquals(1, $record->standarderror);
+    }
+
+    /**
+     * @test
+     */
+    public function it_fails_to_complete_an_attempt_with_a_zero_unique_id(): void {
+        $this->expectExceptionMessage('Unique id of an attempt to complete must be a positive integer, got 0.');
+        adaptivequiz_complete_attempt(0, 13, 3, 1, 'php unit test');
     }
 
     /**

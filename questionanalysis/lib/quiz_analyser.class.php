@@ -1,21 +1,17 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 require_once(dirname(__FILE__).'/question_analyser.class.php');
 require_once(dirname(__FILE__).'/attempt_score.class.php');
@@ -24,9 +20,7 @@ require_once(dirname(__FILE__).'/../../catalgo.class.php');
 require_once($CFG->dirroot.'/tag/lib.php');
 
 /**
- * Questions-analyser class
- *
- * This class provides a mechanism for loading and analysing question usage,
+ * Questions-analyser class. The class provides a mechanism for loading and analysing question usage,
  * performance, and efficacy.
  *
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
@@ -46,7 +40,7 @@ class adaptivequiz_quiz_analyser {
      *
      * @return void
      */
-    public function __construct () {
+    public function __construct() {
 
     }
 
@@ -56,21 +50,25 @@ class adaptivequiz_quiz_analyser {
      * @param int $instance
      * @return void
      */
-    public function load_attempts ($instance) {
+    public function load_attempts($instance) {
         global $DB;
 
-        $adaptivequiz  = $DB->get_record('adaptivequiz', array('id' => $instance), '*');
+        $adaptivequiz  = $DB->get_record('adaptivequiz', ['id' => $instance], '*');
 
         // Get all of the completed attempts for this adaptive quiz instance.
         $attempts  = $DB->get_records('adaptivequiz_attempt',
-            array('instance' => $instance, 'attemptstate' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED));
+            ['instance' => $instance, 'attemptstate' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED]);
 
         foreach ($attempts as $attempt) {
-            $user = $DB->get_record('user', array('id' => $attempt->userid));
+            if ($attempt->uniqueid == 0) {
+                continue;
+            }
+
+            $user = $DB->get_record('user', ['id' => $attempt->userid]);
             if (!$user) {
                 $user = new stdClass();
                 $user->firstname = get_string('unknownuser', 'adaptivequiz');
-                $user->lastname = '#'.$userid;
+                $user->lastname = '#' . $attempt->userid;
             }
 
             // For each attempt, get the attempt's final score.
@@ -106,7 +104,7 @@ class adaptivequiz_quiz_analyser {
      * @param adaptivequiz_question_statistic $statistic
      * @return void
      */
-    public function add_statistic ($key, adaptivequiz_question_statistic $statistic) {
+    public function add_statistic($key, adaptivequiz_question_statistic $statistic) {
         if (!empty($this->statistics[$key])) {
             throw new InvalidArgumentException("Statistic key '$key' is already in use.");
         }
@@ -121,7 +119,7 @@ class adaptivequiz_quiz_analyser {
      *
      * @return array
      */
-    public function get_header () {
+    public function get_header() {
         $header = array();
         $header['id'] = get_string('id', 'adaptivequiz');
         $header['name'] = get_string('adaptivequizname', 'adaptivequiz');
@@ -133,17 +131,17 @@ class adaptivequiz_quiz_analyser {
     }
 
     /**
-     * Return an array of table records, sorted by the statisic given
+     * Return an array of table records, sorted by the statistics given.
      *
-     * @param optional string $sort Which statistic to sort on.
-     * @param optional string $direction ASC or DESC.
+     * @param string $sort Which statistic to sort on.
+     * @param string $direction ASC or DESC.
      * @return array
      */
-    public function get_records ($sort = null, $direction = 'ASC') {
-        $records = array();
+    public function get_records($sort = null, $direction = 'ASC') {
+        $records = [];
 
         foreach ($this->questions as $question) {
-            $record = array();
+            $record = [];
             $record[] = $question->get_question_definition()->id;
             $record[] = $question->get_question_definition()->name;
             $record[] = $question->get_question_level();
@@ -163,7 +161,7 @@ class adaptivequiz_quiz_analyser {
         }
 
         if (!is_null($sort)) {
-            $sortkeys = array();
+            $sortkeys = [];
             foreach ($this->questions as $question) {
                 if ($sort == 'name') {
                     $sortkeys[] = $question->get_question_definition()->name;
@@ -187,8 +185,9 @@ class adaptivequiz_quiz_analyser {
      *
      * @param int $qid The question id
      * @return adaptivequiz_question_analyser
+     * @throws Exception
      */
-    public function get_question_analyzer ($qid) {
+    public function get_question_analyzer($qid) {
         if (!isset($this->questions[$qid])) {
             throw new Exception('Question-id not found.');
         }
@@ -200,10 +199,11 @@ class adaptivequiz_quiz_analyser {
      *
      * @param int $qid The question id
      * @return array
+     * @throws Exception
      */
-    public function get_record ($qid) {
+    public function get_record($qid) {
         $question = $this->get_question_analyzer($qid);
-        $record = array();
+        $record = [];
         $record[] = $question->get_question_definition()->id;
         $record[] = $question->get_question_definition()->name;
         $record[] = $question->get_question_level();

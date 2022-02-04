@@ -275,7 +275,6 @@
         <column>tagcollid</column>
         <column>name</column>
         <column>rawname</column>
-        <column>tagtype</column>
         <column>flag</column>
         <row>
             <value>1</value>
@@ -283,7 +282,6 @@
             <value>1</value>
             <value>adpq_5</value>
             <value>adpq_5</value>
-            <value>default</value>
             <value>0</value>
         </row>
         <row>
@@ -292,7 +290,6 @@
             <value>1</value>
             <value>phpunittag_5</value>
             <value>phpunittag_5</value>
-            <value>default</value>
             <value>0</value>
         </row>
         <row>
@@ -301,7 +298,6 @@
             <value>1</value>
             <value>phpunittag_888</value>
             <value>phpunittag_888</value>
-            <value>default</value>
             <value>0</value>
         </row>
         <row>
@@ -310,7 +306,6 @@
             <value>1</value>
             <value>adpq_6</value>
             <value>adpq_6</value>
-            <value>default</value>
             <value>0</value>
         </row>
         <row>
@@ -319,7 +314,6 @@
             <value>1</value>
             <value>adpq_7</value>
             <value>adpq_7</value>
-            <value>default</value>
             <value>0</value>
         </row>
         <row>
@@ -328,7 +322,6 @@
             <value>1</value>
             <value>adpq_8</value>
             <value>adpq_8</value>
-            <value>default</value>
             <value>0</value>
         </row>
         <row>
@@ -337,7 +330,6 @@
             <value>1</value>
             <value>adpq_9</value>
             <value>adpq_9</value>
-            <value>default</value>
             <value>0</value>
         </row>
         <row>
@@ -346,7 +338,6 @@
             <value>1</value>
             <value>adpq_10</value>
             <value>adpq_10</value>
-            <value>default</value>
             <value>0</value>
         </row>
         <row>
@@ -355,7 +346,6 @@
             <value>1</value>
             <value>test1_22</value>
             <value>test1_22</value>
-            <value>default</value>
             <value>0</value>
         </row>
         <row>
@@ -364,7 +354,6 @@
             <value>1</value>
             <value>test1_23</value>
             <value>test1_23</value>
-            <value>default</value>
             <value>0</value>
         </row>
         <row>
@@ -373,19 +362,28 @@
             <value>1</value>
             <value>test1_24</value>
             <value>test1_24</value>
-            <value>default</value>
+            <value>0</value>
+        </row>
+        <row>
+            <value>25</value>
+            <value>2</value>
+            <value>2</value>
+            <value>adpq_5</value>
+            <value>adpq_5</value>
             <value>0</value>
         </row>
     </table>
     <table name="tag_instance">
         <column>id</column>
         <column>tagid</column>
+        <column>component</column>
         <column>itemtype</column>
         <column>itemid</column>
         <column>tiuserid</column>
         <row>
             <value>1</value>
             <value>1</value>
+            <value>core_question</value>
             <value>question</value>
             <value>1</value>
             <value>0</value>
@@ -393,6 +391,7 @@
         <row>
             <value>2</value>
             <value>4</value>
+            <value>core_question</value>
             <value>question</value>
             <value>2</value>
             <value>0</value>
@@ -400,6 +399,7 @@
         <row>
             <value>3</value>
             <value>5</value>
+            <value>core_question</value>
             <value>question</value>
             <value>3</value>
             <value>0</value>
@@ -407,6 +407,7 @@
         <row>
             <value>4</value>
             <value>6</value>
+            <value>core_question</value>
             <value>question</value>
             <value>4</value>
             <value>0</value>
@@ -414,6 +415,7 @@
         <row>
             <value>5</value>
             <value>7</value>
+            <value>core_question</value>
             <value>question</value>
             <value>5</value>
             <value>0</value>
@@ -421,6 +423,7 @@
         <row>
             <value>6</value>
             <value>8</value>
+            <value>core_question</value>
             <value>question</value>
             <value>6</value>
             <value>0</value>
@@ -428,6 +431,7 @@
         <row>
             <value>7</value>
             <value>1</value>
+            <value>core_question</value>
             <value>question</value>
             <value>8</value>
             <value>0</value>
@@ -435,6 +439,7 @@
         <row>
             <value>8</value>
             <value>8</value>
+            <value>core_question</value>
             <value>question</value>
             <value>9</value>
             <value>0</value>
@@ -442,6 +447,7 @@
         <row>
             <value>9</value>
             <value>8</value>
+            <value>core_question</value>
             <value>question</value>
             <value>10</value>
             <value>0</value>
@@ -449,6 +455,7 @@
         <row>
             <value>22</value>
             <value>22</value>
+            <value>core_question</value>
             <value>question</value>
             <value>11</value>
             <value>0</value>
@@ -456,6 +463,7 @@
         <row>
             <value>23</value>
             <value>23</value>
+            <value>core_question</value>
             <value>question</value>
             <value>12</value>
             <value>0</value>
@@ -463,8 +471,25 @@
         <row>
             <value>24</value>
             <value>24</value>
+            <value>core_question</value>
             <value>question</value>
             <value>13</value>
+            <value>0</value>
+        </row>
+        <row>
+            <value>25</value>
+            <value>25</value>
+            <value>core</value>
+            <value>course</value>
+            <value>2</value>
+            <value>0</value>
+        </row>
+        <row>
+            <value>26</value>
+            <value>2</value>
+            <value>core_question</value>
+            <value>question</value>
+            <value>5</value>
             <value>0</value>
         </row>
     </table>

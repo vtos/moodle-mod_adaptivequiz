@@ -18,15 +18,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz\local;
+namespace mod_adaptivequiz\local\repository;
 
 use advanced_testcase;
 use context_course;
 use core_question_generator;
-use mod_adaptivequiz\local\repository\questions_repository;
 
 final class questions_repository_test extends advanced_testcase {
-
     /**
      * @test
      */

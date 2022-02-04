@@ -277,24 +277,24 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
     /**
      * This functions tests the retrevial of tag ids with an associated difficulty level
-     * but using legit data
-     * @return void
+     * but using legit data.
      */
     public function test_retrieve_tag() {
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
         $this->setup_test_data_xml();
 
         $dummyclass = new stdClass();
 
-        $fetchquestion = new fetchquestion($dummyclass, 5, 1, 100, array('phpunittag_'));
+        $fetchquestion = new fetchquestion($dummyclass, 5, 1, 100, ['phpunittag_']);
         $data = $fetchquestion->retrieve_tag(5);
-        $this->assertEquals(2, count($data));
-        $this->assertEquals(array(1 => 1, 2 => 2), $data);
 
-        $fetchquestion2 = new fetchquestion($dummyclass, 888, 1, 100, array('phpunittag_'));
-        $data = $fetchquestion->retrieve_tag(888);
-        $this->assertEquals(1, count($data));
-        $this->assertEquals(array(3 => 3), $data);
+        $this->assertEquals(2, count($data));
+        $this->assertEquals([0 => 1, 1 => 2], $data);
+
+        $fetchquestion2 = new fetchquestion($dummyclass, 888, 1, 100,['phpunittag_']);
+        $data = $fetchquestion2->retrieve_tag(888);
+
+        $this->assertEquals(0, count($data));
     }
 
     /**
@@ -509,30 +509,28 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
     }
 
     /**
-     * This function tests the output from retrieve_all_tag_ids()
+     * @test
      */
-    public function test_retrieve_all_tag_ids_one_to_one_hundred_default_tag_prefix() {
-        $this->resetAfterTest(true);
+    public function it_retrieves_all_tag_ids(): void {
+        $this->resetAfterTest();
         $this->setup_test_data_xml();
 
-        $dummyclass = new stdClass();
-        $fetchquestion = new fetchquestion($dummyclass, 5, 1, 100);
+        $fetchquestion = new fetchquestion(new stdClass(), 5, 1, 100);
+        $result = $fetchquestion->retrieve_all_tag_ids(1, 100, ADAPTIVEQUIZ_QUESTION_TAG);
 
-        $result = $fetchquestion->retrieve_all_tag_ids(1, 100, 'adpq_');
-        $expected = array(5 => '1', 6 => '4', 7 => '5', 8 => '6', 9 => '7', 10 => '8');
-        $this->assertEquals($expected, $result);
+        $this->assertEquals(
+            [5 => '1', 6 => '4', 7 => '5', 8 => '6', 9 => '7', 10 => '8',],
+            $result
+        );
     }
 
-
     /**
-     * This function tests the output from retrieve_all_tag_ids().
+     * @test
      */
-    public function test_retrieve_all_tag_ids_throw_dml_read_exception() {
-        $this->resetAfterTest(true);
-
+    public function it_throws_an_exception_when_retrieves_all_tag_ids_for_an_empty_tag_prefix(): void {
         $fetchquestion = new fetchquestion(new stdClass(), 5, 1, 100);
 
-        $this->expectException('dml_read_exception');
+        $this->expectException('invalid_parameter_exception');
         $fetchquestion->retrieve_all_tag_ids(1, 5, '');
     }
 

@@ -3,8 +3,7 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,19 +11,18 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+
+defined('MOODLE_INTERNAL') || die();
+
+use mod_adaptivequiz\local\repository\tags_repository;
 
 /**
- * fetch question class
- *
  * This class does the work of fetching a questions associated with a level of difficulty and within
  * a question category
  *
- * This module was created as a collaborative effort between Middlebury College
- * and Remote Learner.
- *
- * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -355,44 +353,30 @@ class fetchquestion {
     }
 
     /**
-     * This function retrieves all of the tag ids that can be used in this attempt
-     * @throws coding_exception if the $tagprefix argument is empty
-     * @param int $minimumlevel the minimum level the student can achieve
-     * @param int $maximumlevel the maximum level the student can achieve
-     * @param string $tagprefix the tag prefix used
-     * @param array an array whose keys represent the difficulty level and values are tag ids
+     * This function retrieves all the tag ids that can be used in this attempt.
+     *
+     * @param int $minimumlevel The minimum level the student can achieve.
+     * @param int $maximumlevel The maximum level the student can achieve.
+     * @param string $tagprefix The tag prefix used.
+     * @return array An array whose keys represent the difficulty level and values are tag ids.
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws moodle_exception
      */
-    public function retrieve_all_tag_ids($minimumlevel, $maximumlevel, $tagprefix) {
-        global $DB;
-
-        $i = 0;
-        $params = array();
-        $select = '';
-        $length = strlen($tagprefix) + 1;
-        $substr = '';
-
-        try {
-            $substr = $DB->sql_substr('name', $length);
-        } catch (coding_exception $e) {
-            $this->print_debug('retrieve_all_tag_ids() - Missing tag prefix '.$this->vardump($tagprefix));
-            print_error('missingtagprefix', 'adaptivequiz');
+    public function retrieve_all_tag_ids(int $minimumlevel, int $maximumlevel, string $tagprefix): array {
+        if (empty(trim($tagprefix))) {
+            throw new invalid_parameter_exception('Tag prefix cannot be empty.');
         }
 
-        for ($i = $minimumlevel; $i <= $maximumlevel; $i++) {
-            $params[$tagprefix.$i] = $tagprefix.$i;
-            $select .= ' name = :'.$tagprefix.$i.' OR';
+        $tags = array_map(function(int $level): string {
+            return ADAPTIVEQUIZ_QUESTION_TAG . $level;
+        }, range($minimumlevel, $maximumlevel));
+
+        if (!$leveltagidmap = tags_repository::get_question_level_to_tag_id_mapping_by_tag_names($tags)) {
+            return [];
         }
 
-        $select = rtrim($select, 'OR');
-
-        $tagids = $DB->get_records_select_menu('tag', $select, $params, 'id ASC', $substr.', id AS id2');
-
-        if (empty($tagids)) {
-            $this->print_debug('retrieve_tag() - no tags found matching minimum level '.$minimumlevel.' and maximum level '.$maximumlevel);
-            return array();
-        }
-
-        return $tagids;
+        return $leveltagidmap;
     }
 
     /**
@@ -443,42 +427,24 @@ class fetchquestion {
     }
 
     /**
-     * This function retrieves all tag ids, used by this activity and associated with a particular level of difficulty
-     * @param int $level: the level of difficulty (optional).  If 0 is passed then the function will use the level class property,
-     *      otherwise the argument value will be used.
-     * @return array - the tag id or false if no tag could be found
+     * This function retrieves all tag ids, used by this activity and associated with a particular level of difficulty.
+     *
+     * @param int $level The level of difficulty (optional). If 0 is passed then the function will use the level class
+     * property, otherwise the argument value will be used.
+     * @return array An array whose keys represent the difficulty level and values are tag ids.
+     * @throws dml_exception
+     * @throws coding_exception
      */
-    public function retrieve_tag($level = 0) {
-        global $DB;
+    public function retrieve_tag(int $level = 0): array {
+        $tags = array_map(function(string $tag) use($level): string {
+            return $tag . $level;
+        }, $this->tags);
 
-        $select = '';
-        $params = array();
-        $currentlevel = 0;
-
-        if (empty($level)) {
-            $thislevel = $this->level;
-        } else {
-            $thislevel = $level;
+        if (!$tagidlist = tags_repository::get_tag_id_list_by_tag_names($tags)) {
+            return [];
         }
 
-        // Format clause for tag name search.
-        foreach ($this->tags as $key => $tag) {
-            $params[$tag.$key] = $tag.$level;
-            $select .= ' name = :'.$tag.$key.' OR';
-        }
-
-        // Remove the last 'OR'.
-        $select = rtrim($select, 'OR');
-
-        // Query the tag table for all tags used by the activity.
-        $tagids = $DB->get_records_select_menu('tag', $select, $params, 'id ASC', 'id, id AS id2');
-
-        if (empty($tagids)) {
-            $this->print_debug('retrieve_tag() - no tags found with level: '.$level);
-            return array();
-        }
-
-        return $tagids;
+        return $tagidlist;
     }
 
     /**

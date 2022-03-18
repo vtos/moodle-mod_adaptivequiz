@@ -107,6 +107,9 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
         $attemptstable->init($PAGE->url, $adaptivequiz, $USER->id);
         $attemptstable->out(5, true);
     }
+    if (!$allattemptscount) {
+        echo html_writer::div(get_string('attemptsusernoprevious', 'adaptivequiz'), 'alert alert-info text-center');
+    }
 
     $completedattemptscount = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
     if (adaptivequiz_allowed_attempt($adaptivequiz->attempts, $completedattemptscount)) {
@@ -116,8 +119,7 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
             echo $renderer->display_start_attempt_form_scured($cm->id);
         }
     } else {
-        echo html_writer::div(get_string('noattemptsallowed', 'adaptivequiz'),
-            'alert alert-info text-center');
+        echo html_writer::div(get_string('noattemptsallowed', 'adaptivequiz'), 'alert alert-info text-center');
     }
 }
 

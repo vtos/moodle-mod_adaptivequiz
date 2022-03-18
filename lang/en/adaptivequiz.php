@@ -28,6 +28,7 @@ $string['abilityestimated_help'] = 'The estimated ability of a test-taker aligns
 $string['attemptfeedbackdefaulttext'] = 'You\'ve finished the attempt, thank you for taking the quiz!';
 $string['attemptquestion_ability'] = 'Ability Measure';
 $string['attempt_summary'] = 'Attempt Summary';
+$string['attemptsusernoprevious'] = 'You haven\'t attempted this quiz yet.';
 $string['attemptsuserprevious'] = 'Your previous attempts';
 $string['attemptnofirstquestion'] = 'Sorry, but couldn\'t define the first question to start the attempt, the quiz is possibly misconfigured. ';
 $string['showabilitymeasure'] = 'Show ability measure to students';

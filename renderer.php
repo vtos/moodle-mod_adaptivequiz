@@ -687,106 +687,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * This function prints a paging link for review attemtps page
-     * @param question_usage_by_activity $quba initialized to the attempt's unique id
-     * @param int $page the the page that is currently selected
-     * @param int $cmid the course module id of the activity
-     * @param int $userid the user id
-     * @return string HTML markup for paging links or nothing if there is only one page
-     */
-    public function print_questions_for_review_pager($quba, $page, $cmid, $userid) {
-        $questslots = $quba->get_slots();
-        $output = '';
-        $url = '';
-        $attr = array('class' => 'viewattemptreportpages');
-        $pages = ceil(count($questslots) / ADAPTIVEQUIZ_REV_QUEST_PER_PAGE);
-
-        // Don't print anything if there is only one page.
-        if (1 == $pages) {
-            return '';
-        }
-
-        // Print base url for page links.
-        $url = new moodle_url('/mod/adaptivequiz/reviewattempt.php',
-            array('cmid' => $cmid, 'uniqueid' => $quba->get_id(), 'userid' => $userid));
-
-        // Print all of the page links.
-        $output .= html_writer::start_tag('center');
-        for ($i = 0; $i < $pages; $i++) {
-            // If we are currently on this page, then don't make it an anchor tag.
-            if ($i == $page) {
-                $output .= '&nbsp'.html_writer::tag('span', $i + 1, $attr).'&nbsp';
-                continue;
-            }
-
-            $url->params(array('page' => $i));
-            $output .= '&nbsp'.html_writer::link($url, $i + 1, $attr).'&nbsp';
-        }
-        $output .= html_writer::end_tag('center');
-
-        return $output;
-    }
-
-    /**
-     * This function returns HTML markup of questions and student's responses
-     * @param question_usage_by_activity $quba initialized to the attempt's unique id
-     * @param int $offset an offset used to determine which question to start processing from
-     * @param stdClass $user user object for the user whos attempt is being reviewed
-     * @param int $timestamp time attmept was last modified
-     * @return string HTML markup
-     */
-    public function print_questions_for_review($quba, $offset = 0, $user, $timestamp) {
-        $questslots = $quba->get_slots();
-        $attr = array('class' => 'questiontags');
-        $offset *= ADAPTIVEQUIZ_REV_QUEST_PER_PAGE;
-
-        // Setup heading formation.
-        $a = new stdClass();
-        $a->fullname = fullname($user);
-        $a->finished = userdate($timestamp);
-        $output = $this->heading(get_string('reviewattemptreport', 'adaptivequiz', $a));
-
-        // Take a portion of the array of question slots for display.
-        $pageqslots = array_slice($questslots, $offset, ADAPTIVEQUIZ_REV_QUEST_PER_PAGE);
-
-        // Setup display options.
-        $options = new question_display_options();
-        $options->readonly = true;
-        $options->flags = question_display_options::HIDDEN;
-        $options->marks = question_display_options::MAX_ONLY;
-        $options->rightanswer = question_display_options::VISIBLE;
-        $options->correctness = question_display_options::VISIBLE;
-        $options->numpartscorrect = question_display_options::VISIBLE;
-
-        // Setup quesiton header metadata.
-        $output .= $this->init_metadata($quba, $pageqslots);
-
-        foreach ($pageqslots as $slot) {
-            $output .= html_writer::empty_tag('hr');
-
-            $label = html_writer::tag('label', get_string('questionnumber', 'adaptivequiz'));
-            $output .= html_writer::tag('div', $label.': '.format_string($slot));
-
-            // Retrieve question attempt object.
-            $questattempt = $quba->get_question_attempt($slot);
-            // Get question definition object.
-            $questdef = $questattempt->get_question();
-            // Retrieve the tags associated with this question.            
-            $qtags = core_tag_tag::get_item_tags_array('core_question', 'question', $questdef->id);
-
-            $label = html_writer::tag('label', get_string('attemptquestion_level', 'adaptivequiz'));
-            $output .= html_writer::tag('div', $label.': '.format_string(adaptivequiz_get_difficulty_from_tags($qtags)));
-
-            $label = html_writer::tag('label', get_string('tags'));
-            $output .= html_writer::tag('div', $label.': '.format_string(implode(' ', $qtags)), $attr);
-
-            $output .= $quba->render_question($slot, $options);
-        }
-
-        return $output;
-    }
-
-    /**
      * This function prints a form and a button that is centered on the page, then the user clicks on the button the user is taken
      * to the url
      * @param moodle_url $url a url
@@ -938,6 +838,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @param stdClass $user A record from {user}. The expected fields are: 'id', 'firstname', 'lastname' and 'email'.
      * @param question_usage_by_activity $quba
      * @param int $cmid
+     * @param int $page
      * @return string
      * @throws coding_exception
      * @throws moodle_exception
@@ -947,7 +848,8 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         stdClass $attempt,
         stdClass $user,
         question_usage_by_activity $quba,
-        int $cmid
+        int $cmid,
+        int $page
     ): string {
         if ($tabid == 'attemptgraph') {
             $return = $this->attempt_graph($attempt->uniqueid, $cmid, $user->id);
@@ -960,6 +862,9 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             $return .= $this->attempt_answer_distribution_table($attempt, $quba);
 
             return $return;
+        }
+        if ($tabid == 'attemptreview') {
+            return $this->attempt_questions_review($quba, $page, $cmid, $user, $attempt->timemodified);
         }
 
         return $this->attempt_summary_listing($attempt, $user);
@@ -1111,6 +1016,121 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         }
 
         return html_writer::table($table);
+    }
+
+    /**
+     * This function returns HTML markup of questions and student's responses.
+     * See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab} for partial parameters description.
+     *
+     * @param question_usage_by_activity $quba
+     * @param int $offset An offset used to determine which question to start processing from.
+     * @param int $cmid
+     * @param stdClass $user
+     * @param int $timestamp Time when the attempt was last modified.
+     * @return string
+     * @throws coding_exception
+     * @throws moodle_exception
+     */
+    protected function attempt_questions_review($quba, $offset, $cmid, $user, $timestamp): string {
+        $pager = $this->attempt_questions_review_pager($quba, $offset, $cmid, $user->id);
+
+        $questslots = $quba->get_slots();
+        $attr = ['class' => 'questiontags'];
+        $offset *= ADAPTIVEQUIZ_REV_QUEST_PER_PAGE;
+
+        $output = html_writer::tag('h2', get_string('attempt_questiondetails', 'adaptivequiz'));
+        $output .= $pager;
+
+        // Setup heading formation.
+        $a = new stdClass();
+        $a->fullname = fullname($user);
+        $a->finished = userdate($timestamp);
+        $output .= $this->heading(get_string('reviewattemptreport', 'adaptivequiz', $a));
+
+        // Take a portion of the array of question slots for display.
+        $pageqslots = array_slice($questslots, $offset, ADAPTIVEQUIZ_REV_QUEST_PER_PAGE);
+
+        // Setup display options.
+        $options = new question_display_options();
+        $options->readonly = true;
+        $options->flags = question_display_options::HIDDEN;
+        $options->marks = question_display_options::MAX_ONLY;
+        $options->rightanswer = question_display_options::VISIBLE;
+        $options->correctness = question_display_options::VISIBLE;
+        $options->numpartscorrect = question_display_options::VISIBLE;
+
+        // Setup quesiton header metadata.
+        $output .= $this->init_metadata($quba, $pageqslots);
+
+        foreach ($pageqslots as $slot) {
+            $output .= html_writer::empty_tag('hr');
+
+            $label = html_writer::tag('label', get_string('questionnumber', 'adaptivequiz'));
+            $output .= html_writer::tag('div', $label.': '.format_string($slot));
+
+            // Retrieve question attempt object.
+            $questattempt = $quba->get_question_attempt($slot);
+            // Get question definition object.
+            $questdef = $questattempt->get_question();
+            // Retrieve the tags associated with this question.
+            $qtags = core_tag_tag::get_item_tags_array('core_question', 'question', $questdef->id);
+
+            $label = html_writer::tag('label', get_string('attemptquestion_level', 'adaptivequiz'));
+            $output .= html_writer::tag('div', $label.': '.format_string(adaptivequiz_get_difficulty_from_tags($qtags)));
+
+            $label = html_writer::tag('label', get_string('tags'));
+            $output .= html_writer::tag('div', $label.': '.format_string(implode(' ', $qtags)), $attr);
+
+            $output .= $quba->render_question($slot, $options);
+        }
+
+        $output .= html_writer::empty_tag('br');
+        $output .= $pager;
+
+        return $output;
+    }
+
+    /**
+     * This function prints a paging link for the attempt review page.
+     * See {@link mod_adaptivequiz_renderer::attempt_questions_review()} for parameters description.
+     *
+     * @throws moodle_exception
+     */
+    protected function attempt_questions_review_pager(
+        question_usage_by_activity $quba,
+        int $page,
+        int $cmid,
+        int $userid
+    ): string {
+        $questslots = $quba->get_slots();
+        $output = '';
+        $attr = ['class' => 'viewattemptreportpages'];
+        $pages = ceil(count($questslots) / ADAPTIVEQUIZ_REV_QUEST_PER_PAGE);
+
+        // Don't print anything if there is only one page.
+        if (1 == $pages) {
+            return '';
+        }
+
+        // Print base url for page links.
+        $url = new moodle_url('/mod/adaptivequiz/reviewattempt.php',
+            ['cmid' => $cmid, 'uniqueid' => $quba->get_id(), 'userid' => $userid]);
+
+        // Print all of the page links.
+        $output .= html_writer::start_tag('center');
+        for ($i = 0; $i < $pages; $i++) {
+            // If we are currently on this page, then don't make it an anchor tag.
+            if ($i == $page) {
+                $output .= '&nbsp'.html_writer::tag('span', $i + 1, $attr).'&nbsp';
+                continue;
+            }
+
+            $url->params(['page' => $i]);
+            $output .= '&nbsp'.html_writer::link($url, $i + 1, $attr).'&nbsp';
+        }
+        $output .= html_writer::end_tag('center');
+
+        return $output;
     }
 
     protected function render_ability_measure(ability_measure $measure): string {

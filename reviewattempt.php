@@ -54,6 +54,15 @@ $sql = 'SELECT a.name, a.highestlevel, a.lowestlevel, aa.timecreated, aa.timemod
       ORDER BY a.name ASC';
 $adaptivequiz  = $DB->get_record_sql($sql, $param);
 
+$quba = question_engine::load_questions_usage_by_activity($uniqueid);
+
+$user = $DB->get_record('user', ['id' => $userid]);
+if (!$user) {
+    $user = new stdClass();
+    $user->firstname = get_string('unknownuser', 'adaptivequiz');
+    $user->lastname = '#'.$userid;
+}
+
 $PAGE->set_url('/mod/adaptivequiz/reviewattempt.php',
     ['cmid' => $cm->id, 'uniqueid' => $uniqueid, 'userid' => $userid]);
 $PAGE->set_title(format_string($adaptivequiz->name));
@@ -62,33 +71,12 @@ $PAGE->set_context($context);
 
 $output = $PAGE->get_renderer('mod_adaptivequiz');
 
-$PAGE->requires->js_init_call('M.mod_adaptivequiz.init_reviewattempt', null, false, $output->adaptivequiz_get_js_module());
-
-/* Load question usage by activity object */
-$quba = question_engine::load_questions_usage_by_activity($uniqueid);
-/* render pager links */
-$pager = $output->print_questions_for_review_pager($quba, $page, $cm->id, $userid);
-/* Render a button on the page */
-$url = new moodle_url('/mod/adaptivequiz/viewattemptreport.php', array('cmid' => $cm->id, 'userid' => $userid));
-$txt = get_string('backtoviewattemptreport', 'adaptivequiz');
-$button = $output->print_form_and_button($url, $txt);
-
-$user = $DB->get_record('user', array('id' => $userid));
-if (!$user) {
-    $user = new stdClass();
-    $user->firstname = get_string('unknownuser', 'adaptivequiz');
-    $user->lastname = '#'.$userid;
-}
+$PAGE->requires->js_init_call('M.mod_adaptivequiz.init_reviewattempt', null, false,
+    $output->adaptivequiz_get_js_module());
 
 echo $output->print_header();
 
 echo $output->attempt_review_tabs($PAGE->url, $tab);
-echo $output->attempt_report_page_by_tab($tab, $adaptivequiz, $user, $quba, $cm->id);
+echo $output->attempt_report_page_by_tab($tab, $adaptivequiz, $user, $quba, $cm->id, $page);
 
-echo html_writer::tag('h2', get_string('attempt_questiondetails', 'adaptivequiz'));
-echo $pager;
-echo $output->print_questions_for_review($quba, $page, $user, $adaptivequiz->timemodified);
-echo $button;
-echo html_writer::empty_tag('br');
-echo $pager;
 echo $output->print_footer();

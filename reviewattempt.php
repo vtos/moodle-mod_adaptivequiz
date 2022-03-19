@@ -1,21 +1,17 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Adaptive quiz view attempted questions
@@ -33,6 +29,7 @@ $id = required_param('cmid', PARAM_INT);
 $uniqueid = required_param('uniqueid', PARAM_INT);
 $userid = required_param('userid', PARAM_INT);
 $page = optional_param('page', 0, PARAM_INT);
+$tab = optional_param('tab', 'attemptsummary', PARAM_ALPHA);
 
 if (!$cm = get_coursemodule_from_id('adaptivequiz', $id)) {
     print_error('invalidcoursemodule');
@@ -57,7 +54,8 @@ $sql = 'SELECT a.name, a.highestlevel, a.lowestlevel, aa.timecreated, aa.timemod
       ORDER BY a.name ASC';
 $adaptivequiz  = $DB->get_record_sql($sql, $param);
 
-$PAGE->set_url('/mod/adaptivequiz/reviewattempt.php', array('cmid' => $cm->id));
+$PAGE->set_url('/mod/adaptivequiz/reviewattempt.php',
+    ['cmid' => $cm->id, 'uniqueid' => $uniqueid, 'userid' => $userid]);
 $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
@@ -83,6 +81,8 @@ if (!$user) {
 }
 
 echo $output->print_header();
+
+echo $output->attempt_review_tabs($PAGE->url, $tab);
 
 echo html_writer::tag('h2', get_string('attempt_summary', 'adaptivequiz'));
 echo $output->get_attempt_summary_listing($adaptivequiz, $user);

@@ -1,21 +1,17 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Adaptive quiz renderer class
@@ -1018,6 +1014,32 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         }
 
         return html_writer::table($table);
+    }
+
+    public function attempt_review_tabs(moodle_url $pageurl, string $selected): string {
+        $tabs = [];
+
+        $attemptsummarytaburl = clone($pageurl);
+        $pageurl->param('tab', 'attemptsummary');
+        $tabs[] = new tabobject('attemptsummary', $attemptsummarytaburl,
+            get_string('reportattemptsummarytab', 'adaptivequiz'));
+
+        $attemptgraphtaburl = clone($pageurl);
+        $attemptgraphtaburl->param('tab', 'attemptgraph');
+        $tabs[] = new tabobject('attemptgraph', $attemptgraphtaburl,
+            get_string('reportattemptgraphtab', 'adaptivequiz'));
+
+        $answerdistributiontaburl = clone($pageurl);
+        $answerdistributiontaburl->param('tab', 'answerdistribution');
+        $tabs[] = new tabobject('answerdistribution', $answerdistributiontaburl,
+            get_string('reportattemptanswerdistributiontab', 'adaptivequiz'));
+
+        $attemptreviewtaburl = clone($pageurl);
+        $attemptreviewtaburl->param('tab', 'attemptreview');
+        $tabs[] = new tabobject('attemptreview', $attemptreviewtaburl,
+            get_string('reportattemptreviewtab', 'adaptivequiz'));
+
+        return $this->tabtree($tabs, $selected);
     }
 
     protected function render_ability_measure(ability_measure $measure): string {

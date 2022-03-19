@@ -45,7 +45,7 @@ require_capability('mod/adaptivequiz:viewreport', $context);
 
 $param = array('uniqueid' => $uniqueid, 'userid' => $userid, 'activityid' => $cm->instance);
 $sql = 'SELECT a.name, a.highestlevel, a.lowestlevel, aa.timecreated, aa.timemodified, aa.attemptstate, aa.attemptstopcriteria,
-               aa.questionsattempted, aa.difficultysum, aa.standarderror, aa.measure
+               aa.questionsattempted, aa.difficultysum, aa.standarderror, aa.measure, aa.uniqueid
           FROM {adaptivequiz} a
           JOIN {adaptivequiz_attempt} aa ON a.id = aa.instance
          WHERE aa.uniqueid = :uniqueid
@@ -83,14 +83,7 @@ if (!$user) {
 echo $output->print_header();
 
 echo $output->attempt_review_tabs($PAGE->url, $tab);
-echo $output->attempt_report_page_by_tab($tab, $adaptivequiz, $user);
-
-$graphurl = new moodle_url('/mod/adaptivequiz/attemptgraph.php',
-    array('uniqueid' => $uniqueid, 'cmid' => $cm->id, 'userid' => $userid));
-$params = array('src' => $graphurl, 'class' => 'adaptivequiz-attemptgraph');
-echo html_writer::empty_tag('img', $params);
-
-echo ' ';
+echo $output->attempt_report_page_by_tab($tab, $adaptivequiz, $user, $quba, $cm->id);
 
 $graphurl = new moodle_url('/mod/adaptivequiz/answerdistributiongraph.php',
     array('uniqueid' => $uniqueid, 'cmid' => $cm->id, 'userid' => $userid));
@@ -103,8 +96,8 @@ echo html_writer::tag('span', '&#9660;', array('id' => 'adpq_scoring_table_link_
 echo ' '.get_string('scoring_table', 'adaptivequiz');
 echo html_writer::end_tag('h3');
 echo html_writer::end_tag('a');
+
 echo html_writer::start_tag('div', array('id' => 'adpq_scoring_table'));
-echo $output->get_attempt_scoring_table($adaptivequiz, $quba);
 echo $output->get_attempt_distribution_table($adaptivequiz, $quba);
 echo html_writer::tag('div', '', array('class' => 'clearfix'));
 echo html_writer::end_tag('div');

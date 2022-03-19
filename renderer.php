@@ -905,62 +905,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Answer a table of the question difficulties and the intermediate scores
-     * throughout the attempt.
-     *
-     * @param stdClass $adaptivequiz the quiz attempt record
-     * @param question_usage_by_activity $quba the questions used in this attempt
-     * @return string
-     */
-    public function get_attempt_scoring_table($adaptivequiz, $quba) {
-        $table = new html_table();
-
-        $num = get_string('attemptquestion_num', 'adaptivequiz');
-        $level = get_string('attemptquestion_level', 'adaptivequiz');
-        $rightwrong = get_string('attemptquestion_rightwrong', 'adaptivequiz');
-        $ability = get_string('attemptquestion_ability', 'adaptivequiz');
-        $error = get_string('attemptquestion_error', 'adaptivequiz');
-
-        $table->head = array($num, $level, $rightwrong, $ability, $error);
-        $table->align = array('center', 'center', 'center', 'center', 'center');
-        $table->size = array('', '', '', '', '', '');
-        $table->data = array();
-
-        $numattempted = 0;
-        $difficultysum = 0;
-        $sumcorrect = 0;
-        $sumincorrect = 0;
-        foreach ($quba->get_slots() as $slot) {
-            $question = $quba->get_question($slot);            
-            $tags = core_tag_tag::get_item_tags_array('core_question', 'question', $question->id);
-            
-            $qdifficulty = adaptivequiz_get_difficulty_from_tags($tags);
-            $qdifficultylogits = catalgo::convert_linear_to_logit($qdifficulty, $adaptivequiz->lowestlevel,
-                $adaptivequiz->highestlevel);
-            $correct = ($quba->get_question_mark($slot) > 0);
-
-            $numattempted++;
-            $difficultysum = $difficultysum + $qdifficultylogits;
-            if ($correct) {
-                $sumcorrect++;
-            } else {
-                $sumincorrect++;
-            }
-
-            $abilitylogits = catalgo::estimate_measure($difficultysum, $numattempted, $sumcorrect, $sumincorrect);
-            $abilityfraction = 1 / ( 1 + exp( (-1 * $abilitylogits) ) );
-            $ability = (($adaptivequiz->highestlevel - $adaptivequiz->lowestlevel) * $abilityfraction) + $adaptivequiz->lowestlevel;
-
-            $stderrorlogits = catalgo::estimate_standard_error($numattempted, $sumcorrect, $sumincorrect);
-            $stderror = catalgo::convert_logit_to_percent($stderrorlogits);
-
-            $table->data[] = array($slot, $qdifficulty, ($correct ? 'r' : 'w'), round($ability, 2),
-                    round($stderror * 100, 1)."%");
-        }
-        return html_writer::table($table);
-    }
-
-    /**
      * Answer a table of the question difficulties and the number of questions answered
      * right and wrong for each difficulty.
      *
@@ -1046,12 +990,102 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @param string $tabid
      * @param stdClass $attempt A joined record from {adaptivequiz} and {adaptivequiz_attempt} which contains the
      * required attempt data. The expected fields are: 'attemptstate', 'measure', 'highestlevel', 'lowestlevel',
-     * 'standarderror', 'timecreated', 'timemodified', 'attemptstopcriteria'.
-     * @param stdClass $user A record from {user}. The expected fields are: 'firstname', 'lastname' and 'email'.
+     * 'standarderror', 'timecreated', 'timemodified', 'attemptstopcriteria' and 'uniqueid'.
+     * @param stdClass $user A record from {user}. The expected fields are: 'id', 'firstname', 'lastname' and 'email'.
+     * @param question_usage_by_activity $quba
+     * @param int $cmid
      * @return string
+     * @throws coding_exception
+     * @throws moodle_exception
      */
-    public function attempt_report_page_by_tab(string $tabid, stdClass $attempt, stdClass $user): string {
+    public function attempt_report_page_by_tab(
+        string $tabid,
+        stdClass $attempt,
+        stdClass $user,
+        question_usage_by_activity $quba,
+        int $cmid
+    ): string {
+        if ($tabid == 'attemptgraph') {
+            $return = $this->attempt_graph($attempt->uniqueid, $cmid, $user->id);
+            $return .= $this->attempt_scoring_table($attempt, $quba);
+
+            return $return;
+        }
+
         return $this->attempt_summary_listing($attempt, $user);
+    }
+
+    /**
+     *
+     * @param int $uniqueid See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab()}.
+     * @param int $cmid
+     * @param int $userid
+     * @return string
+     * @throws moodle_exception
+     */
+    protected function attempt_graph(int $uniqueid, int $cmid, int $userid): string {
+        $graphurl = new moodle_url('/mod/adaptivequiz/attemptgraph.php',
+            ['uniqueid' => $uniqueid, 'cmid' => $cmid, 'userid' => $userid]);
+        $params = ['src' => $graphurl, 'class' => 'adaptivequiz-attemptgraph'];
+
+        return html_writer::empty_tag('img', $params);
+    }
+
+    /**
+     * Produces a table of the question difficulties and the intermediate scores throughout the attempt.
+     *
+     * @param stdClass $adaptivequiz See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab()}.
+     * @param question_usage_by_activity $quba The questions used in this attempt.
+     * @return string
+     * @throws coding_exception
+     */
+    protected function attempt_scoring_table(stdClass $adaptivequiz, question_usage_by_activity $quba): string {
+        $table = new html_table();
+
+        $num = get_string('attemptquestion_num', 'adaptivequiz');
+        $level = get_string('attemptquestion_level', 'adaptivequiz');
+        $rightwrong = get_string('attemptquestion_rightwrong', 'adaptivequiz');
+        $ability = get_string('attemptquestion_ability', 'adaptivequiz');
+        $error = get_string('attemptquestion_error', 'adaptivequiz');
+
+        $table->head = [$num, $level, $rightwrong, $ability, $error];
+        $table->align = ['center', 'center', 'center', 'center', 'center'];
+        $table->size = ['', '', '', '', '', ''];
+        $table->data = [];
+
+        $numattempted = 0;
+        $difficultysum = 0;
+        $sumcorrect = 0;
+        $sumincorrect = 0;
+        foreach ($quba->get_slots() as $slot) {
+            $question = $quba->get_question($slot);
+            $tags = core_tag_tag::get_item_tags_array('core_question', 'question', $question->id);
+
+            $qdifficulty = adaptivequiz_get_difficulty_from_tags($tags);
+            $qdifficultylogits = catalgo::convert_linear_to_logit($qdifficulty, $adaptivequiz->lowestlevel,
+                $adaptivequiz->highestlevel);
+            $correct = ($quba->get_question_mark($slot) > 0);
+
+            $numattempted++;
+            $difficultysum = $difficultysum + $qdifficultylogits;
+            if ($correct) {
+                $sumcorrect++;
+            } else {
+                $sumincorrect++;
+            }
+
+            $abilitylogits = catalgo::estimate_measure($difficultysum, $numattempted, $sumcorrect, $sumincorrect);
+            $abilityfraction = 1 / ( 1 + exp( (-1 * $abilitylogits) ) );
+            $ability = (($adaptivequiz->highestlevel - $adaptivequiz->lowestlevel) * $abilityfraction) + $adaptivequiz->lowestlevel;
+
+            $stderrorlogits = catalgo::estimate_standard_error($numattempted, $sumcorrect, $sumincorrect);
+            $stderror = catalgo::convert_logit_to_percent($stderrorlogits);
+
+            $table->data[] = [$slot, $qdifficulty, ($correct ? 'r' : 'w'), round($ability, 2),
+                round($stderror * 100, 1)."%"];
+        }
+
+        return html_writer::table($table);
     }
 
     protected function render_ability_measure(ability_measure $measure): string {

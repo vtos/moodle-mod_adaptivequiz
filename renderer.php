@@ -904,62 +904,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         return $html;
     }
 
-    /**
-     * Answer a table of the question difficulties and the number of questions answered
-     * right and wrong for each difficulty.
-     *
-     * @param stdClass $adaptivequiz the quiz attempt record
-     * @param question_usage_by_activity $quba the questions used in this attempt
-     * @return string
-     */
-    public function get_attempt_distribution_table($adaptivequiz, $quba) {
-        $table = new html_table();
-
-        $level = get_string('attemptquestion_level', 'adaptivequiz');
-        $numright = get_string('numright', 'adaptivequiz');
-        $numwrong = get_string('numwrong', 'adaptivequiz');
-
-        $table->head = array($level, $numright, $numwrong);
-        $table->align = array('center', 'center', 'center');
-        $table->size = array('', '', '' );
-        $table->data = array();
-
-        // Set up our data arrays.
-        $qdifficulties = array();
-        $rightanswers = array();
-        $wronganswers = array();
-
-        for ($i = $adaptivequiz->lowestlevel; $i <= $adaptivequiz->highestlevel; $i++) {
-            $qdifficulties[] = intval($i);
-            $rightanswers[] = 0;
-            $wronganswers[] = 0;
-        }
-
-        foreach ($quba->get_slots() as $i => $slot) {
-            $question = $quba->get_question($slot);
-            $tags = core_tag_tag::get_item_tags_array('core_question', 'question', $question->id);
-            $qdifficulty = adaptivequiz_get_difficulty_from_tags($tags);
-            $correct = ($quba->get_question_mark($slot) > 0);
-
-            $position = array_search($qdifficulty, $qdifficulties);
-            if ($correct) {
-                $rightanswers[$position]++;
-            } else {
-                $wronganswers[$position]++;
-            }
-        }
-
-        foreach ($qdifficulties as $key => $val) {
-            $table->data[] = array(
-                $val,
-                $rightanswers[$key],
-                $wronganswers[$key],
-            );
-        }
-
-        return html_writer::table($table);
-    }
-
     public function attempt_review_tabs(moodle_url $pageurl, string $selected): string {
         $tabs = [];
 
@@ -1008,6 +952,12 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         if ($tabid == 'attemptgraph') {
             $return = $this->attempt_graph($attempt->uniqueid, $cmid, $user->id);
             $return .= $this->attempt_scoring_table($attempt, $quba);
+
+            return $return;
+        }
+        if ($tabid == 'answerdistribution') {
+            $return = $this->attempt_answer_distribution_graph($attempt->uniqueid, $cmid, $user->id);
+            $return .= $this->attempt_answer_distribution_table($attempt, $quba);
 
             return $return;
         }
@@ -1083,6 +1033,81 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
 
             $table->data[] = [$slot, $qdifficulty, ($correct ? 'r' : 'w'), round($ability, 2),
                 round($stderror * 100, 1)."%"];
+        }
+
+        return html_writer::table($table);
+    }
+
+    /**
+     * @param int $uniqueid Attempt unique id.
+     * @param int $cmid
+     * @param int $userid
+     * @return string
+     * @throws moodle_exception
+     */
+    protected function attempt_answer_distribution_graph(int $uniqueid, int $cmid, int $userid): string {
+        $graphurl = new moodle_url('/mod/adaptivequiz/answerdistributiongraph.php',
+            ['uniqueid' => $uniqueid, 'cmid' => $cmid, 'userid' => $userid]);
+        $params = ['src' => $graphurl, 'class' => 'adaptivequiz-answerdistributiongraph'];
+
+        return html_writer::empty_tag('img', $params);
+    }
+
+    /**
+     * Produces a table of the question difficulties and the number of questions answered right and wrong for each
+     * difficulty.
+     *
+     * @param stdClass $adaptivequiz See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab()}.
+     * @param question_usage_by_activity $quba The questions used in this attempt.
+     * @return string
+     * @throws coding_exception
+     */
+    protected function attempt_answer_distribution_table(
+        stdClass $adaptivequiz,
+        question_usage_by_activity $quba
+    ): string {
+        $table = new html_table();
+
+        $level = get_string('attemptquestion_level', 'adaptivequiz');
+        $numright = get_string('numright', 'adaptivequiz');
+        $numwrong = get_string('numwrong', 'adaptivequiz');
+
+        $table->head = [$level, $numright, $numwrong];
+        $table->align = ['center', 'center', 'center'];
+        $table->size = ['', '', '' ];
+        $table->data = [];
+
+        // Set up our data arrays.
+        $qdifficulties = [];
+        $rightanswers = [];
+        $wronganswers = [];
+
+        for ($i = $adaptivequiz->lowestlevel; $i <= $adaptivequiz->highestlevel; $i++) {
+            $qdifficulties[] = intval($i);
+            $rightanswers[] = 0;
+            $wronganswers[] = 0;
+        }
+
+        foreach ($quba->get_slots() as $i => $slot) {
+            $question = $quba->get_question($slot);
+            $tags = core_tag_tag::get_item_tags_array('core_question', 'question', $question->id);
+            $qdifficulty = adaptivequiz_get_difficulty_from_tags($tags);
+            $correct = ($quba->get_question_mark($slot) > 0);
+
+            $position = array_search($qdifficulty, $qdifficulties);
+            if ($correct) {
+                $rightanswers[$position]++;
+            } else {
+                $wronganswers[$position]++;
+            }
+        }
+
+        foreach ($qdifficulties as $key => $val) {
+            $table->data[] = [
+                $val,
+                $rightanswers[$key],
+                $wronganswers[$key],
+            ];
         }
 
         return html_writer::table($table);

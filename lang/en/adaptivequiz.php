@@ -155,7 +155,6 @@ $string['reviewattemptreport'] = 'Reviewing attempt by {$a->fullname} submitted 
 $string['score'] = 'Score';
 $string['bestscore'] = 'Best Score';
 $string['bestscorestderror'] = 'Standard Error';
-$string['scoring_table'] = 'Scoring Tables';
 $string['attempt_questiondetails'] = 'Question Details';
 $string['attemptstarttime'] = 'Attempt start time';
 $string['attempttotaltime'] = 'Total time (hh:mm:ss)';

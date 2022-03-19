@@ -83,9 +83,7 @@ if (!$user) {
 echo $output->print_header();
 
 echo $output->attempt_review_tabs($PAGE->url, $tab);
-
-echo html_writer::tag('h2', get_string('attempt_summary', 'adaptivequiz'));
-echo $output->get_attempt_summary_listing($adaptivequiz, $user);
+echo $output->attempt_report_page_by_tab($tab, $adaptivequiz, $user);
 
 $graphurl = new moodle_url('/mod/adaptivequiz/attemptgraph.php',
     array('uniqueid' => $uniqueid, 'cmid' => $cm->id, 'userid' => $userid));

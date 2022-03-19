@@ -867,8 +867,8 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @param stdClass $user the user who took the quiz that created the attempt
      * @return string
      */
-    public function get_attempt_summary_listing($adaptivequiz, $user) {
-        $html = '';
+    public function attempt_summary_listing($adaptivequiz, $user) {
+        $html = html_writer::tag('h2', get_string('attempt_summary', 'adaptivequiz'));;
         $html .= html_writer::start_tag('dl', array('class' => 'adaptivequiz-summarylist'));
         $html .= html_writer::tag('dt', get_string('attempt_user', 'adaptivequiz').': ');
         $html .= html_writer::tag('dd', $user->firstname." ".$user->lastname." (".$user->email.")");
@@ -1040,6 +1040,18 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             get_string('reportattemptreviewtab', 'adaptivequiz'));
 
         return $this->tabtree($tabs, $selected);
+    }
+
+    /**
+     * @param string $tabid
+     * @param stdClass $attempt A joined record from {adaptivequiz} and {adaptivequiz_attempt} which contains the
+     * required attempt data. The expected fields are: 'attemptstate', 'measure', 'highestlevel', 'lowestlevel',
+     * 'standarderror', 'timecreated', 'timemodified', 'attemptstopcriteria'.
+     * @param stdClass $user A record from {user}. The expected fields are: 'firstname', 'lastname' and 'email'.
+     * @return string
+     */
+    public function attempt_report_page_by_tab(string $tabid, stdClass $attempt, stdClass $user): string {
+        return $this->attempt_summary_listing($attempt, $user);
     }
 
     protected function render_ability_measure(ability_measure $measure): string {

@@ -63,10 +63,12 @@ if (!$user) {
     $user->lastname = '#'.$userid;
 }
 
+$title = get_string('reportpagecommontitle', 'adaptivequiz', format_string($adaptivequiz->name));
+
 $PAGE->set_url('/mod/adaptivequiz/reviewattempt.php',
     ['cmid' => $cm->id, 'uniqueid' => $uniqueid, 'userid' => $userid]);
-$PAGE->set_title(format_string($adaptivequiz->name));
-$PAGE->set_heading(format_string($course->fullname));
+$PAGE->set_title($title);
+$PAGE->set_heading($title);
 $PAGE->set_context($context);
 $PAGE->navbar->add(get_string('activityreports', 'adaptivequiz'),
     new moodle_url('/mod/adaptivequiz/viewreport.php', ['cmid' => $cm->id]));
@@ -80,6 +82,11 @@ $PAGE->requires->js_init_call('M.mod_adaptivequiz.init_reviewattempt', null, fal
     $output->adaptivequiz_get_js_module());
 
 echo $output->print_header();
+
+$a = new stdClass();
+$a->fullname = fullname($user);
+$a->finished = userdate($adaptivequiz->timemodified);
+echo $output->heading(get_string('reviewattemptreport', 'adaptivequiz', $a));
 
 echo $output->attempt_review_tabs($PAGE->url, $tab);
 echo $output->attempt_report_page_by_tab($tab, $adaptivequiz, $user, $quba, $cm->id, $page);

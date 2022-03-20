@@ -763,45 +763,98 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     /**
      * Answer the summery information about an attempt
      *
-     * @param stdClass $adaptivequiz the attempt record.
-     * @param stdClass $user the user who took the quiz that created the attempt
+     * @param stdClass $adaptivequiz The attempt record.
+     * @param stdClass $user The user who took the quiz that created the attempt.
      * @return string
+     * @throws coding_exception
      */
-    public function attempt_summary_listing($adaptivequiz, $user) {
-        $html = html_writer::tag('h2', get_string('attempt_summary', 'adaptivequiz'));;
-        $html .= html_writer::start_tag('dl', array('class' => 'adaptivequiz-summarylist'));
-        $html .= html_writer::tag('dt', get_string('attempt_user', 'adaptivequiz').': ');
-        $html .= html_writer::tag('dd', $user->firstname." ".$user->lastname." (".$user->email.")");
-        $html .= html_writer::tag('dt', get_string('attempt_state', 'adaptivequiz').': ');
-        $html .= html_writer::tag('dd', $adaptivequiz->attemptstate);
-        $html .= html_writer::tag('dt', get_string('score', 'adaptivequiz').': ');
+    public function attempt_summary_listing(stdClass $adaptivequiz, stdClass $user): string {
+        $table = new html_table();
+        $table->attributes['class'] = 'generaltable attemptsummarytable';
+
+        $row = new html_table_row();
+
+        $headercell = new html_table_cell(get_string('attempt_user', 'adaptivequiz'));
+        $headercell->header = true;
+
+        $datacell = new html_table_cell(fullname($user) . ' (' . $user->email . ')');
+
+        $row->cells = [$headercell, $datacell];
+        $table->data[] = $row;
+
+        $row = new html_table_row();
+
+        $headercell = new html_table_cell(get_string('attempt_state', 'adaptivequiz'));
+        $headercell->header = true;
+
+        $datacell = new html_table_cell($adaptivequiz->attemptstate);
+
+        $row->cells = [$headercell, $datacell];
+        $table->data[] = $row;
+
+        $row = new html_table_row();
+
+        $headercell = new html_table_cell(get_string('score', 'adaptivequiz'));
+        $headercell->header = true;
+
         $abilityfraction = 1 / ( 1 + exp( (-1 * $adaptivequiz->measure) ) );
         $ability = (($adaptivequiz->highestlevel - $adaptivequiz->lowestlevel) * $abilityfraction) + $adaptivequiz->lowestlevel;
         $stderror = catalgo::convert_logit_to_percent($adaptivequiz->standarderror);
-        if ($stderror > 0) {
-            $score = round($ability, 2)." &nbsp; &plusmn; ".round($stderror * 100, 1)."%";
-        } else {
-            $score = 'n/a';
-        }
-        $html .= html_writer::tag('dd', $score);
-        $html .= html_writer::end_tag('dl');
+        $score = ($stderror > 0)
+            ? round($ability, 2)." &nbsp; &plusmn; ".round($stderror * 100, 1)."%"
+            : 'n/a';
+        $datacell = new html_table_cell($score);
 
-        $html .= html_writer::start_tag('dl', array('class' => 'adaptivequiz-summarylist'));
-        $html .= html_writer::tag('dt', get_string('attemptstarttime', 'adaptivequiz').': ');
-        $html .= html_writer::tag('dd', userdate($adaptivequiz->timecreated));
-        $html .= html_writer::tag('dt', get_string('attemptfinishedtimestamp', 'adaptivequiz').': ');
-        $html .= html_writer::tag('dd', userdate($adaptivequiz->timemodified));
-        $html .= html_writer::tag('dt', get_string('attempttotaltime', 'adaptivequiz').': ');
+        $row->cells = [$headercell, $datacell];
+        $table->data[] = $row;
+
+        $row = new html_table_row();
+
+        $headercell = new html_table_cell(get_string('attemptstarttime', 'adaptivequiz'));
+        $headercell->header = true;
+
+        $datacell = new html_table_cell(userdate($adaptivequiz->timecreated));
+
+        $row->cells = [$headercell, $datacell];
+        $table->data[] = $row;
+
+        $row = new html_table_row();
+
+        $headercell = new html_table_cell(get_string('attemptfinishedtimestamp', 'adaptivequiz'));
+        $headercell->header = true;
+
+        $datacell = new html_table_cell(userdate($adaptivequiz->timemodified));
+
+        $row->cells = [$headercell, $datacell];
+        $table->data[] = $row;
+
+        $row = new html_table_row();
+
+        $headercell = new html_table_cell(get_string('attempttotaltime', 'adaptivequiz'));
+        $headercell->header = true;
+
         $totaltime = $adaptivequiz->timemodified - $adaptivequiz->timecreated;
         $hours = floor($totaltime / 3600);
         $remainder = $totaltime - ($hours * 3600);
         $minutes = floor($remainder / 60);
         $seconds = $remainder - ($minutes * 60);
-        $html .= html_writer::tag('dd', sprintf('%02d', $hours).":".sprintf('%02d', $minutes).":".sprintf('%02d', $seconds));
-        $html .= html_writer::tag('dt', get_string('attemptstopcriteria', 'adaptivequiz').': ');
-        $html .= html_writer::tag('dd', $adaptivequiz->attemptstopcriteria);
-        $html .= html_writer::end_tag('dl');
-        return $html;
+        $cellcontent = sprintf('%02d', $hours).":".sprintf('%02d', $minutes).":".sprintf('%02d', $seconds);
+        $datacell = new html_table_cell($cellcontent);
+
+        $row->cells = [$headercell, $datacell];
+        $table->data[] = $row;
+
+        $row = new html_table_row();
+
+        $headercell = new html_table_cell(get_string('attemptstopcriteria', 'adaptivequiz'));
+        $headercell->header = true;
+
+        $datacell = new html_table_cell($adaptivequiz->attemptstopcriteria);
+
+        $row->cells = [$headercell, $datacell];
+        $table->data[] = $row;
+
+        return html_writer::table($table);
     }
 
     public function attempt_review_tabs(moodle_url $pageurl, string $selected): string {
@@ -822,10 +875,10 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $tabs[] = new tabobject('answerdistribution', $answerdistributiontaburl,
             get_string('reportattemptanswerdistributiontab', 'adaptivequiz'));
 
-        $attemptreviewtaburl = clone($pageurl);
-        $attemptreviewtaburl->param('tab', 'attemptreview');
-        $tabs[] = new tabobject('attemptreview', $attemptreviewtaburl,
-            get_string('reportattemptreviewtab', 'adaptivequiz'));
+        $questionsdetailstaburl = clone($pageurl);
+        $questionsdetailstaburl->param('tab', 'questionsdetails');
+        $tabs[] = new tabobject('questionsdetails', $questionsdetailstaburl,
+            get_string('reportattemptquestionsdetailstab', 'adaptivequiz'));
 
         return $this->tabtree($tabs, $selected);
     }
@@ -853,18 +906,20 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     ): string {
         if ($tabid == 'attemptgraph') {
             $return = $this->attempt_graph($attempt->uniqueid, $cmid, $user->id);
+            $return .= html_writer::empty_tag('br');
             $return .= $this->attempt_scoring_table($attempt, $quba);
 
             return $return;
         }
         if ($tabid == 'answerdistribution') {
             $return = $this->attempt_answer_distribution_graph($attempt->uniqueid, $cmid, $user->id);
+            $return .= html_writer::empty_tag('br');
             $return .= $this->attempt_answer_distribution_table($attempt, $quba);
 
             return $return;
         }
-        if ($tabid == 'attemptreview') {
-            return $this->attempt_questions_review($quba, $page, $cmid, $user, $attempt->timemodified);
+        if ($tabid == 'questionsdetails') {
+            return $this->attempt_questions_review($quba, $page, $cmid, $user);
         }
 
         return $this->attempt_summary_listing($attempt, $user);
@@ -883,7 +938,11 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             ['uniqueid' => $uniqueid, 'cmid' => $cmid, 'userid' => $userid]);
         $params = ['src' => $graphurl, 'class' => 'adaptivequiz-attemptgraph'];
 
-        return html_writer::empty_tag('img', $params);
+        $output = html_writer::start_div('mdl-align');
+        $output .= html_writer::empty_tag('img', $params);
+        $output .= html_writer::end_div('mdl-align');
+
+        return $output;
     }
 
     /**
@@ -940,7 +999,10 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
                 round($stderror * 100, 1)."%"];
         }
 
-        return html_writer::table($table);
+        $return = $this->heading(get_string('reportattemptgraphtabletitle', 'adaptivequiz'), '4', 'mdl-align');
+        $return .= html_writer::table($table);
+
+        return $return;
     }
 
     /**
@@ -955,7 +1017,11 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             ['uniqueid' => $uniqueid, 'cmid' => $cmid, 'userid' => $userid]);
         $params = ['src' => $graphurl, 'class' => 'adaptivequiz-answerdistributiongraph'];
 
-        return html_writer::empty_tag('img', $params);
+        $output = html_writer::start_div('mdl-align');
+        $output .= html_writer::empty_tag('img', $params);
+        $output .= html_writer::end_div('mdl-align');
+
+        return $output;
     }
 
     /**
@@ -1015,7 +1081,11 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             ];
         }
 
-        return html_writer::table($table);
+        $return = $this->heading(get_string('reportattemptanswerdistributiontabletitle', 'adaptivequiz'), '4',
+            'mdl-align');
+        $return .= html_writer::table($table);
+
+        return $return;
     }
 
     /**
@@ -1026,26 +1096,18 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @param int $offset An offset used to determine which question to start processing from.
      * @param int $cmid
      * @param stdClass $user
-     * @param int $timestamp Time when the attempt was last modified.
      * @return string
      * @throws coding_exception
      * @throws moodle_exception
      */
-    protected function attempt_questions_review($quba, $offset, $cmid, $user, $timestamp): string {
+    protected function attempt_questions_review($quba, $offset, $cmid, $user): string {
         $pager = $this->attempt_questions_review_pager($quba, $offset, $cmid, $user->id);
 
         $questslots = $quba->get_slots();
         $attr = ['class' => 'questiontags'];
         $offset *= ADAPTIVEQUIZ_REV_QUEST_PER_PAGE;
 
-        $output = html_writer::tag('h2', get_string('attempt_questiondetails', 'adaptivequiz'));
-        $output .= $pager;
-
-        // Setup heading formation.
-        $a = new stdClass();
-        $a->fullname = fullname($user);
-        $a->finished = userdate($timestamp);
-        $output .= $this->heading(get_string('reviewattemptreport', 'adaptivequiz', $a));
+        $output = $pager;
 
         // Take a portion of the array of question slots for display.
         $pageqslots = array_slice($questslots, $offset, ADAPTIVEQUIZ_REV_QUEST_PER_PAGE);
@@ -1063,8 +1125,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $output .= $this->init_metadata($quba, $pageqslots);
 
         foreach ($pageqslots as $slot) {
-            $output .= html_writer::empty_tag('hr');
-
             $label = html_writer::tag('label', get_string('questionnumber', 'adaptivequiz'));
             $output .= html_writer::tag('div', $label.': '.format_string($slot));
 
@@ -1082,6 +1142,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             $output .= html_writer::tag('div', $label.': '.format_string(implode(' ', $qtags)), $attr);
 
             $output .= $quba->render_question($slot, $options);
+            $output .= html_writer::empty_tag('hr');
         }
 
         $output .= html_writer::empty_tag('br');

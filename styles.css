@@ -42,3 +42,10 @@ table.adpq_answers_table thead:first-child th.section {
 .adpq_lowlevel .adpq_correct {
     font-weight: bold;
 }
+/**/
+.usersattemptstable-wrapper {
+    margin-top: 1rem;
+}
+.usersattemptstable {
+    margin-bottom: 0.75rem !important;
+}

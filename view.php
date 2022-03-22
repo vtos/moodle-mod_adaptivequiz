@@ -128,13 +128,8 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
 
 if (has_capability('mod/adaptivequiz:viewreport', $context)) {
     if (!$downloadusersattempts) {
-        echo $renderer->display_view_report_form($cm->id);
-        echo $renderer->display_question_analysis_form($cm->id);
-
         echo $renderer->heading(get_string('activityreports', 'adaptivequiz'), '3');
-
         groups_print_activity_menu($cm, new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]));
-
         echo $renderer->container_start('usersattemptstable-wrapper');
     }
 

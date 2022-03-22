@@ -56,23 +56,6 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
     }
 
     /**
-     * This function tests the output for the view report form
-     * @return void
-     */
-    public function test_display_view_report_form() {
-        $dummypage = new moodle_page();
-        $target = 'mod_adaptivequiz';
-        $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
-        $output = $renderer->display_view_report_form(9999);
-
-        $this->assertStringContainsString('<form', $output);
-        $this->assertStringContainsString('/mod/adaptivequiz/viewreport.php?cmid=9999', $output);
-        $this->assertStringContainsString('type="submit"', $output);
-        $this->assertStringContainsString('class="submitbtns adaptivequizbtn"', $output);
-        $this->assertStringContainsString('</form>', $output);
-    }
-
-    /**
      * This function tests the output from the get_js_module
      * @return void
      */

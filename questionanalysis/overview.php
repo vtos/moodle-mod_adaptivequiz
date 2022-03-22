@@ -54,7 +54,10 @@ require_capability('mod/adaptivequiz:viewreport', $context);
 
 $adaptivequiz  = $DB->get_record('adaptivequiz', array('id' => $cm->instance), '*');
 $PAGE->set_url('/mod/adaptivequiz/questionanalysis/overview.php', array('cmid' => $cm->id));
-$PAGE->set_title(format_string($adaptivequiz->name));
+
+$title = get_string('reportquestionanalysispageheading', 'adaptivequiz', format_string($adaptivequiz->name));
+$PAGE->set_title($title);
+
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 $output = $PAGE->get_renderer('mod_adaptivequiz', 'questions');
@@ -83,7 +86,7 @@ foreach ($records as &$record) {
 
 /* print header information */
 $header = $output->print_header();
-$title = $output->heading(get_string('questions_report', 'adaptivequiz'));
+$title = $output->heading($title);
 /* Output attempts table */
 $reporttable = $output->get_report_table($headers, $records, $cm, '/mod/adaptivequiz/questionanalysis/overview.php', $sort,
     $sortdir);

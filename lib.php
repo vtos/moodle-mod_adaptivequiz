@@ -511,15 +511,21 @@ function adaptivequiz_extend_navigation(navigation_node $navref, stdclass $cours
 }
 
 /**
- * Extends the settings navigation with the adaptivequiz settings
- *
- * This function is called when the context for the page is a adaptivequiz module. This is not called by AJAX
- * so it is safe to rely on the $PAGE.
- *
- * @param settings_navigation $settingsnav: {@link settings_navigation}
- * @param navigation_node $adaptivequiznode: {@link navigation_node}
+ * @throws coding_exception
+ * @throws moodle_exception
  */
-function adaptivequiz_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $adaptivequiznode = null) {
+function adaptivequiz_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $adaptivequiznode) {
+    global $PAGE;
+
+    if (!has_capability('mod/adaptivequiz:viewreport', $PAGE->cm->context)) {
+        return;
+    }
+
+    $node = navigation_node::create(get_string('questionanalysisbtn', 'adaptivequiz'),
+        new moodle_url('/mod/adaptivequiz/questionanalysis/overview.php', ['cmid' => $PAGE->cm->id]),
+        navigation_node::TYPE_SETTING, null, 'mod_adaptivequiz_question_analysis',
+        new pix_icon('i/report', ''));
+    $adaptivequiznode->add_node($node);
 }
 
 /**

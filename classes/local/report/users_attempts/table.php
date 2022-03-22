@@ -157,7 +157,10 @@ final class table extends table_sql {
             $sqlparams
         );
 
-        $sqlcountfrom = '{adaptivequiz_attempt} aa';
+        $sqlcountfrom = '
+            {adaptivequiz_attempt} aa
+            JOIN {user} u ON u.id = aa.userid
+        ';
         $sqlcountwhere = 'instance = :instance';
         $sqlcountparams = ['instance' => $this->filter->adaptivequizid];
         if ($this->filter->groupid) {

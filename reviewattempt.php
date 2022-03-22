@@ -67,7 +67,7 @@ $a = new stdClass();
 $a->quizname = format_string($adaptivequiz->name);
 $a->fullname = fullname($user);
 $a->finished = userdate($adaptivequiz->timemodified);
-$title = get_string('reviewattemptreport', 'adaptivequiz', $a);
+$title = get_string('reportattemptreviewpageheading', 'adaptivequiz', $a);
 
 $PAGE->set_url('/mod/adaptivequiz/reviewattempt.php',
     ['cmid' => $cm->id, 'uniqueid' => $uniqueid, 'userid' => $userid]);

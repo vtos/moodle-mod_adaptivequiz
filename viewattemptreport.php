@@ -68,7 +68,7 @@ $user = $DB->get_record('user', ['id' => $userid]);
 $a = new stdClass();
 $a->quizname = format_string($record->name);
 $a->username = fullname($user);
-$title = get_string('indvuserreport', 'adaptivequiz', $a);
+$title = get_string('reportindividualuserattemptpageheading', 'adaptivequiz', $a);
 $PAGE->set_title($title);
 
 $PAGE->set_heading(format_string($course->fullname));

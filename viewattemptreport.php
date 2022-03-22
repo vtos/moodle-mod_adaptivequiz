@@ -63,26 +63,24 @@ if (empty($records)) {
 
 $record = current($records);
 
-$PAGE->set_title(format_string($record->name));
+$user = $DB->get_record('user', ['id' => $userid]);
+
+$a = new stdClass();
+$a->quizname = format_string($record->name);
+$a->username = fullname($user);
+$title = get_string('indvuserreport', 'adaptivequiz', $a);
+$PAGE->set_title($title);
+
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
 $output = $PAGE->get_renderer('mod_adaptivequiz');
 
-/* print header information */
 $header = $output->print_header();
-/* Output attempts table */
-$user = $DB->get_record('user', array('id' => $userid));
 $reporttable = $output->print_attempt_report_table($records, $cm, $user);
-/* OUtput return to main reports page button */
-$url = new moodle_url('/mod/adaptivequiz/viewreport.php', array('cmid' => $cm->id));
-$txt = get_string('backtoviewreport', 'adaptivequiz');
-$button = $output->print_form_and_button($url, $txt);
-
-/* Output footer information */
 $footer = $output->print_footer();
 
 echo $header;
+echo $output->heading($title);
 echo $reporttable;
-echo $button;
 echo $footer;

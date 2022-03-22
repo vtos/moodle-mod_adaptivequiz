@@ -344,16 +344,10 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * This function returns HTML markup to display a table of a users's attempt
      * @param stdClass $records an array of user attempt table objects
      * @param stdClass $cm course module object set to the instance of the activity
-     * @param stdClass $user a user table record
      * @return string HTML markup
      */
-    public function print_attempt_report_table($records, $cm, $user) {
-        $record = current($records);
-        $profileurl = new moodle_url('/user/profile.php', array('id' => $record->userid));
-        $namelink = html_writer::link($profileurl, fullname($user));
-        $output = $this->heading(get_string('indvuserreport', 'adaptivequiz', $namelink));
-        $output .= $this->create_attempt_report_table($records, $cm);
-        return $output;
+    public function print_attempt_report_table($records, $cm) {
+        return $this->create_attempt_report_table($records, $cm);
     }
 
     /**

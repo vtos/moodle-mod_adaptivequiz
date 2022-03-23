@@ -14,8 +14,6 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive testing version information.
- *
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,9 +21,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2022020400;
-$plugin->release = '2.0.1';
-$plugin->requires = 2021051704.13; // 3.11.4+ (Build: 20211230)
+$plugin->version = 2022032300;
+$plugin->release = '2.1.0';
+$plugin->requires = 2021051706.00; // 3.11.6 (Build: 20220314)
 $plugin->cron = 0;
 $plugin->component = 'mod_adaptivequiz';
 $plugin->maturity = MATURITY_STABLE;

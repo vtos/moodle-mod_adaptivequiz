@@ -75,44 +75,6 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
     }
 
     /**
-     * This function tests the output from the create_submit_form
-     * @return void
-     */
-    public function test_create_submit_form() {
-
-        $dummypage = new moodle_page();
-        $target = 'mod_adaptivequiz';
-        $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
-
-        $mockquba = $this->createPartialMock('question_usage_by_activity', ['render_question']);
-        $mockquba->expects($this->once())
-            ->method('render_question')
-            ->withAnyParameters()
-            ->willReturn('output');
-
-        $output = $renderer->create_submit_form(9999, $mockquba, 8888, 7777);
-
-        // Test form attributes
-        $this->assertStringContainsString('<form', $output);
-        $this->assertStringContainsString('enctype="multipart/form-data"', $output);
-        $this->assertStringContainsString('accept-charset="utf-8"', $output);
-        $this->assertStringContainsString('id="responseform"', $output);
-
-        // Test submit button and class
-        $this->assertStringContainsString('type="submit"', $output);
-        $this->assertStringContainsString('class="submitbtns adaptivequizbtn"', $output);
-
-        // Test output contains required elements
-        $this->assertStringContainsString('name="cmid"', $output);
-        $this->assertStringContainsString('name="uniqueid"', $output);
-        $this->assertStringContainsString('name="sesskey"', $output);
-        $this->assertStringContainsString('name="slots"', $output);
-        $this->assertStringContainsString('name="dl"', $output);
-
-        $this->assertStringContainsString('</form>', $output);
-    }
-
-    /**
      * This functions tests the output from create_report_table()
      */
     public function test_create_report_table() {

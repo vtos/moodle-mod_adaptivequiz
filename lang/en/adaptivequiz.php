@@ -40,6 +40,7 @@ $string['reportattemptgraphtab'] = 'Attempt Graph';
 $string['reportattemptgraphtabletitle'] = 'Table View of Attempt Graph';
 $string['reportattemptquestionsdetailstab'] = 'Questions Details';
 $string['reportattemptreviewpageheading'] = '{$a->quizname} - reviewing attempt by {$a->fullname} submitted on {$a->finished}';
+$string['reportattemptsdownloadfilename'] = '{$a}_attempts_report';
 $string['reportattemptsummarytab'] = 'Attempt Summary';
 $string['reportindividualuserattemptpageheading'] = '{$a->quizname} - individual user attempts report for {$a->username}';
 $string['reportuserattemptstitleshort'] = '{$a}\'s attempts';

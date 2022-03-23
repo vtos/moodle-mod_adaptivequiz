@@ -49,46 +49,51 @@ if ($id) {
 }
 
 require_login($course, true, $cm);
+
 $context = context_module::instance($cm->id);
-
-$event = \mod_adaptivequiz\event\course_module_viewed::create(
-    [
-        'objectid' => $PAGE->cm->instance,
-        'context' => $PAGE->context,
-    ]
-);
-
-$event->add_record_snapshot('course', $PAGE->course);
-$event->add_record_snapshot($PAGE->cm->modname, $adaptivequiz);
-$event->trigger();
-
 $PAGE->set_context($context);
-$PAGE->set_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]);
 
-if (!$downloadusersattempts) {
-    $PAGE->set_title(format_string($adaptivequiz->name));
-    $PAGE->set_heading(format_string($course->fullname));
-}
+$PAGE->set_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]);
 
 /** @var mod_adaptivequiz_renderer $renderer */
 $renderer = $PAGE->get_renderer('mod_adaptivequiz');
 
-if (!$downloadusersattempts) {
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading(format_string($adaptivequiz->name));
-
-    $cminfo = cm_info::create($cm);
-    $completiondetails = cm_completion_details::get_instance($cminfo, $USER->id);
-    $activitydates = activity_dates::get_dates_for_module($cminfo, $USER->id);
-    echo $OUTPUT->activity_information($cminfo, $completiondetails, $activitydates);
-
-    if ($adaptivequiz->intro) { // Conditions to show the intro can change to look for own settings or whatever.
-        echo $OUTPUT->box(format_module_intro('adaptivequiz', $adaptivequiz, $cm->id), 'generalbox mod_introbox', 'newmoduleintro');
+$canviewattemptsreport = has_capability('mod/adaptivequiz:viewreport', $context);
+if ($canviewattemptsreport) {
+    $attemptsreporttable = new users_attempts_table($renderer, $cm->id, $PAGE->url,
+        users_attempts_filter::from_vars($adaptivequiz->id, groups_get_activity_group($cm, true)));
+    $attemptsreporttable->is_downloading($downloadusersattempts,
+        get_string('reportattemptsdownloadfilename', 'adaptivequiz', format_string($adaptivequiz->name)));
+    if ($attemptsreporttable->is_downloading()) {
+        $attemptsreporttable->out(1, false);
+        exit;
     }
 }
 
-if (has_capability('mod/adaptivequiz:attempt', $context)) {
+$event = \mod_adaptivequiz\event\course_module_viewed::create([
+    'objectid' => $PAGE->cm->instance,
+    'context' => $PAGE->context,
+]);
+$event->add_record_snapshot('course', $PAGE->course);
+$event->add_record_snapshot($PAGE->cm->modname, $adaptivequiz);
+$event->trigger();
 
+$PAGE->set_title(format_string($adaptivequiz->name));
+$PAGE->set_heading(format_string($course->fullname));
+
+echo $OUTPUT->header();
+echo $OUTPUT->heading(format_string($adaptivequiz->name));
+
+$cminfo = cm_info::create($cm);
+$completiondetails = cm_completion_details::get_instance($cminfo, $USER->id);
+$activitydates = activity_dates::get_dates_for_module($cminfo, $USER->id);
+echo $OUTPUT->activity_information($cminfo, $completiondetails, $activitydates);
+
+if ($adaptivequiz->intro) { // Conditions to show the intro can change to look for own settings or whatever.
+    echo $OUTPUT->box(format_module_intro('adaptivequiz', $adaptivequiz, $cm->id), 'generalbox mod_introbox', 'newmoduleintro');
+}
+
+if (has_capability('mod/adaptivequiz:attempt', $context)) {
     $allattemptscount = $DB->count_records('adaptivequiz_attempt',
         ['instance' => $adaptivequiz->id, 'userid' => $USER->id]);
     if ($allattemptscount && $adaptivequiz->attempts == 1) {
@@ -126,24 +131,12 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
     }
 }
 
-if (has_capability('mod/adaptivequiz:viewreport', $context)) {
-    if (!$downloadusersattempts) {
-        echo $renderer->heading(get_string('activityreports', 'adaptivequiz'), '3');
-        groups_print_activity_menu($cm, new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]));
-        echo $renderer->container_start('usersattemptstable-wrapper');
-    }
-
-    $attemptstable = new users_attempts_table($renderer, $cm->id,
-        users_attempts_filter::from_vars($adaptivequiz->id, groups_get_activity_group($cm, true)));
-    $attemptstable->is_downloading($downloadusersattempts, 'users_attempts');
-    $attemptstable->init($PAGE->url);
-    $attemptstable->out(3, true);
-
-    if (!$downloadusersattempts) {
-        echo $renderer->container_end();
-    }
+if ($canviewattemptsreport) {
+    echo $renderer->heading(get_string('activityreports', 'adaptivequiz'), '3');
+    groups_print_activity_menu($cm, new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]));
+    echo $renderer->container_start('usersattemptstable-wrapper');
+    $attemptsreporttable->out(10, true);
+    echo $renderer->container_end();
 }
 
-if (!$downloadusersattempts) {
-    echo $OUTPUT->footer();
-}
+echo $OUTPUT->footer();

@@ -51,125 +51,17 @@ final class table extends table_sql {
      */
     private $filter;
 
-    public function __construct(mod_adaptivequiz_renderer $renderer, int $cmid, filter $filter) {
+    /**
+     * @throws coding_exception
+     */
+    public function __construct(mod_adaptivequiz_renderer $renderer, int $cmid, moodle_url $baseurl, filter $filter) {
         parent::__construct('usersattemptstable');
 
         $this->renderer = $renderer;
         $this->cmid = $cmid;
         $this->filter = $filter;
-    }
 
-    /**
-     * A convenience method to call a bunch of init methods.
-     *
-     * @param moodle_url $baseurl
-     * @throws coding_exception
-     */
-    public function init(moodle_url $baseurl): void {
-        $this->define_columns([
-            'fullname', 'email', 'attemptsnum', 'measure', 'stderror', 'attempttimefinished',
-        ]);
-        $this->define_headers([
-            get_string('fullname'),
-            get_string('email'),
-            get_string('numofattemptshdr', 'adaptivequiz'),
-            get_string('bestscore', 'adaptivequiz'),
-            get_string('bestscorestderror', 'adaptivequiz'),
-            get_string('attemptfinishedtimestamp', 'adaptivequiz'),
-        ]);
-        $this->define_baseurl($baseurl);
-        $this->set_attribute('class', $this->attributes['class'] . ' usersattemptstable');
-        $this->set_content_alignment_in_columns();
-        $this->collapsible(false);
-        $this->sortable(true, 'lastname');
-        $this->is_downloadable(true);
-
-        $sqlfrom = '
-            {adaptivequiz_attempt} aa
-            JOIN {user} u ON u.id = aa.userid
-            JOIN {adaptivequiz} a ON a.id = aa.instance
-        ';
-        $sqlwhere = 'aa.instance = :instance';
-        $sqlparams = [
-            'attemptstate1' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-            'attemptstate2' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-            'attemptstate3' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-            'attemptstate4' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-            'instance' => $this->filter->adaptivequizid,
-        ];
-        if ($this->filter->groupid) {
-            $sqlfrom .= ' INNER JOIN {groups_members} gm ON u.id = gm.userid';
-            $sqlwhere .= ' AND gm.groupid = :groupid';
-            $sqlparams['groupid'] = $this->filter->groupid;
-        }
-        $this->set_sql(
-            '
-                u.id' . fields::for_name()->get_sql('u')->selects . ', u.email, a.highestlevel, a.lowestlevel,
-                (
-                    SELECT COUNT(*)
-                    FROM {adaptivequiz_attempt} caa
-                    WHERE caa.userid = u.id
-                    AND caa.instance = aa.instance
-                ) AS attemptsnum,
-                (
-                    SELECT maa.measure
-                    FROM {adaptivequiz_attempt} maa
-                    WHERE maa.instance = a.id
-                    AND maa.userid = u.id
-                    AND maa.attemptstate = :attemptstate1
-                    AND maa.standarderror > 0.0
-                    ORDER BY measure DESC
-                    LIMIT 1
-                ) AS measure,
-                (
-                    SELECT saa.standarderror
-                    FROM {adaptivequiz_attempt} saa
-                    WHERE saa.instance = a.id
-                    AND saa.userid = u.id
-                    AND saa.attemptstate = :attemptstate2
-                    AND saa.standarderror > 0.0
-                    ORDER BY measure DESC
-                    LIMIT 1
-                ) AS stderror,
-                (
-                    SELECT taa.timemodified
-                    FROM {adaptivequiz_attempt} taa
-                    WHERE taa.instance = a.id
-                    AND taa.userid = u.id
-                    AND taa.attemptstate = :attemptstate3
-                    AND taa.standarderror > 0.0
-                    ORDER BY measure DESC
-                    LIMIT 1
-                ) AS attempttimefinished,
-                (
-                    SELECT iaa.uniqueid
-                    FROM {adaptivequiz_attempt} iaa
-                    WHERE iaa.instance = a.id
-                    AND iaa.userid = u.id
-                    AND iaa.attemptstate = :attemptstate4
-                    AND iaa.standarderror > 0.0
-                    ORDER BY measure DESC
-                    LIMIT 1
-                ) AS uniqueid
-            ',
-            $sqlfrom,
-            $sqlwhere,
-            $sqlparams
-        );
-
-        $sqlcountfrom = '
-            {adaptivequiz_attempt} aa
-            JOIN {user} u ON u.id = aa.userid
-        ';
-        $sqlcountwhere = 'instance = :instance';
-        $sqlcountparams = ['instance' => $this->filter->adaptivequizid];
-        if ($this->filter->groupid) {
-            $sqlcountfrom .= ' INNER JOIN {groups_members} gm ON aa.userid = gm.userid';
-            $sqlcountwhere .= ' AND gm.groupid = :groupid';
-            $sqlcountparams['groupid'] = $this->filter->groupid;
-        }
-        $this->set_count_sql("SELECT COUNT(DISTINCT aa.userid) FROM $sqlcountfrom WHERE $sqlcountwhere",
-            $sqlcountparams);
+        $this->init($baseurl);
     }
 
     /**
@@ -274,6 +166,119 @@ final class table extends table_sql {
         return intval($row->attempttimefinished)
             ? userdate($row->attempttimefinished)
             : get_string('na', 'adaptivequiz');
+    }
+
+    /**
+     * A convenience method to call a bunch of init methods.
+     *
+     * @param moodle_url $baseurl
+     * @throws coding_exception
+     */
+    private function init(moodle_url $baseurl): void {
+        $this->define_columns([
+            'fullname', 'email', 'attemptsnum', 'measure', 'stderror', 'attempttimefinished',
+        ]);
+        $this->define_headers([
+            get_string('fullname'),
+            get_string('email'),
+            get_string('numofattemptshdr', 'adaptivequiz'),
+            get_string('bestscore', 'adaptivequiz'),
+            get_string('bestscorestderror', 'adaptivequiz'),
+            get_string('attemptfinishedtimestamp', 'adaptivequiz'),
+        ]);
+        $this->define_baseurl($baseurl);
+        $this->set_attribute('class', $this->attributes['class'] . ' usersattemptstable');
+        $this->set_content_alignment_in_columns();
+        $this->collapsible(false);
+        $this->sortable(true, 'lastname');
+        $this->is_downloadable(true);
+
+        $sqlfrom = '
+            {adaptivequiz_attempt} aa
+            JOIN {user} u ON u.id = aa.userid
+            JOIN {adaptivequiz} a ON a.id = aa.instance
+        ';
+        $sqlwhere = 'aa.instance = :instance';
+        $sqlparams = [
+            'attemptstate1' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
+            'attemptstate2' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
+            'attemptstate3' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
+            'attemptstate4' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
+            'instance' => $this->filter->adaptivequizid,
+        ];
+        if ($this->filter->groupid) {
+            $sqlfrom .= ' INNER JOIN {groups_members} gm ON u.id = gm.userid';
+            $sqlwhere .= ' AND gm.groupid = :groupid';
+            $sqlparams['groupid'] = $this->filter->groupid;
+        }
+        $this->set_sql(
+            '
+                u.id' . fields::for_name()->get_sql('u')->selects . ', u.email, a.highestlevel, a.lowestlevel,
+                (
+                    SELECT COUNT(*)
+                    FROM {adaptivequiz_attempt} caa
+                    WHERE caa.userid = u.id
+                    AND caa.instance = aa.instance
+                ) AS attemptsnum,
+                (
+                    SELECT maa.measure
+                    FROM {adaptivequiz_attempt} maa
+                    WHERE maa.instance = a.id
+                    AND maa.userid = u.id
+                    AND maa.attemptstate = :attemptstate1
+                    AND maa.standarderror > 0.0
+                    ORDER BY measure DESC
+                    LIMIT 1
+                ) AS measure,
+                (
+                    SELECT saa.standarderror
+                    FROM {adaptivequiz_attempt} saa
+                    WHERE saa.instance = a.id
+                    AND saa.userid = u.id
+                    AND saa.attemptstate = :attemptstate2
+                    AND saa.standarderror > 0.0
+                    ORDER BY measure DESC
+                    LIMIT 1
+                ) AS stderror,
+                (
+                    SELECT taa.timemodified
+                    FROM {adaptivequiz_attempt} taa
+                    WHERE taa.instance = a.id
+                    AND taa.userid = u.id
+                    AND taa.attemptstate = :attemptstate3
+                    AND taa.standarderror > 0.0
+                    ORDER BY measure DESC
+                    LIMIT 1
+                ) AS attempttimefinished,
+                (
+                    SELECT iaa.uniqueid
+                    FROM {adaptivequiz_attempt} iaa
+                    WHERE iaa.instance = a.id
+                    AND iaa.userid = u.id
+                    AND iaa.attemptstate = :attemptstate4
+                    AND iaa.standarderror > 0.0
+                    ORDER BY measure DESC
+                    LIMIT 1
+                ) AS uniqueid
+            ',
+            $sqlfrom,
+            $sqlwhere,
+            $sqlparams
+        );
+
+        $sqlcountfrom = '
+            {adaptivequiz_attempt} aa
+            JOIN {user} u ON u.id = aa.userid
+        ';
+        $sqlcountwhere = 'instance = :instance';
+        $sqlcountparams = ['instance' => $this->filter->adaptivequizid];
+        if ($this->filter->groupid) {
+            $sqlcountfrom .= ' INNER JOIN {groups_members} gm ON aa.userid = gm.userid';
+            $sqlcountwhere .= ' AND gm.groupid = :groupid';
+            $sqlcountparams['groupid'] = $this->filter->groupid;
+        }
+        $this->set_count_sql("SELECT COUNT(DISTINCT aa.userid) FROM $sqlcountfrom WHERE $sqlcountwhere",
+            $sqlcountparams);
     }
 
     private function sql_group_by_clause(): string {

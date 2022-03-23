@@ -63,7 +63,6 @@ Feature: Delete an attempt on adaptive quiz
   @javascript
   Scenario: Delete an individual attempt
     When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "teacher1"
-    And I press "View report"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Delete attempt" "link" in the "Completed" "table_row"
     And I press "Continue"

@@ -81,9 +81,6 @@ $PAGE->navbar->add(get_string('reviewattempt', 'adaptivequiz'));
 
 $output = $PAGE->get_renderer('mod_adaptivequiz');
 
-$PAGE->requires->js_init_call('M.mod_adaptivequiz.init_reviewattempt', null, false,
-    $output->adaptivequiz_get_js_module());
-
 echo $output->print_header();
 echo $output->heading($title);
 

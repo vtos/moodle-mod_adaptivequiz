@@ -22,7 +22,7 @@ This Moodle activity module was originally created as a collaborative effort bet
 College][3] and [Remote Learner][4]. The current repository was forked from
 [https://github.com/middlebury/moodle-mod_adaptivequiz][5].
 
-The [MOODLE_311][6] branch of the repository is compatible with Moodle 3.11.6 currently.
+The [MOODLE_311][6] branch of the repository is compatible with Moodle 3.11 starting from version 3.11.2 currently.
 All unit tests in the module are currently fixed and are passing. Behat tests coverage is about 70%
 and is still in progress. The automated tests coverage is crucial for the forked codebase to ensure future changes
 will not break what's working already. 

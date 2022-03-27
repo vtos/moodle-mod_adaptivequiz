@@ -213,7 +213,7 @@ final class table extends table_sql {
         }
         $this->set_sql(
             '
-                u.id' . fields::for_name()->get_sql('u')->selects . ', u.email, a.highestlevel, a.lowestlevel,
+                u.id, ' . get_all_user_name_fields(true, 'u') . ', u.email, a.highestlevel, a.lowestlevel,
                 (
                     SELECT COUNT(*)
                     FROM {adaptivequiz_attempt} caa

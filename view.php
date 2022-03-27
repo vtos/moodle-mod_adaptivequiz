@@ -78,16 +78,14 @@ $event->add_record_snapshot('course', $PAGE->course);
 $event->add_record_snapshot($PAGE->cm->modname, $adaptivequiz);
 $event->trigger();
 
+$completion = new completion_info($course);
+$completion->set_module_viewed($cm);
+
 $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_heading(format_string($course->fullname));
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($adaptivequiz->name));
-
-$cminfo = cm_info::create($cm);
-$completiondetails = cm_completion_details::get_instance($cminfo, $USER->id);
-$activitydates = activity_dates::get_dates_for_module($cminfo, $USER->id);
-echo $OUTPUT->activity_information($cminfo, $completiondetails, $activitydates);
 
 if ($adaptivequiz->intro) { // Conditions to show the intro can change to look for own settings or whatever.
     echo $OUTPUT->box(format_module_intro('adaptivequiz', $adaptivequiz, $cm->id), 'generalbox mod_introbox', 'newmoduleintro');

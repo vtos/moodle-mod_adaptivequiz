@@ -165,7 +165,7 @@ Feature: Attempt feedback
       And I click on "True" "radio" in the "Second question" "question"
       And I press "Submit answer"
       And I press "Continue"
-      When I am on the "Adaptive Quiz" "mod_adaptivequiz > View" page
+      When I am on the "adaptivequiz1" "Activity" page
       Then "#abilitymeasurecell" "css_element" should not exist
 
     @javascript
@@ -189,5 +189,5 @@ Feature: Attempt feedback
       And I click on "True" "radio" in the "Second question" "question"
       And I press "Submit answer"
       And I press "Continue"
-      When I am on the "Adaptive Quiz" "mod_adaptivequiz > View" page
+      When I am on the "adaptivequiz1" "Activity" page
       Then ".abilitymeasurecol" "css_element" should not exist

@@ -1,21 +1,17 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * PHPUnit tests for catalgo class
@@ -42,9 +38,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
      * @throws coding_exception
      */
     protected function setup_test_data_xml() {
-        $this->dataset_from_files(
-            [__DIR__.'/fixtures/mod_adaptivequiz_catalgo.xml']
-        )->to_database();
+        $this->loadDataSet($this->createXMLDataSet(__DIR__.'/fixtures/mod_adaptivequiz_catalgo.xml'));
     }
 
     /**
@@ -715,7 +709,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         // Minimum stopping criteria has not been met
         $mockcatalgo = $this
             ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['retrieve_attempt_record', 'question_was_marked_correct', 'compute_next_difficulty',
                     'compute_right_answers', 'compute_wrong_answers', 'estimate_measure', 'estimate_standard_error',
                     'retrieve_standard_error', 'standard_error_within_parameters']
@@ -767,7 +761,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         // Minimum stopping criteria has not been met
         $mockcatalgo = $this
             ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['retrieve_attempt_record', 'question_was_marked_correct', 'compute_next_difficulty',
                     'compute_right_answers', 'compute_wrong_answers', 'estimate_measure', 'estimate_standard_error',
                     'retrieve_standard_error', 'standard_error_within_parameters']
@@ -819,7 +813,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         // Minimum stopping criteria has been met
         $mockcatalgo = $this
             ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['retrieve_attempt_record', 'question_was_marked_correct', 'compute_next_difficulty', 'compute_right_answers', 'compute_wrong_answers',
                     'retrieve_standard_error', 'standard_error_within_parameters']
             )
@@ -893,7 +887,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         $mockquba = $this->createMock(question_usage_by_activity::class);
         $mockcatalgo = $this
             ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['return_current_diff_level']
             )
             ->setConstructorArgs(
@@ -920,7 +914,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         $mockquba = $this->createMock(question_usage_by_activity::class);
         $mockcatalgo = $this
             ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['return_current_diff_level']
             )
             ->setConstructorArgs(
@@ -945,7 +939,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         $mockquba = $this->createMock(question_usage_by_activity::class);
         $mockcatalgo = $this
             ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['return_current_diff_level']
             )
             ->setConstructorArgs(
@@ -971,7 +965,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         $mockquba = $this->createMock(question_usage_by_activity::class);
         $mockcatalgo = $this
             ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['return_current_diff_level']
             )
             ->setConstructorArgs(
@@ -997,7 +991,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         $mockquba = $this->createMock(question_usage_by_activity::class);
         $mockcatalgo = $this
             ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['return_current_diff_level']
             )
             ->setConstructorArgs(
@@ -1024,7 +1018,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         $mockquba = $this->createMock(question_usage_by_activity::class);
         $mockcatalgo = $this
             ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['return_current_diff_level']
             )
             ->setConstructorArgs(
@@ -1053,7 +1047,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         $mockquba = $this->createPartialMock(question_usage_by_activity::class, ['get_slots', 'get_question_state']);
         $mockcatalgo = $this
             ->getMockBuilder(mod_adaptivequiz_mock_catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['get_question_mark', 'compute_next_difficulty']
             )
             ->setConstructorArgs(
@@ -1087,7 +1081,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         $mockquba = $this->createPartialMock(question_usage_by_activity::class, ['get_slots', 'get_question_state']);
         $mockcatalgo = $this
             ->getMockBuilder(mod_adaptivequiz_mock_catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['get_question_mark', 'compute_next_difficulty']
             )
             ->setConstructorArgs(
@@ -1132,7 +1126,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
         $mockquba = $this->createPartialMock(question_usage_by_activity::class, ['get_slots', 'get_question_state']);
         $mockcatalgo = $this
             ->getMockBuilder(mod_adaptivequiz_mock_catalgo::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['get_question_mark', 'compute_next_difficulty']
             )
             ->setConstructorArgs(

@@ -1,21 +1,17 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * adaptive attempt PHPUnit tests
@@ -49,9 +45,7 @@ class mod_adaptivequiz_adaptiveattempt_testcase extends advanced_testcase {
      * This function loads data into the PHPUnit tables for testing
      */
     protected function setup_test_data_xml() {
-        $this->dataset_from_files(
-            [__DIR__.'/fixtures/mod_adaptivequiz_adaptiveattempt.xml']
-        )->to_database();
+        $this->loadDataSet($this->createXMLDataSet(__DIR__.'/fixtures/mod_adaptivequiz_adaptiveattempt.xml'));
     }
 
     /**
@@ -242,7 +236,7 @@ class mod_adaptivequiz_adaptiveattempt_testcase extends advanced_testcase {
         $this->assertEquals(0, $result);
 
         $result = (string) $adaptiveattempt->return_random_question(array(1 => 'quest 1', 2 => 'quest 2', 3 => 'quest 3', 4 => 'quest 4'));
-        $this->assertMatchesRegularExpression('/[1-4]/', $result);
+        $this->assertRegExp('/[1-4]/', $result);
     }
 
     /**
@@ -592,7 +586,7 @@ class mod_adaptivequiz_adaptiveattempt_testcase extends advanced_testcase {
 
         $mockattemptthree = $this
             ->getMockBuilder(adaptiveattempt::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['get_attempt', 'max_questions_answered', 'initialize_quba', 'find_last_quest_used_by_attempt',
                     'level_in_bounds']
             )

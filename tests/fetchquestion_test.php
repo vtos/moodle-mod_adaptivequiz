@@ -52,9 +52,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
      * @throws coding_exception
      */
     protected function setup_test_data_xml() {
-        $this->dataset_from_files(
-            [__DIR__.'/fixtures/mod_adaptivequiz_findquestion.xml']
-        )->to_database();
+        $this->loadDataSet($this->createXMLDataSet(__DIR__.'/fixtures/mod_adaptivequiz_findquestion.xml'));
     }
 
     /**
@@ -142,7 +140,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $attempt = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['retrieve_question_categories']
             )
             ->setConstructorArgs(
@@ -175,7 +173,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['retrieve_question_categories']
             )
             ->setConstructorArgs(
@@ -211,7 +209,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['retrieve_question_categories']
             )
             ->setConstructorArgs(
@@ -305,7 +303,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['initalize_tags_with_quest_count', 'retrieve_tag', 'find_questions_with_tags']
             )
             ->setConstructorArgs(
@@ -332,7 +330,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['initalize_tags_with_quest_count', 'retrieve_tag', 'find_questions_with_tags']
             )
             ->setConstructorArgs(
@@ -371,7 +369,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['initalize_tags_with_quest_count', 'retrieve_tag', 'find_questions_with_tags']
             )
             ->setConstructorArgs(
@@ -410,7 +408,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['initalize_tags_with_quest_count', 'retrieve_tag', 'find_questions_with_tags']
             )
             ->setConstructorArgs(
@@ -449,7 +447,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['initalize_tags_with_quest_count', 'retrieve_tag', 'find_questions_with_tags']
             )
             ->setConstructorArgs(
@@ -486,7 +484,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['initalize_tags_with_quest_count', 'retrieve_tag', 'find_questions_with_tags']
             )
             ->setConstructorArgs(
@@ -591,7 +589,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['retrieve_question_categories', 'retrieve_all_tag_ids', 'retrieve_tags_with_question_count']
             )
             ->setConstructorArgs(
@@ -628,7 +626,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['retrieve_question_categories', 'retrieve_all_tag_ids', 'retrieve_tags_with_question_count']
             )
             ->setConstructorArgs(
@@ -697,7 +695,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
+            ->setMethods(
                 ['retrieve_question_categories']
             )
             ->setConstructorArgs(

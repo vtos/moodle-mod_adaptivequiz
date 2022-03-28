@@ -39,9 +39,7 @@ class mod_adaptivequiz_lib_testcase extends advanced_testcase {
      * @return void
      */
     protected function setup_test_data_xml() {
-        $this->dataset_from_files(
-            [__DIR__.'/fixtures/mod_adaptivequiz.xml']
-        )->to_database();
+        $this->loadDataSet($this->createXMLDataSet(__DIR__.'/fixtures/mod_adaptivequiz.xml'));
     }
 
     /**

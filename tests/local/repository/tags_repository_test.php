@@ -50,17 +50,13 @@ final class tags_repository_test extends advanced_testcase {
         );
 
         $question1 = $questionsgenerator->create_question('shortanswer', null, ['category' => $questionscat->id]);
-        $questionsgenerator->create_question_tag(
-            ['questionid' => $question1->id, 'tag' => 'adpq_5',]
-        );
+        core_tag_tag::add_item_tag('core_question', 'question', $question1->id, context_course::instance($course->id), 'adpq_5');
+
         $question2 = $questionsgenerator->create_question('shortanswer', null, ['category' => $questionscat->id]);
-        $questionsgenerator->create_question_tag(
-            ['questionid' => $question2->id, 'tag' => 'adpq_6',]
-        );
+        core_tag_tag::add_item_tag('core_question', 'question', $question2->id, context_course::instance($course->id), 'adpq_6');
+
         $question3 = $questionsgenerator->create_question('shortanswer', null, ['category' => $questionscat->id]);
-        $questionsgenerator->create_question_tag(
-            ['questionid' => $question3->id, 'tag' => 'adpq_7',]
-        );
+        core_tag_tag::add_item_tag('core_question', 'question', $question3->id, context_course::instance($course->id), 'adpq_7');
 
         core_tag_tag::add_item_tag('core', 'course', $course->id, context_course::instance($course->id), 'adpq_5');
 
@@ -71,7 +67,9 @@ final class tags_repository_test extends advanced_testcase {
         $questionstags = core_tag_tag::get_items_tags('core_question', 'question', [$question1->id, $question2->id]);
 
         $tagidlist = array_map(function(array $itemtags): int {
-            return $itemtags[array_key_first($itemtags)]->id;
+            reset($itemtags);
+
+            return $itemtags[key($itemtags)]->id;
         }, $questionstags);
 
         $this->assertEquals(2, count($map));
@@ -112,17 +110,13 @@ final class tags_repository_test extends advanced_testcase {
         );
 
         $question1 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat->id]);
-        $questionsgenerator->create_question_tag(
-            ['questionid' => $question1->id, 'tag' => 'adpq_10',]
-        );
+        core_tag_tag::add_item_tag('core_question', 'question', $question1->id, context_course::instance($course->id), 'adpq_10');
+
         $question2 = $questionsgenerator->create_question('shortanswer', null, ['category' => $questionscat->id]);
-        $questionsgenerator->create_question_tag(
-            ['questionid' => $question2->id, 'tag' => 'adpq_11',]
-        );
+        core_tag_tag::add_item_tag('core_question', 'question', $question2->id, context_course::instance($course->id), 'adpq_11');
+
         $question3 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat->id]);
-        $questionsgenerator->create_question_tag(
-            ['questionid' => $question3->id, 'tag' => 'adpq_12',]
-        );
+        core_tag_tag::add_item_tag('core_question', 'question', $question3->id, context_course::instance($course->id), 'adpq_12');
 
         core_tag_tag::add_item_tag('core', 'course', $course->id, context_course::instance($course->id), 'adpq_10');
 
@@ -133,7 +127,9 @@ final class tags_repository_test extends advanced_testcase {
         $questionstags = core_tag_tag::get_items_tags('core_question', 'question', [$question1->id, $question2->id]);
 
         $itemtagidlist = array_map(function(array $itemtags): int {
-            return $itemtags[array_key_first($itemtags)]->id;
+            reset($itemtags);
+
+            return $itemtags[key($itemtags)]->id;
         }, $questionstags);
 
         $this->assertEquals(2, count($tagidlist));

@@ -23,6 +23,7 @@ namespace mod_adaptivequiz\local\repository;
 use advanced_testcase;
 use context_course;
 use core_question_generator;
+use core_tag_tag;
 
 final class questions_repository_test extends advanced_testcase {
     /**
@@ -42,17 +43,13 @@ final class questions_repository_test extends advanced_testcase {
         );
 
         $question1 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
-        $questionsgenerator->create_question_tag(
-            ['questionid' => $question1->id, 'tag' => 'adpq_1',]
-        );
+        core_tag_tag::add_item_tag('core_question', 'question', $question1->id, context_course::instance($course->id), 'adpq_1');
+
         $question2 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
-        $questionsgenerator->create_question_tag(
-            ['questionid' => $question2->id, 'tag' => 'adpq_2',]
-        );
+        core_tag_tag::add_item_tag('core_question', 'question', $question2->id, context_course::instance($course->id), 'adpq_2');
+
         $question3 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
-        $questionsgenerator->create_question_tag(
-            ['questionid' => $question3->id, 'tag' => 'adpq_001',]
-        );
+        core_tag_tag::add_item_tag('core_question', 'question', $question3->id, context_course::instance($course->id), 'adpq_001');
 
         $questionscat2 = $questionsgenerator->create_question_category(
             ['contextid' => context_course::instance($course->id)->id,]
@@ -64,9 +61,7 @@ final class questions_repository_test extends advanced_testcase {
 
         $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat2->id]);
 
-        $questionsgenerator->create_question_tag(
-            ['questionid' => $question2->id, 'tag' => 'truefalse_1',]
-        );
+        core_tag_tag::add_item_tag('core_question', 'question', $question2->id, context_course::instance($course->id), 'truefalse_1');
 
         $this->assertEquals(1, questions_repository::count_adaptive_questions_in_pool_with_level(
             [$questionscat1->id, $questionscat2->id,], 1

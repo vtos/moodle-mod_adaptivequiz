@@ -1,4 +1,4 @@
-@mod @mod_adaptivequiz @mod_adaptiequiz_add_activity
+@mod @mod_adaptivequiz
 Feature: Add an adaptive quiz
   In order to evaluate students using an adaptive questions strategy
   As a teacher
@@ -48,10 +48,11 @@ Feature: Add an adaptive quiz
       | Minimum number of questions  | 1                           |
       | Maximum number of questions  | 2                           |
       | Standard Error to stop       | 25                          |
-      | ID number                    | adaptivequiz1               |
     And I click on "Save and return to course" "button"
     And I log out
-    And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+    And I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     Then "Start attempt" "button" should exist
 
   @javascript

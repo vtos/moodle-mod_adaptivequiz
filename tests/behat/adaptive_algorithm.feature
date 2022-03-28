@@ -88,7 +88,8 @@ Feature: Adaptive quiz content
 
   @javascript
   Scenario: 20% standard error, user performs 1 level above the starting level
-    Given I am on the "C1" "Course" page logged in as "teacher1"
+    Given I log in as "teacher1"
+    And I am on "Course 1" course homepage
     And I turn editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
@@ -101,10 +102,11 @@ Feature: Adaptive quiz content
       | Minimum number of questions  | 1                            |
       | Maximum number of questions  | 10                           |
       | Standard Error to stop       | 20                           |
-      | ID number                    | adaptivequiz1                |
     And I click on "Save and return to course" "button"
     And I log out
-    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+    When I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I press "Start attempt"
     Then I should see " (difficulty 2)."
     And I click on "True" "radio"
@@ -128,7 +130,8 @@ Feature: Adaptive quiz content
 
   @javascript
   Scenario: 20% standard error, user performs on the lowest level
-    Given I am on the "C1" "Course" page logged in as "teacher1"
+    Given I log in as "teacher1"
+    And I am on "Course 1" course homepage
     And I turn editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
@@ -141,10 +144,11 @@ Feature: Adaptive quiz content
       | Minimum number of questions  | 1                            |
       | Maximum number of questions  | 10                           |
       | Standard Error to stop       | 20                           |
-      | ID number                    | adaptivequiz1                |
     And I click on "Save and return to course" "button"
     And I log out
-    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+    When I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I press "Start attempt"
     Then I should see " (difficulty 2)."
     And I click on "False" "radio"
@@ -162,7 +166,8 @@ Feature: Adaptive quiz content
 
   @javascript
   Scenario: 20% standard error, user performs on the highest level
-    Given I am on the "C1" "Course" page logged in as "teacher1"
+    Given I log in as "teacher1"
+    And I am on "Course 1" course homepage
     And I turn editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
@@ -175,10 +180,11 @@ Feature: Adaptive quiz content
       | Minimum number of questions  | 1                            |
       | Maximum number of questions  | 10                           |
       | Standard Error to stop       | 20                           |
-      | ID number                    | adaptivequiz1                |
     And I click on "Save and return to course" "button"
     And I log out
-    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+    When I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I press "Start attempt"
     Then I should see " (difficulty 2)."
     And I click on "True" "radio"

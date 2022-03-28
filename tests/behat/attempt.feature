@@ -49,35 +49,42 @@ Feature: Attempt an adaptive quiz
       | Maximum number of questions  | 2                           |
       | Standard Error to stop       | 20                          |
       | Attempts allowed             | 1                           |
-      | ID number                    | adaptivequiz1               |
     And I click on "Save and return to course" "button"
     And I log out
 
   @javascript
   Scenario: Attempt an adaptive quiz
-    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+    When I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I press "Start attempt"
     Then I should see "First question"
 
   @javascript
   Scenario: Return to a started attempt
-    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+    When I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I press "Start attempt"
     And I click on "True" "radio"
     And I press "Submit answer"
-    And I am on the "adaptivequiz1" "Activity" page
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I press "Start attempt"
     Then I should see "Second question"
 
   @javascript
   Scenario: A student cannot attempt an adaptive quiz if no more attempts are allowed
-    Given I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+    Given I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I press "Start attempt"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
     And I press "Submit answer"
     And I press "Continue"
-    When I am on the "adaptivequiz1" "Activity" page
+    When I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     Then "Start attempt" "button" should not be visible
     And I should see "No more attempts allowed at this activity"

@@ -49,13 +49,14 @@ Feature: Attempt feedback
       | Maximum number of questions      | 2                           |
       | Standard Error to stop           | 20                          |
       | Show ability measure to students | Yes                         |
-      | ID number                        | adaptivequiz1               |
     And I click on "Save and return to course" "button"
     And I log out
 
     @javascript
     Scenario: Get default textual feedback after an attempt is finished
-      When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+      When I log in as "student1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I press "Start attempt"
       And I click on "True" "radio" in the "First question" "question"
       And I press "Submit answer"
@@ -65,13 +66,17 @@ Feature: Attempt feedback
 
     @javascript
     Scenario: Get customized textual feedback after an attempt is finished
-      Given I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+      Given I log in as "teacher1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I navigate to "Edit settings" in current page administration
       And I set the following fields to these values:
         | Attempt feedback | Thank you for taking the test! |
       And I click on "Save and return to course" "button"
       And I log out
-      When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+      When I log in as "student1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I press "Start attempt"
       And I click on "True" "radio" in the "First question" "question"
       And I press "Submit answer"
@@ -81,7 +86,9 @@ Feature: Attempt feedback
 
     @javascript
     Scenario: Get estimated ability after an attempt is finished
-      When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+      When I log in as "student1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I press "Start attempt"
       And I click on "True" "radio" in the "First question" "question"
       And I press "Submit answer"
@@ -91,13 +98,17 @@ Feature: Attempt feedback
 
     @javascript
     Scenario: View attempt summary with estimated ability for the only allowed attempt
-      Given I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+      Given I log in as "teacher1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I navigate to "Edit settings" in current page administration
       And I set the following fields to these values:
         | Attempts allowed | 1 |
       And I click on "Save and return to course" "button"
       And I log out
-      When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+      When I log in as "student1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I press "Start attempt"
       And I click on "True" "radio" in the "First question" "question"
       And I press "Submit answer"
@@ -111,7 +122,9 @@ Feature: Attempt feedback
 
     @javascript
     Scenario: View attempts summary with estimated ability for several attempts
-      Given I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+      Given I log in as "student1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I press "Start attempt"
       And I click on "True" "radio" in the "First question" "question"
       And I press "Submit answer"
@@ -124,7 +137,8 @@ Feature: Attempt feedback
       And I click on "True" "radio" in the "Second question" "question"
       And I press "Submit answer"
       And I press "Continue"
-      When I am on the "adaptivequiz1" "Activity" page
+      When I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       Then I should see "Your previous attempts"
       And "userattemptstable" "table" should exist
       And I should see "Estimated ability / 1 - 2" in the "th.abilitymeasurecol" "css_element"
@@ -135,13 +149,17 @@ Feature: Attempt feedback
 
     @javascript
     Scenario: Estimated ability after an attempt is finished is not visible when set accordingly
-      Given I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+      Given I log in as "teacher1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I navigate to "Edit settings" in current page administration
       And I set the following fields to these values:
         | Show ability measure to students | No |
       And I click on "Save and return to course" "button"
       And I log out
-      When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+      When I log in as "student1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I press "Start attempt"
       And I click on "True" "radio" in the "First question" "question"
       And I press "Submit answer"
@@ -151,32 +169,41 @@ Feature: Attempt feedback
 
     @javascript
     Scenario: Estimated ability for the only allowed attempt is not visible for a student when set accordingly
-      Given I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+      Given I log in as "teacher1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I navigate to "Edit settings" in current page administration
       And I set the following fields to these values:
         | Attempts allowed                 | 1  |
         | Show ability measure to students | No |
       And I click on "Save and return to course" "button"
       And I log out
-      And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+      And I log in as "student1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I press "Start attempt"
       And I click on "True" "radio" in the "First question" "question"
       And I press "Submit answer"
       And I click on "True" "radio" in the "Second question" "question"
       And I press "Submit answer"
       And I press "Continue"
-      When I am on the "adaptivequiz1" "Activity" page
+      When I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       Then "#abilitymeasurecell" "css_element" should not exist
 
     @javascript
     Scenario: Estimated ability is not visible for a student in attempts summary when set accordingly
-      Given I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+      Given I log in as "teacher1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I navigate to "Edit settings" in current page administration
       And I set the following fields to these values:
         | Show ability measure to students | No |
       And I click on "Save and return to course" "button"
       And I log out
-      And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+      And I log in as "student1"
+      And I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       And I press "Start attempt"
       And I click on "True" "radio" in the "First question" "question"
       And I press "Submit answer"
@@ -189,5 +216,6 @@ Feature: Attempt feedback
       And I click on "True" "radio" in the "Second question" "question"
       And I press "Submit answer"
       And I press "Continue"
-      When I am on the "adaptivequiz1" "Activity" page
+      When I am on "Course 1" course homepage
+      And I follow "Adaptive Quiz"
       Then ".abilitymeasurecol" "css_element" should not exist

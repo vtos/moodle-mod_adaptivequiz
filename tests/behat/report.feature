@@ -48,12 +48,12 @@ Feature: Attempt an adaptive quiz
       | Minimum number of questions  | 2                           |
       | Maximum number of questions  | 20                          |
       | Standard Error to stop       | 5                           |
-      | ID number                    | adaptivequiz1               |
     And I click on "Save and return to course" "button"
     And I am on "Course 1" course homepage
     And I log out
     And I log in as "student1"
-    And I am on the "adaptivequiz1" "Activity" page
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I press "Start attempt"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
@@ -64,14 +64,18 @@ Feature: Attempt an adaptive quiz
 
   @javascript
   Scenario: Attempts report
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    When I log in as "teacher1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     Then I should see "Attempts report"
     And "Peter The Student" "table_row" should exist
     And "Peter The Student" row "Number of attempts" column of "usersattemptstable" table should contain "1"
 
   @javascript
   Scenario: Individual user attempts report
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    When I log in as "teacher1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     Then I should see "Adaptive Quiz - individual user attempts report for Peter The Student"
     And "Completed" "table_row" should exist
@@ -80,14 +84,18 @@ Feature: Attempt an adaptive quiz
 
   @javascript
   Scenario: View attempt summary
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    When I log in as "teacher1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Review attempt" "link" in the "Completed" "table_row"
     Then I should see "Peter The Student (peterthestudent@example.com)" in the "User" "table_row"
 
   @javascript
   Scenario: View attempt graph
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    When I log in as "teacher1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Review attempt" "link" in the "Completed" "table_row"
     And I click on "Attempt Graph" "link"
@@ -108,7 +116,9 @@ Feature: Attempt an adaptive quiz
 
   @javascript
   Scenario: View attempt answer distribution
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    When I log in as "teacher1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Review attempt" "link" in the "Completed" "table_row"
     And I click on "Answer Distribution" "link"
@@ -126,7 +136,9 @@ Feature: Attempt an adaptive quiz
 
   @javascript
   Scenario: View attempt questions details
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    When I log in as "teacher1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Review attempt" "link" in the "Completed" "table_row"
     And I click on "Questions Details" "link"

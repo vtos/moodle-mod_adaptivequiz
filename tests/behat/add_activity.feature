@@ -1,4 +1,4 @@
-@mod @mod_adaptivequiz
+@mod @mod_adaptivequiz @mod_adaptiequiz_add_activity
 Feature: Add an adaptive quiz
   In order to evaluate students using an adaptive questions strategy
   As a teacher
@@ -36,7 +36,7 @@ Feature: Add an adaptive quiz
     And I expand all fieldsets
     And I set the field "Tags" to "adpq_1"
     And I press "id_submitbutton"
-    And I am on "Course 1" course homepage with editing mode on
+    And I am on "Course 1" course homepage
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
       | Name                         | Adaptive Quiz               |
@@ -75,7 +75,7 @@ Feature: Add an adaptive quiz
     And I set the following fields to these values:
       | Tags | truefalse_1, TF |
     And I press "id_submitbutton"
-    And I am on "Course 1" course homepage with editing mode on
+    And I am on "Course 1" course homepage
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
       | Name                         | Adaptive Quiz               |

@@ -805,7 +805,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $tabs = [];
 
         $attemptsummarytaburl = clone($pageurl);
-        $pageurl->param('tab', 'attemptsummary');
+        $attemptsummarytaburl->param('tab', 'attemptsummary');
         $tabs[] = new tabobject('attemptsummary', $attemptsummarytaburl,
             get_string('reportattemptsummarytab', 'adaptivequiz'));
 
@@ -828,6 +828,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
+     * @param moodle_url $pageurl
      * @param string $tabid
      * @param stdClass $attempt A joined record from {adaptivequiz} and {adaptivequiz_attempt} which contains the
      * required attempt data. The expected fields are: 'attemptstate', 'measure', 'highestlevel', 'lowestlevel',
@@ -846,6 +847,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         stdClass $user,
         question_usage_by_activity $quba,
         int $cmid,
+        moodle_url $pageurl,
         int $page
     ): string {
         if ($tabid == 'attemptgraph') {
@@ -863,7 +865,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             return $return;
         }
         if ($tabid == 'questionsdetails') {
-            return $this->attempt_questions_review($quba, $page, $cmid, $user);
+            return $this->attempt_questions_review($quba, $pageurl, $page);
         }
 
         return $this->attempt_summary_listing($attempt, $user);
@@ -1036,16 +1038,19 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * This function returns HTML markup of questions and student's responses.
      * See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab} for partial parameters description.
      *
+     * @param moodle_url $pageurl
      * @param question_usage_by_activity $quba
      * @param int $offset An offset used to determine which question to start processing from.
-     * @param int $cmid
-     * @param stdClass $user
      * @return string
      * @throws coding_exception
      * @throws moodle_exception
      */
-    protected function attempt_questions_review($quba, $offset, $cmid, $user): string {
-        $pager = $this->attempt_questions_review_pager($quba, $offset, $cmid, $user->id);
+    protected function attempt_questions_review(
+        question_usage_by_activity $quba,
+        moodle_url $pageurl,
+        int $offset
+    ): string {
+        $pager = $this->attempt_questions_review_pager($quba, $pageurl, $offset);
 
         $questslots = $quba->get_slots();
         $attr = ['class' => 'questiontags'];
@@ -1103,9 +1108,8 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      */
     protected function attempt_questions_review_pager(
         question_usage_by_activity $quba,
-        int $page,
-        int $cmid,
-        int $userid
+        moodle_url $pageurl,
+        int $page
     ): string {
         $questslots = $quba->get_slots();
         $output = '';
@@ -1117,10 +1121,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             return '';
         }
 
-        // Print base url for page links.
-        $url = new moodle_url('/mod/adaptivequiz/reviewattempt.php',
-            ['cmid' => $cmid, 'uniqueid' => $quba->get_id(), 'userid' => $userid]);
-
         // Print all of the page links.
         $output .= html_writer::start_tag('center');
         for ($i = 0; $i < $pages; $i++) {
@@ -1130,8 +1130,8 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
                 continue;
             }
 
-            $url->params(['page' => $i]);
-            $output .= '&nbsp'.html_writer::link($url, $i + 1, $attr).'&nbsp';
+            $pageurl->params(['page' => $i]);
+            $output .= '&nbsp'.html_writer::link($pageurl, $i + 1, $attr).'&nbsp';
         }
         $output .= html_writer::end_tag('center');
 

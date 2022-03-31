@@ -70,7 +70,7 @@ $a->finished = userdate($adaptivequiz->timemodified);
 $title = get_string('reportattemptreviewpageheading', 'adaptivequiz', $a);
 
 $PAGE->set_url('/mod/adaptivequiz/reviewattempt.php',
-    ['cmid' => $cm->id, 'uniqueid' => $uniqueid, 'userid' => $userid]);
+    ['cmid' => $cm->id, 'uniqueid' => $uniqueid, 'userid' => $userid, 'tab' => $tab]);
 $PAGE->set_title($title);
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
@@ -85,6 +85,6 @@ echo $output->print_header();
 echo $output->heading($title);
 
 echo $output->attempt_review_tabs($PAGE->url, $tab);
-echo $output->attempt_report_page_by_tab($tab, $adaptivequiz, $user, $quba, $cm->id, $page);
+echo $output->attempt_report_page_by_tab($tab, $adaptivequiz, $user, $quba, $cm->id, $PAGE->url, $page);
 
 echo $output->print_footer();

@@ -48,10 +48,11 @@ Feature: Delete an attempt on adaptive quiz
       | Minimum number of questions  | 2                           |
       | Maximum number of questions  | 20                          |
       | Standard Error to stop       | 5                           |
+      | ID number                    | adaptivequiz1               |
     And I click on "Save and return to course" "button"
     And I log out
     And I log in as "student1"
-    And I am on the "Adaptive Quiz" "adaptivequiz activity" page
+    And I am on the "adaptivequiz1" "Activity" page
     And I press "Start attempt"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
@@ -62,7 +63,7 @@ Feature: Delete an attempt on adaptive quiz
 
   @javascript
   Scenario: Delete an individual attempt
-    When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "teacher1"
+    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Delete attempt" "link" in the "Completed" "table_row"
     And I press "Continue"

@@ -1,4 +1,4 @@
-@mod @mod_adaptivequiz @mod_adaptivequiz_attempt
+@mod @mod_adaptivequiz
 Feature: Attempt an adaptive quiz
   In order to demonstrate what I know using the adaptive quiz strategy
   As a student
@@ -65,7 +65,7 @@ Feature: Attempt an adaptive quiz
     And I press "Start attempt"
     And I click on "True" "radio"
     And I press "Submit answer"
-    And I am on the "Adaptive Quiz" "adaptivequiz activity" page
+    And I am on the "adaptivequiz1" "Activity" page
     And I press "Start attempt"
     Then I should see "Second question"
 

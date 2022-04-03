@@ -48,9 +48,10 @@ Feature: Add an adaptive quiz
       | Minimum number of questions  | 1                           |
       | Maximum number of questions  | 2                           |
       | Standard Error to stop       | 25                          |
+      | ID number                    | adaptivequiz1               |
     And I click on "Save and return to course" "button"
     And I log out
-    And I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
+    And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     Then "Start attempt" "button" should exist
 
   @javascript

@@ -1,4 +1,4 @@
-@mod @mod_adaptivequiz
+@mod @mod_adaptivequiz @mod_adaptivequiz_adaptive_algorithm
 Feature: Adaptive quiz content
   In order to take a quiz with the CAT (Computer Adaptive Testing) algorithm
   As a student
@@ -101,9 +101,10 @@ Feature: Adaptive quiz content
       | Minimum number of questions  | 1                            |
       | Maximum number of questions  | 10                           |
       | Standard Error to stop       | 20                           |
+      | ID number                    | adaptivequiz1                |
     And I click on "Save and return to course" "button"
     And I log out
-    When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
+    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     And I press "Start attempt"
     Then I should see " (difficulty 2)."
     And I click on "True" "radio"
@@ -140,9 +141,10 @@ Feature: Adaptive quiz content
       | Minimum number of questions  | 1                            |
       | Maximum number of questions  | 10                           |
       | Standard Error to stop       | 20                           |
+      | ID number                    | adaptivequiz1                |
     And I click on "Save and return to course" "button"
     And I log out
-    When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
+    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     And I press "Start attempt"
     Then I should see " (difficulty 2)."
     And I click on "False" "radio"
@@ -173,9 +175,10 @@ Feature: Adaptive quiz content
       | Minimum number of questions  | 1                            |
       | Maximum number of questions  | 10                           |
       | Standard Error to stop       | 20                           |
+      | ID number                    | adaptivequiz1                |
     And I click on "Save and return to course" "button"
     And I log out
-    When I am on the "Adaptive Quiz" "adaptivequiz activity" page logged in as "student1"
+    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     And I press "Start attempt"
     Then I should see " (difficulty 2)."
     And I click on "True" "radio"

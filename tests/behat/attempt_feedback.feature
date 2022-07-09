@@ -25,7 +25,7 @@ Feature: Attempt feedback
       | Adaptive Quiz Questions | truefalse | Q2   | Second question | True   |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank > Questions" in current page administration
+    And I navigate to "Question bank" in current page administration
     And I set the field "Select a category" to "Adaptive Quiz Questions (2)"
     And I choose "Edit question" action for "Q1" in the question bank
     And I expand all fieldsets
@@ -66,7 +66,7 @@ Feature: Attempt feedback
     @javascript
     Scenario: Get customized textual feedback after an attempt is finished
       Given I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-      And I navigate to "Edit settings" in current page administration
+      And I navigate to "Settings" in current page administration
       And I set the following fields to these values:
         | Attempt feedback | Thank you for taking the test! |
       And I click on "Save and return to course" "button"
@@ -92,7 +92,7 @@ Feature: Attempt feedback
     @javascript
     Scenario: View attempt summary with estimated ability for the only allowed attempt
       Given I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-      And I navigate to "Edit settings" in current page administration
+      And I navigate to "Settings" in current page administration
       And I set the following fields to these values:
         | Attempts allowed | 1 |
       And I click on "Save and return to course" "button"
@@ -136,7 +136,7 @@ Feature: Attempt feedback
     @javascript
     Scenario: Estimated ability after an attempt is finished is not visible when set accordingly
       Given I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-      And I navigate to "Edit settings" in current page administration
+      And I navigate to "Settings" in current page administration
       And I set the following fields to these values:
         | Show ability measure to students | No |
       And I click on "Save and return to course" "button"
@@ -152,7 +152,7 @@ Feature: Attempt feedback
     @javascript
     Scenario: Estimated ability for the only allowed attempt is not visible for a student when set accordingly
       Given I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-      And I navigate to "Edit settings" in current page administration
+      And I navigate to "Settings" in current page administration
       And I set the following fields to these values:
         | Attempts allowed                 | 1  |
         | Show ability measure to students | No |
@@ -171,7 +171,7 @@ Feature: Attempt feedback
     @javascript
     Scenario: Estimated ability is not visible for a student in attempts summary when set accordingly
       Given I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-      And I navigate to "Edit settings" in current page administration
+      And I navigate to "Settings" in current page administration
       And I set the following fields to these values:
         | Show ability measure to students | No |
       And I click on "Save and return to course" "button"

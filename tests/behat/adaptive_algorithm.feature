@@ -33,7 +33,7 @@ Feature: Adaptive quiz content
       | Adaptive Quiz Questions | truefalse | Q10  | Question 10 (difficulty 5). | True   |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank > Questions" in current page administration
+    And I navigate to "Question bank" in current page administration
     And I set the field "Select a category" to "Adaptive Quiz Questions (10)"
     And I choose "Edit question" action for "Q1" in the question bank
     And I expand all fieldsets

@@ -30,7 +30,7 @@ Feature: Add an adaptive quiz
   Scenario: Add an adaptive quiz to a course to be visible to a student
     When I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
-    And I navigate to "Question bank > Questions" in current page administration
+    And I navigate to "Question bank" in current page administration
     And I set the field "Select a category" to "Adaptive Quiz Questions (4)"
     And I choose "Edit question" action for "TF1" in the question bank
     And I expand all fieldsets
@@ -58,7 +58,7 @@ Feature: Add an adaptive quiz
   Scenario: It is impossible to create an adaptive quiz without a properly tagged question for the starting level of difficulty
     When I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
-    And I navigate to "Question bank > Questions" in current page administration
+    And I navigate to "Question bank" in current page administration
     And I set the field "Select a category" to "Adaptive Quiz Questions (4)"
     And I choose "Edit question" action for "TF1" in the question bank
     And I expand all fieldsets

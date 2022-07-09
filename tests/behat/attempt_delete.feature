@@ -25,7 +25,7 @@ Feature: Delete an attempt on adaptive quiz
       | Adaptive Quiz Questions | truefalse | TF2  | Second question |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Question bank > Questions" in current page administration
+    And I navigate to "Question bank" in current page administration
     And I set the field "Select a category" to "Adaptive Quiz Questions (2)"
     And I choose "Edit question" action for "TF1" in the question bank
     And I expand all fieldsets

@@ -1,9 +1,11 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 require_once(dirname(__FILE__).'/question_analyser.class.php');
 require_once(dirname(__FILE__).'/attempt_score.class.php');
@@ -138,8 +140,11 @@ class adaptivequiz_quiz_analyser {
      * @return array
      */
     public function get_records($sort = null, $direction = 'ASC') {
-        $records = [];
+        if (empty($this->questions)) {
+            return [];
+        }
 
+        $records = [];
         foreach ($this->questions as $question) {
             $record = [];
             $record[] = $question->get_question_definition()->id;

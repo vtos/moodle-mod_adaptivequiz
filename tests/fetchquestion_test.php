@@ -1,21 +1,17 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * fetch question PHPUnit tests
@@ -24,6 +20,8 @@
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -535,26 +533,6 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
     }
 
     /**
-     * This function tests the output from retrieve_tags_with_question_count()
-     */
-    public function test_retrieve_tags_with_question_count_using_default_tag_prefix() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
-
-        $dummyclass = new stdClass();
-        $tagids = array(1, 4, 5, 6, 7, 8);
-        $categoryids = '5';
-        $fetchquestion = new fetchquestion($dummyclass, 5, 1, 100);
-        $result = $fetchquestion->retrieve_tags_with_question_count($tagids, $categoryids, 'adpq_');
-
-        $expected = array();
-        $expected[5] = '1';
-        $expected[10] = '2';
-
-        $this->assertEquals($expected, $result);
-    }
-
-    /**
      * This is a data provider for
      * @return $data - an array with arrays of data
      */
@@ -587,7 +565,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
      * This function tests the output from initalize_tags_with_quest_count()
      */
     public function test_initalize_tags_with_quest_count() {
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
@@ -613,7 +591,11 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
             ->method('retrieve_tags_with_question_count')
             ->withAnyParameters()
             ->willReturn(
-                [1 => 8, 2 => 3, 5 => 10]
+                [
+                    new questions_number_per_difficulty(1, 8),
+                    new questions_number_per_difficulty(2, 3),
+                    new questions_number_per_difficulty(5, 10),
+                ]
             );
 
         $result = $mockclass->initalize_tags_with_quest_count([], ['test1_', 'test2_'], 1, 100);
@@ -624,7 +606,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
      * This function tests the output from initalize_tags_with_quest_count(), passing an already built difficulty question sum structure, forcing a rebuild
      */
     public function test_initalize_tags_with_quest_count_pre_built_quest_sum_struct_rebuild_true() {
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
@@ -650,7 +632,11 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
             ->method('retrieve_tags_with_question_count')
             ->withAnyParameters()
             ->willReturn(
-                [1 => 8, 2 => 3, 5 => 10]
+                [
+                    new questions_number_per_difficulty(1, 8),
+                    new questions_number_per_difficulty(2, 3),
+                    new questions_number_per_difficulty(5, 10),
+                ]
             );
 
         $result = $mockclass->initalize_tags_with_quest_count([1, 2, 3, 4], ['test1_', 'test2_'], 1, 100, true);
@@ -685,62 +671,6 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
         $fetchquestion = new fetchquestion($dummyclass, 1, 1, 2);
         $result = $fetchquestion->decrement_question_sum_from_difficulty($result, 2);
         $this->assertEquals($expected, $result);
-    }
-
-    /**
-     * This function tests the output of find_questions_with_tags() when multiple question categories contain multiple questions using XML data
-     */
-    public function test_find_questions_with_tags_with_multiple_quest_in_quest_category() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
-        $this->setup_generator_data();
-
-        $mockclass = $this
-            ->getMockBuilder(fetchquestion::class)
-            ->onlyMethods(
-                ['retrieve_question_categories']
-            )
-            ->setConstructorArgs(
-                [new stdClass(), 1, 1, 100]
-            )
-            ->getMock();
-        $mockclass->expects($this->once())
-            ->method('retrieve_question_categories')
-            ->willReturn(
-                [6 => 6, 7 => 7, 8 => 8]
-            );
-
-        $data = $mockclass->find_questions_with_tags(
-            [22, 23, 24]
-        );
-        $this->assertEquals(3, count($data));
-
-        $dummyone = new stdClass();
-        $dummyone->id = '11';
-        $dummyone->name = 'multiple_quest_in_quest_category 1';
-        $dummytwo = new stdClass();
-        $dummytwo->id = '12';
-        $dummytwo->name = 'multiple_quest_in_quest_category 2';
-        $dummythree = new stdClass();
-        $dummythree->id = '13';
-        $dummythree->name = 'multiple_quest_in_quest_category 3';
-        $this->assertEquals([11 => $dummyone, 12 => $dummytwo, 13 => $dummythree], $data);
-    }
-
-    /**
-     * This function tests the output of retrieve_tags_with_question_count() when multiple question categories contain multiple questions using XML data
-     */
-    public function test_retrieve_tags_with_question_count_with_multiple_quest_in_quest_category() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
-        $this->setup_generator_data();
-
-        $fetchquestion = new fetchquestion(new stdClass(), 1, 1, 100);
-
-        $data = $fetchquestion->retrieve_tags_with_question_count(array(22, 23, 24), array(7, 6, 8), 'test1_');
-        $this->assertEquals(3, count($data));
-        $expected = array(22 => '1', 23 => '1', 24 => '1');
-        $this->assertEquals($expected, $data);
     }
 
     /**

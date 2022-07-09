@@ -1,9 +1,11 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Some utility functions for the adaptive quiz activity.
@@ -22,6 +24,9 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
+
+use core_question\local\bank\question_edit_contexts;
+use qbank_managecategories\helper as qbank_managecategories_helper;
 
 // Default tagging used.
 define('ADAPTIVEQUIZ_QUESTION_TAG', 'adpq_');
@@ -55,11 +60,11 @@ require_once($CFG->dirroot.'/question/engine/lib.php');
 /**
  * This function returns an array of question bank categories accessible to the
  * current user in the given context
- * @param object $context A context object
+ * @param context $context A context object
  * @return array An array whose keys are the question category ids and values
  * are the name of the question category
  */
-function adaptivequiz_get_question_categories($context) {
+function adaptivequiz_get_question_categories(context $context) {
     if (empty($context)) {
         return array();
     }
@@ -67,7 +72,7 @@ function adaptivequiz_get_question_categories($context) {
     $options      = array();
     $qesteditctx  = new question_edit_contexts($context);
     $contexts     = $qesteditctx->having_one_edit_tab_cap('editq');
-    $questioncats = question_category_options($contexts);
+    $questioncats = qbank_managecategories_helper::question_category_options($contexts);
 
     if (!empty($questioncats)) {
         foreach ($questioncats as $questioncatcourse) {

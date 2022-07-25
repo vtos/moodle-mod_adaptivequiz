@@ -22,7 +22,8 @@ This Moodle activity module was originally created as a collaborative effort bet
 College][3] and [Remote Learner][4]. The current repository was forked from
 [https://github.com/middlebury/moodle-mod_adaptivequiz][5].
 
-The [MOODLE_311][6] branch of the repository is compatible with Moodle 3.11.
+The [MOODLE_400][6] branch of the repository is compatible with Moodle 4.0. Also, all versions starting from 3.8 are supported.
+
 All unit tests in the module are currently fixed and are passing. Behat tests coverage is about 70%
 and is still in progress. The automated tests coverage is crucial for the forked codebase to ensure future changes
 will not break what's working already. 
@@ -35,7 +36,7 @@ Further support and development of the plugin to be expected.
 [3]: http://www.middlebury.edu/
 [4]: http://remote-learner.net/
 [5]: https://github.com/middlebury/moodle-mod_adaptivequiz
-[6]: https://github.com/vtos/moodle-mod_adaptivequiz/tree/MOODLE_311
+[6]: https://github.com/vtos/moodle-mod_adaptivequiz/tree/MOODLE_400
 
 The Question Bank
 -----------------

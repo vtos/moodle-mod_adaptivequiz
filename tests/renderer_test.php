@@ -21,12 +21,21 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_adaptivequiz;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
+
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/renderer.php');
 require_once($CFG->dirroot.'/tag/lib.php');
+
+use advanced_testcase;
+use mod_adaptivequiz_renderer;
+use moodle_page;
+use moodle_url;
+use stdClass;
 
 /**
  * @group mod_adaptivequiz

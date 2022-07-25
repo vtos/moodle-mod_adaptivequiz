@@ -21,15 +21,21 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_adaptivequiz;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
+
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
+
+use advanced_testcase;
+use context_module;
 
 /**
  * @group mod_adaptivequiz
  */
-class mod_adaptivequiz_locallib_testcase extends advanced_testcase {
+class locallib_testcase extends advanced_testcase {
 
     private $activitycontext;
 

@@ -17,14 +17,20 @@
 /**
  * A dummy class that extands catalgo class.  The purpose of this class is to expose the protected method of return_current_diff_level()
  *
- * @package    mod_adaptivequiz
- * @category   phpunit
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-class mod_adaptivequiz_mock_catalgo extends catalgo {
+namespace mod_adaptivequiz;
 
+defined('MOODLE_INTERNAL') || die();
+
+use mod_adaptivequiz\local\catalgo;
+use question_usage_by_activity;
+use stdClass;
+
+class mock_catalgo extends catalgo {
     /**
      * This function calculates the currently difficulty level of the attempt by calling the parent class' method
      * @param question_usage_by_activity $quba a question usage by activity set to an attempt id

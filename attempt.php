@@ -21,11 +21,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_adaptivequiz\local\adaptiveattempt;
+use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\local\fetchquestion;
+
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/adaptiveattempt.class.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/fetchquestion.class.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/catalgo.class.php');
 require_once($CFG->dirroot.'/tag/lib.php');
 
 $id = required_param('cmid', PARAM_INT); // Course module id.

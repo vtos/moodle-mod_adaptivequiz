@@ -52,14 +52,16 @@ require_once($CFG->dirroot.'/question/editlib.php');
 require_once($CFG->dirroot.'/lib/questionlib.php');
 require_once($CFG->dirroot.'/question/engine/lib.php');
 
+use mod_adaptivequiz\local\catalgo;
+
 /**
  * This function returns an array of question bank categories accessible to the
  * current user in the given context
- * @param object $context A context object
+ * @param context $context A context object
  * @return array An array whose keys are the question category ids and values
  * are the name of the question category
  */
-function adaptivequiz_get_question_categories($context) {
+function adaptivequiz_get_question_categories(context $context) {
     if (empty($context)) {
         return array();
     }
@@ -363,7 +365,6 @@ function adaptivequiz_get_grading_options() {
  */
 function adaptivequiz_get_user_grades($adaptivequiz, $userid = 0) {
     global $CFG, $DB;
-    require_once($CFG->dirroot.'/mod/adaptivequiz/catalgo.class.php');
 
     $params = array(
         'instance' => $adaptivequiz->id,

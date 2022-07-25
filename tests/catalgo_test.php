@@ -21,17 +21,28 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_adaptivequiz;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
+
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/catalgo.class.php');
 require_once('dummycatalgo.class.php');
+
+use advanced_testcase;
+use coding_exception;
+use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\mock_catalgo;
+use question_state_gaveup;
+use question_state_todo;
+use question_usage_by_activity;
+use stdClass;
 
 /**
  * @group mod_adaptivequiz
  */
-class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
+class catalgo_testcase extends advanced_testcase {
     /**
      * This function loads data into the PHPUnit tables for testing
      *
@@ -1046,7 +1057,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
 
         $mockquba = $this->createPartialMock(question_usage_by_activity::class, ['get_slots', 'get_question_state']);
         $mockcatalgo = $this
-            ->getMockBuilder(mod_adaptivequiz_mock_catalgo::class)
+            ->getMockBuilder(mock_catalgo::class)
             ->setMethods(
                 ['get_question_mark', 'compute_next_difficulty']
             )
@@ -1080,7 +1091,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
 
         $mockquba = $this->createPartialMock(question_usage_by_activity::class, ['get_slots', 'get_question_state']);
         $mockcatalgo = $this
-            ->getMockBuilder(mod_adaptivequiz_mock_catalgo::class)
+            ->getMockBuilder(mock_catalgo::class)
             ->setMethods(
                 ['get_question_mark', 'compute_next_difficulty']
             )
@@ -1125,7 +1136,7 @@ class mod_adaptivequiz_catalgo_testcase extends advanced_testcase {
 
         $mockquba = $this->createPartialMock(question_usage_by_activity::class, ['get_slots', 'get_question_state']);
         $mockcatalgo = $this
-            ->getMockBuilder(mod_adaptivequiz_mock_catalgo::class)
+            ->getMockBuilder(mock_catalgo::class)
             ->setMethods(
                 ['get_question_mark', 'compute_next_difficulty']
             )

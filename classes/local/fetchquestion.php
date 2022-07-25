@@ -13,10 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
-use mod_adaptivequiz\local\repository\tags_repository;
-
 /**
  * This class does the work of fetching a questions associated with a level of difficulty and within
  * a question category
@@ -25,6 +21,20 @@ use mod_adaptivequiz\local\repository\tags_repository;
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace mod_adaptivequiz\local;
+
+defined('MOODLE_INTERNAL') || die();
+
+use coding_exception;
+use dml_exception;
+use dml_read_exception;
+use invalid_parameter_exception;
+use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
+use mod_adaptivequiz\local\repository\questions_repository;
+use mod_adaptivequiz\local\repository\tags_repository;
+use moodle_exception;
+use stdClass;
 
 class fetchquestion {
     /**
@@ -519,7 +529,6 @@ class fetchquestion {
             return $this->questcatids;
         }
 
-        $output = '';
         $param = array('instance' => $this->adaptivequiz->id);
         $records = $DB->get_records_menu('adaptivequiz_question', $param, 'questioncategory ASC', 'id,questioncategory');
 

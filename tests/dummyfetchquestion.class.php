@@ -15,14 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A dummy class that extands fetchquestion class.  The purpose of this class is to expose the protected method of retrieve_question_categories()
+ * A dummy class that extends fetchquestion class. The purpose of this class is to expose the protected method of retrieve_question_categories()
  *
- * @package    mod_adaptivequiz
- * @category   phpunit
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_adaptivequiz_mock_fetchquestion extends fetchquestion {
+
+namespace mod_adaptivequiz;
+
+defined('MOODLE_INTERNAL') || die();
+
+use mod_adaptivequiz\local\fetchquestion;
+
+class mock_fetchquestion extends fetchquestion {
     /**
      * Constructor
      */

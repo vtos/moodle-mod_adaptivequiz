@@ -21,9 +21,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once $CFG->dirroot . '/mod/adaptivequiz/requiredpassword.class.php';
-require_once $CFG->dirroot . '/mod/adaptivequiz/catalgo.class.php';
-
+use mod_adaptivequiz\form\requiredpassword;
+use mod_adaptivequiz\local\catalgo;
 use mod_adaptivequiz\output\ability_measure;
 use mod_adaptivequiz\output\user_attempt_summary;
 
@@ -405,8 +404,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     public function format_report_table_headers($cm, $sort, $sortdir) {
         global $OUTPUT;
 
-        $newsortdir = '';
-        $columnicon = '';
         $firstname = '';
         $lastname = '';
         $email = '';
@@ -506,8 +503,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @param html_table $table an instance of the html_table class
      */
     protected function get_report_table_rows($records, $cm, $table) {
-        $row = array();
-
         foreach ($records as $record) {
             $attemptlink = new moodle_url('/mod/adaptivequiz/viewattemptreport.php',
                 array('userid' => $record->id, 'cmid' => $cm->id));
@@ -622,11 +617,11 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     /**
      * This function displays a form for users to enter a password before entering the attempt
      * @param int $cmid course module id
-     * @return mod_adaptivequiz_requiredpassword instance of a formslib object
+     * @return requiredpassword instance of a formslib object
      */
-    public function display_password_form($cmid) {
+    public function display_password_form($cmid): requiredpassword {
         $url = new moodle_url('/mod/adaptivequiz/attempt.php');
-        return new mod_adaptivequiz_requiredpassword($url->out_omit_querystring(),
+        return new requiredpassword($url->out_omit_querystring(),
             array('hidden' => array('cmid' => $cmid, 'uniqueid' => 0)));
     }
 

@@ -21,17 +21,23 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_adaptivequiz;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
+
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/adaptiveattempt.class.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/fetchquestion.class.php');
+
+use advanced_testcase;
+use context_module;
+use mod_adaptivequiz\local\adaptiveattempt;
+use stdClass;
 
 /**
  * @group mod_adaptivequiz
  */
-class mod_adaptivequiz_adaptiveattempt_testcase extends advanced_testcase {
+class adaptiveattempt_testcase extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */
     protected $activityinstance = null;
 
@@ -322,7 +328,7 @@ class mod_adaptivequiz_adaptiveattempt_testcase extends advanced_testcase {
 
         $dummy = new stdClass();
 
-        $adaptiveattempt = $this->getMockBuilder('adaptiveattempt')
+        $adaptiveattempt = $this->getMockBuilder(adaptiveattempt::class)
             ->disableOriginalConstructor()
             ->getMock();
 

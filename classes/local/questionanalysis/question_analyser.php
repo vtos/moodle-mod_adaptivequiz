@@ -3,8 +3,7 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,22 +11,30 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Question-analyser class
- *
  * This class provides a mechanism for analysing the usage, performance, and efficacy
  * of a single question in an adaptive quiz.
  *
- * This module was created as a collaborative effort between Middlebury College
- * and Remote Learner.
- *
- * @package    mod_adaptivequiz
  * @copyright  2013 Middlebury College {@link http://www.middlebury.edu/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class adaptivequiz_question_analyser {
+
+namespace mod_adaptivequiz\local\questionanalysis;
+
+defined('MOODLE_INTERNAL') || die();
+
+use context;
+use InvalidArgumentException;
+use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\local\questionanalysis\statistics\question_statistic;
+use mod_adaptivequiz\local\questionanalysis\statistics\question_statistic_result;
+use question_definition;
+use stdClass;
+
+class question_analyser {
 
     /** @var context the context this usage belongs to. */
     protected $context;
@@ -72,12 +79,12 @@ class adaptivequiz_question_analyser {
     /**
      * Add an usage result for this question.
      *
-     * @param adaptivequiz_attempt_score $score The user's score on this attempt.
+     * @param attempt_score $score The user's score on this attempt.
      * @param boolean $correct True if the user answered correctly.
      * @param string $answer
      * @return void
      */
-    public function add_result ($attemptid, $user, adaptivequiz_attempt_score $score, $correct, $answer) {
+    public function add_result ($attemptid, $user, attempt_score $score, $correct, $answer) {
         $result = new stdClass();
         $result->attemptid = $attemptid;
         $result->user = $user;
@@ -134,10 +141,10 @@ class adaptivequiz_question_analyser {
      * Add and calculate a statistic.
      *
      * @param string $key A key to identify this statistic for sorting and printing.
-     * @param adaptivequiz_question_statistic $statistic
+     * @param question_statistic $statistic
      * @return void
      */
-    public function add_statistic ($key, adaptivequiz_question_statistic $statistic) {
+    public function add_statistic ($key, question_statistic $statistic) {
         if (!empty($this->statistics[$key])) {
             throw new InvalidArgumentException("Statistic key '$key' is already in use.");
         }
@@ -149,7 +156,7 @@ class adaptivequiz_question_analyser {
      * Answer a statistic result.
      *
      * @param string $key A key to identify this statistic.
-     * @return adaptivequiz_question_statistic_result
+     * @return question_statistic_result
      */
     public function get_statistic_result ($key) {
         if (empty($this->statisticresults[$key])) {

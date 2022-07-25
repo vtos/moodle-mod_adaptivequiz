@@ -21,15 +21,21 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_adaptivequiz;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
+
 require_once($CFG->dirroot.'/mod/adaptivequiz/lib.php');
+
+use advanced_testcase;
+use stdClass;
 
 /**
  * @group mod_adaptivequiz
  */
-class mod_adaptivequiz_lib_testcase extends advanced_testcase {
+class lib_testcase extends advanced_testcase {
     /**
      * This functions loads data via the tests/fixtures/mod_adaptivequiz.xml file
      * @return void

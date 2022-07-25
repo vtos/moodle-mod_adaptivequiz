@@ -1,21 +1,17 @@
 <?php
-// This file is not a part of Moodle - http://moodle.org/.
-// This is a non-core contributed module. The module had been created
-// as a collaborative effort between Middlebury College and Remote Learner.
-// Later on it was adopted by a developer Vitaly Potenko to keep it compatible
-// with new Moodle versions and let it acquire new features.
+// This file is part of Moodle - http://moodle.org/
 //
-// This is free software: you can redistribute it and/or modify
+// Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// This is distributed in the hope that it will be useful,
+// Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// The GNU General Public License can be seen at <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * adaptive attempt PHPUnit tests
@@ -25,17 +21,23 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_adaptivequiz;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
+
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/adaptiveattempt.class.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/fetchquestion.class.php');
+
+use advanced_testcase;
+use context_module;
+use mod_adaptivequiz\local\adaptiveattempt;
+use stdClass;
 
 /**
  * @group mod_adaptivequiz
  */
-class mod_adaptivequiz_adaptiveattempt_testcase extends advanced_testcase {
+class adaptiveattempt_testcase extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */
     protected $activityinstance = null;
 
@@ -326,7 +328,7 @@ class mod_adaptivequiz_adaptiveattempt_testcase extends advanced_testcase {
 
         $dummy = new stdClass();
 
-        $adaptiveattempt = $this->getMockBuilder('adaptiveattempt')
+        $adaptiveattempt = $this->getMockBuilder(adaptiveattempt::class)
             ->disableOriginalConstructor()
             ->getMock();
 

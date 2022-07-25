@@ -23,6 +23,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+require_once($CFG->dirroot.'/question/engine/lib.php');
+
+use mod_adaptivequiz\local\adaptiveattempt;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -38,9 +42,6 @@ define('ADAPTIVEQUIZNAME', 'adaptivequiz');
 define('ADAPTIVEQUIZ_GRADEHIGHEST', '1');
 define('ADAPTIVEQUIZ_ATTEMPTFIRST', '3');
 define('ADAPTIVEQUIZ_ATTEMPTLAST',  '4');
-
-require_once($CFG->dirroot.'/question/engine/lib.php');
-
 
 /**
  * Returns the information on whether the module supports a feature

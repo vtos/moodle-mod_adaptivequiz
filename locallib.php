@@ -23,6 +23,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core_question\local\bank\question_edit_contexts;
+use mod_adaptivequiz\local\catalgo;
+use qbank_managecategories\helper as qbank_managecategories_helper;
+
 // Default tagging used.
 define('ADAPTIVEQUIZ_QUESTION_TAG', 'adpq_');
 
@@ -55,11 +59,11 @@ require_once($CFG->dirroot.'/question/engine/lib.php');
 /**
  * This function returns an array of question bank categories accessible to the
  * current user in the given context
- * @param object $context A context object
+ * @param context $context A context object
  * @return array An array whose keys are the question category ids and values
  * are the name of the question category
  */
-function adaptivequiz_get_question_categories($context) {
+function adaptivequiz_get_question_categories(context $context) {
     if (empty($context)) {
         return array();
     }
@@ -363,7 +367,6 @@ function adaptivequiz_get_grading_options() {
  */
 function adaptivequiz_get_user_grades($adaptivequiz, $userid = 0) {
     global $CFG, $DB;
-    require_once($CFG->dirroot.'/mod/adaptivequiz/catalgo.class.php');
 
     $params = array(
         'instance' => $adaptivequiz->id,

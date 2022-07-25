@@ -21,14 +21,20 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
+namespace mod_adaptivequiz;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
+
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/fetchquestion.class.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/tests/dummyfetchquestion.class.php');
+
+use advanced_testcase;
+use coding_exception;
+use mod_adaptivequiz\local\fetchquestion;
+use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
+use stdClass;
 
 /**
  * @group mod_adaptivequiz
@@ -683,7 +689,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
         $dummy = new stdClass();
         $dummy->id = 1;
 
-        $fetchquestion = new mod_adaptivequiz_mock_fetchquestion($dummy, 1, 1, 100);
+        $fetchquestion = new mock_fetchquestion($dummy, 1, 1, 100);
         $data = $fetchquestion->return_retrieve_question_categories();
         $this->assertEquals(2, count($data));
         $expected = array(1 => '11', 2 => '22');

@@ -1,11 +1,9 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,13 +11,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
-require_once(dirname(__FILE__).'/question_analyser.class.php');
-require_once(dirname(__FILE__).'/attempt_score.class.php');
-require_once(dirname(__FILE__).'/statistics/question_statistic.interface.php');
-require_once(dirname(__FILE__).'/../../catalgo.class.php');
-require_once($CFG->dirroot.'/tag/lib.php');
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Questions-analyser class. The class provides a mechanism for loading and analysing question usage,
@@ -29,7 +21,21 @@ require_once($CFG->dirroot.'/tag/lib.php');
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class adaptivequiz_quiz_analyser {
+
+namespace mod_adaptivequiz\local\questionanalysis;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot.'/tag/lib.php');
+
+use core_tag_tag;
+use Exception;
+use InvalidArgumentException;
+use mod_adaptivequiz\local\questionanalysis\statistics\question_statistic;
+use question_engine;
+use stdClass;
+
+class quiz_analyser {
 
     /** @var array $questions An array of all questions loaded and their stats */
     protected $questions = array();
@@ -74,7 +80,7 @@ class adaptivequiz_quiz_analyser {
             }
 
             // For each attempt, get the attempt's final score.
-            $score = new adaptivequiz_attempt_score($attempt->measure, $attempt->standarderror, $adaptivequiz->lowestlevel,
+            $score = new attempt_score($attempt->measure, $attempt->standarderror, $adaptivequiz->lowestlevel,
                 $adaptivequiz->highestlevel);
 
             // For each attempt, loop through all questions asked and add that usage
@@ -87,7 +93,7 @@ class adaptivequiz_quiz_analyser {
                 if (empty($this->questions[$question->id])) {
                     $tags = core_tag_tag::get_item_tags_array('core_question', 'question', $question->id);
                     $difficulty = adaptivequiz_get_difficulty_from_tags($tags);
-                    $this->questions[$question->id] = new adaptivequiz_question_analyser($quba->get_owning_context(), $question,
+                    $this->questions[$question->id] = new question_analyser($quba->get_owning_context(), $question,
                         $difficulty, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
                 }
 
@@ -103,10 +109,10 @@ class adaptivequiz_quiz_analyser {
      * Add a statistic to calculate.
      *
      * @param string $key A key to identify this statistic for sorting and printing.
-     * @param adaptivequiz_question_statistic $statistic
+     * @param question_statistic $statistic
      * @return void
      */
-    public function add_statistic($key, adaptivequiz_question_statistic $statistic) {
+    public function add_statistic($key, question_statistic $statistic) {
         if (!empty($this->statistics[$key])) {
             throw new InvalidArgumentException("Statistic key '$key' is already in use.");
         }
@@ -189,7 +195,7 @@ class adaptivequiz_quiz_analyser {
      * Answer a question-analyzer for a particular question id analyze
      *
      * @param int $qid The question id
-     * @return adaptivequiz_question_analyser
+     * @return question_analyser
      * @throws Exception
      */
     public function get_question_analyzer($qid) {

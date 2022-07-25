@@ -14,32 +14,36 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A dummy class that extands fetchquestion class.  The purpose of this class is to expose the protected method of retrieve_question_categories()
+ * This interface defines the methods required for pluggable statistics that may be added to the question analysis.
  *
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2013 Middlebury College {@link http://www.middlebury.edu/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz;
+namespace mod_adaptivequiz\local\questionanalysis\statistics;
 
 defined('MOODLE_INTERNAL') || die();
 
-use mod_adaptivequiz\local\fetchquestion;
+use mod_adaptivequiz\local\questionanalysis\question_analyser;
 
-class mock_fetchquestion extends fetchquestion {
+class times_used_statistic implements question_statistic {
     /**
-     * Constructor
+     * Answer a display-name for this statistic.
+     *
+     * @return string
      */
-    public function __construct($adaptivequiz, $level = 1, $minimumlevel, $maximumlevel, $tags = array()) {
-        parent::__construct($adaptivequiz, $level, $minimumlevel, $maximumlevel, $tags);
+    public function get_display_name () {
+        return get_string('times_used_display_name', 'adaptivequiz');
     }
 
     /**
-     * This function retrieves the question categories associated with the activity instance
-     * @return array whose keys and values are question categoriy ids
+     * Calculate this statistic for a question's results
+     *
+     * @param question_analyser $analyser
+     * @return question_statistic_result
      */
-    public function return_retrieve_question_categories() {
-        return parent::retrieve_question_categories();
+    public function calculate (question_analyser $analyser) {
+        return new times_used_statistic_result (count($analyser->get_results()));
     }
 }

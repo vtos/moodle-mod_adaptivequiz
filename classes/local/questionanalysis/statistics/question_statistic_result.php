@@ -14,32 +14,30 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A dummy class that extands fetchquestion class.  The purpose of this class is to expose the protected method of retrieve_question_categories()
+ * This interface defines the methods required for pluggable statistic-results that may be added to the question analysis.
  *
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2013 Middlebury College {@link http://www.middlebury.edu/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz;
+namespace mod_adaptivequiz\local\questionanalysis\statistics;
 
 defined('MOODLE_INTERNAL') || die();
 
-use mod_adaptivequiz\local\fetchquestion;
-
-class mock_fetchquestion extends fetchquestion {
+interface question_statistic_result {
     /**
-     * Constructor
+     * A sortable version of the result.
+     *
+     * @return mixed string or numeric
      */
-    public function __construct($adaptivequiz, $level = 1, $minimumlevel, $maximumlevel, $tags = array()) {
-        parent::__construct($adaptivequiz, $level, $minimumlevel, $maximumlevel, $tags);
-    }
+    public function sortable ();
 
     /**
-     * This function retrieves the question categories associated with the activity instance
-     * @return array whose keys and values are question categoriy ids
+     * A printable version of the result.
+     *
+     * @param numeric $result
+     * @return mixed string or numeric
      */
-    public function return_retrieve_question_categories() {
-        return parent::retrieve_question_categories();
-    }
+    public function printable ();
 }

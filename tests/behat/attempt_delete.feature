@@ -67,4 +67,4 @@ Feature: Delete an attempt on adaptive quiz
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Delete attempt" "link" in the "Completed" "table_row"
     And I press "Continue"
-    And I should see "No attempt records for this student"
+    And I should see "Nothing to display"

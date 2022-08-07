@@ -75,8 +75,8 @@ Feature: Attempt an adaptive quiz
     And I click on "1" "link" in the "Peter The Student" "table_row"
     Then I should see "Adaptive Quiz - individual user attempts report for Peter The Student"
     And "Completed" "table_row" should exist
-    And "Completed" row "Reason for stopping attempt" column of "quizsummaryofuserattempt" table should contain "Unable to fetch a questions for level 5"
-    And "Completed" row "Sum of questions attempted" column of "quizsummaryofuserattempt" table should contain "2"
+    And "Completed" row "Reason for stopping attempt" column of "individualuserattemptstable" table should contain "Unable to fetch a question for level 5"
+    And "Completed" row "Sum of questions attempted" column of "individualuserattemptstable" table should contain "2"
 
   @javascript
   Scenario: View attempt summary

@@ -290,16 +290,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * This function returns HTML markup to display a table of a users's attempt
-     * @param stdClass $records an array of user attempt table objects
-     * @param stdClass $cm course module object set to the instance of the activity
-     * @return string HTML markup
-     */
-    public function print_attempt_report_table($records, $cm) {
-        return $this->create_attempt_report_table($records, $cm);
-    }
-
-    /**
      * This function generates the HTML required to display the initial reports table
      * @param stdClass $records attempt records from adaptivequiz_attempt table
      * @param stdClass $cm course module object set to the instance of the activity
@@ -321,77 +311,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $output .= html_writer::table($table);
 
         return $output;
-    }
-
-    /**
-     * This function generates the HTML required to the attempts report table
-     * @param stdClass $records an array of user attempt table objects
-     * @param stdClass $cm course module object set to the instance of the activity
-     * @return string HTML markup
-     */
-    protected function create_attempt_report_table($records, $cm) {
-        $output = '';
-
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable quizsummaryofuserattempt boxaligncenter';
-
-        $attemptstate = get_string('attemptstate', 'adaptivequiz');
-        $attemptstopcriteria = get_string('attemptstopcriteria', 'adaptivequiz');
-        $questionsattempted = get_string('questionsattempted', 'adaptivequiz');
-        $score = get_string('score', 'adaptivequiz');
-        $timemodified = get_string('attemptfinishedtimestamp', 'adaptivequiz');
-        $timecreated = get_string('attemptstarttime', 'adaptivequiz');
-
-        $table->head = array($attemptstate, $attemptstopcriteria, $questionsattempted, $score, $timecreated, $timemodified, '');
-        $table->align = array('center', 'center', 'center', 'center', 'center', 'center', 'center');
-        $table->size = array('', '', '', '', '', '');
-        $table->data = array();
-
-        $this->get_attempt_report_table_rows($records, $cm, $table);
-        $output .= html_writer::table($table);
-
-        return $output;
-    }
-
-    /**
-     * This function generates the attempt report rows
-     * @param stdClass an array of user attempt table objects
-     * @param stdClass $cm course module object set to the instance of the activity
-     * @param html_table $table an instance of the html_table class
-     */
-    protected function get_attempt_report_table_rows($records, $cm, $table) {
-        $row = array();
-        $attemptstate = '';
-
-        foreach ($records as $record) {
-            $reviewurl = new moodle_url('/mod/adaptivequiz/reviewattempt.php',
-                array('uniqueid' => $record->uniqueid, 'cmid' => $cm->id, 'userid' => $record->userid));
-            $link = html_writer::link($reviewurl, get_string('reviewattempt', 'adaptivequiz'));
-            if ($record->attemptstate != ADAPTIVEQUIZ_ATTEMPT_COMPLETED) {
-                $closeurl = new moodle_url('/mod/adaptivequiz/closeattempt.php',
-                    array('uniqueid' => $record->uniqueid, 'cmid' => $cm->id, 'userid' => $record->userid));
-                $closelink = html_writer::link($closeurl, get_string('closeattempt', 'adaptivequiz'));
-            } else {
-                $closelink = '';
-            }
-            $deleteurl = new moodle_url('/mod/adaptivequiz/delattempt.php',
-                array('uniqueid' => $record->uniqueid, 'cmid' => $cm->id, 'userid' => $record->userid));
-            $dellink = html_writer::link($deleteurl, get_string('deleteattemp', 'adaptivequiz'));
-
-            if (0 == strcmp('inprogress', $record->attemptstate)) {
-                $attemptstate = get_string('recentinprogress', 'adaptivequiz');
-            } else {
-                $attemptstate = get_string('recentcomplete', 'adaptivequiz');
-            }
-
-            $measure = $this->format_measure_and_standard_error($record);
-
-            $row = array($attemptstate, format_string($record->attemptstopcriteria), $record->questionsattempted, $measure,
-                    userdate($record->timecreated), userdate($record->timemodified),
-                    $link.($closelink ? '&nbsp;&nbsp;'.$closelink : '').'&nbsp;&nbsp;'.$dellink);
-            $table->data[] = $row;
-            $table->rowclasses[] = 'studentattempt';
-        }
     }
 
     /**

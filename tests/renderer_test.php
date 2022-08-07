@@ -166,47 +166,6 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
     }
 
     /**
-     * This functions tests the output from print_attempt_report_table()
-     */
-    public function test_print_attempt_report_table() {
-        $dummypage = new moodle_page();
-        $target = 'mod_adaptivequiz';
-        $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
-
-        $records = array();
-        $records[1] = new stdClass();
-        $records[1]->id = 1;
-        $records[1]->instance = 1;
-        $records[1]->userid = 1;
-        $records[1]->uniqueid = 123;
-        $records[1]->attemptstate = 'completed';
-        $records[1]->attemptstopcriteria = 'stopped for some reason';
-        $records[1]->questionsattempted = 12;
-        $records[1]->standarderror = 0.001;
-        $records[1]->measure = -0.6;
-        $records[1]->stderror = 0.17;
-        $records[1]->highestlevel = 16;
-        $records[1]->lowestlevel = 1;
-        $records[1]->timemodified = 12345678;
-        $records[1]->timecreated = 12345600;
-
-        $cm = new stdClass();
-        $cm->id = 1;
-
-        $output = $renderer->print_attempt_report_table($records, $cm, new stdClass);
-        $this->assertStringContainsString('<table', $output);
-        $this->assertStringContainsString('/mod/adaptivequiz/reviewattempt.php', $output);
-        $this->assertStringContainsString('uniqueid=123', $output);
-        $this->assertStringContainsString('userid=1', $output);
-        $this->assertStringContainsString('cmid=1', $output);
-        /* Check table row */
-        $this->assertStringContainsString('stopped for some reason', $output);
-        $this->assertStringContainsString('6.3 &plusmn; 4%', $output);
-        $this->assertStringContainsString('12', $output);
-        $this->assertStringContainsString('</table>', $output);
-    }
-
-    /**
      * This function tests the output from format_report_table_headers()
      */
     public function test_format_report_table_headers() {

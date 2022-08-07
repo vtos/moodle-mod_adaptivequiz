@@ -106,7 +106,6 @@ $string['functiondisabledbysecuremode'] = 'Cette fonctionnalité est actuellemen
 $string['enterrequiredpassword'] = 'Entrez le mot de passe requis';
 $string['requirepasswordmessage'] = 'Pour débuter ce questionnaire vous devez connaître son mot de passe';
 $string['wrongpassword'] = 'Mot de passe incorrect';
-$string['noattemptrecords'] = 'Aucune tentative enregistrée pour le candidat';
 $string['attemptstate'] = 'État de la tentative';
 $string['attemptstopcriteria'] = 'Raison de l’abandon';
 $string['questionsattempted'] = 'Total des items tentés';

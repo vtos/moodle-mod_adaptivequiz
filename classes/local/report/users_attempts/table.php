@@ -36,6 +36,8 @@ use table_sql;
 
 final class table extends table_sql {
 
+    public const UNIQUE_ID = 'usersattemptstable';
+
     /**
      * @var mod_adaptivequiz_renderer $renderer
      */
@@ -55,7 +57,7 @@ final class table extends table_sql {
      * @throws coding_exception
      */
     public function __construct(mod_adaptivequiz_renderer $renderer, int $cmid, moodle_url $baseurl, filter $filter) {
-        parent::__construct('usersattemptstable');
+        parent::__construct(self::UNIQUE_ID);
 
         $this->renderer = $renderer;
         $this->cmid = $cmid;

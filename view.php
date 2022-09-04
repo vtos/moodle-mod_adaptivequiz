@@ -30,6 +30,9 @@ use core_completion\cm_completion_details;
 use mod_adaptivequiz\local\report\users_attempts\filter as users_attempts_filter;
 use mod_adaptivequiz\local\user_attempts_table;
 use mod_adaptivequiz\local\report\users_attempts\table as users_attempts_table;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\form as user_preferences_form;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\repository as report_user_preferences_repository;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\preferences as report_user_preferences;
 use mod_adaptivequiz\output\user_attempt_summary;
 
 $id = optional_param('id', 0, PARAM_INT);
@@ -60,6 +63,17 @@ $renderer = $PAGE->get_renderer('mod_adaptivequiz');
 
 $canviewattemptsreport = has_capability('mod/adaptivequiz:viewreport', $context);
 if ($canviewattemptsreport) {
+    $attemtslistprefsform = new user_preferences_form($PAGE->url->out());
+
+    $reportuserprefs = report_user_preferences_repository::get(users_attempts_table::UNIQUE_ID);
+    if ($prefsformdata = $attemtslistprefsform->get_data()) {
+        $reportuserprefs = report_user_preferences::from_plain_object($prefsformdata);
+
+        report_user_preferences_repository::save(users_attempts_table::UNIQUE_ID, $reportuserprefs);
+    }
+
+    $attemtslistprefsform->set_data($reportuserprefs->as_array());
+
     $attemptsreporttable = new users_attempts_table($renderer, $cm->id, $PAGE->url,
         users_attempts_filter::from_vars($adaptivequiz->id, groups_get_activity_group($cm, true)));
     $attemptsreporttable->is_downloading($downloadusersattempts,
@@ -135,8 +149,10 @@ if ($canviewattemptsreport) {
     echo $renderer->heading(get_string('activityreports', 'adaptivequiz'), '3');
     groups_print_activity_menu($cm, new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]));
     echo $renderer->container_start('usersattemptstable-wrapper');
-    $attemptsreporttable->out(10, true);
+    $attemptsreporttable->out($reportuserprefs->rows_per_page(), $reportuserprefs->show_initials_bar());
     echo $renderer->container_end();
+
+    $attemtslistprefsform->display();
 }
 
 echo $OUTPUT->footer();

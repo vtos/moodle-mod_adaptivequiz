@@ -27,21 +27,23 @@ defined('MOODLE_INTERNAL') || die();
 
 final class repository {
 
-    public static function save(string $uniqueid, preferences $prefs): void {
+    private const PREFERENCE_NAME = 'adaptivequiz_users_attempts_report';
+
+    public static function save(preferences $prefs): void {
         global $SESSION;
 
         $prefsarr = $prefs->as_array();
 
-        $SESSION->flextableextra[$uniqueid] = $prefsarr;
-        set_user_preference('flextable_extra_' . $uniqueid, json_encode($prefsarr));
+        $SESSION->flextableextra[self::PREFERENCE_NAME] = $prefsarr;
+        set_user_preference(self::PREFERENCE_NAME, json_encode($prefsarr));
     }
 
-    public static function get(string $uniqueid): preferences {
+    public static function get(): preferences {
         global $SESSION;
 
-        $storedprefsarr = empty($SESSION->flextableextra[$uniqueid])
-            ? json_decode(get_user_preferences('flextable_extra_' . $uniqueid), true)
-            : $SESSION->flextableextra[$uniqueid]
+        $storedprefsarr = empty($SESSION->flextableextra[self::PREFERENCE_NAME])
+            ? json_decode(get_user_preferences(self::PREFERENCE_NAME), true)
+            : $SESSION->flextableextra[self::PREFERENCE_NAME]
         ;
 
         return empty($storedprefsarr) ? preferences::defaults() : preferences::from_array($storedprefsarr);

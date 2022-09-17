@@ -27,17 +27,22 @@ require_once $CFG->dirroot.'/mod/adaptivequiz/locallib.php';
 
 use core\activity_dates;
 use core_completion\cm_completion_details;
-use mod_adaptivequiz\local\report\users_attempts\filter as users_attempts_filter;
+use mod_adaptivequiz\local\report\individual_user_attempts\questions_difficulty_range;
+use mod_adaptivequiz\local\report\users_attempts\filter\filter as users_attempts_filter;
+use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
+use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\filter_user_preferences;
 use mod_adaptivequiz\local\user_attempts_table;
 use mod_adaptivequiz\local\report\users_attempts\table as users_attempts_table;
-use mod_adaptivequiz\local\report\users_attempts\user_preferences\form as user_preferences_form;
-use mod_adaptivequiz\local\report\users_attempts\user_preferences\repository as report_user_preferences_repository;
-use mod_adaptivequiz\local\report\users_attempts\user_preferences\preferences as report_user_preferences;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_form;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\repository as user_preferences_repository;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\preferences as user_preferences;
 use mod_adaptivequiz\output\user_attempt_summary;
 
 $id = optional_param('id', 0, PARAM_INT);
 $downloadusersattempts = optional_param('download', '', PARAM_ALPHA);
 $n  = optional_param('n', 0, PARAM_INT);
+$resetfilter = optional_param('resetfilter', 0, PARAM_INT);
 
 if ($id) {
     $cm         = get_coursemodule_from_id('adaptivequiz', $id, 0, false, MUST_EXIST);
@@ -63,19 +68,59 @@ $renderer = $PAGE->get_renderer('mod_adaptivequiz');
 
 $canviewattemptsreport = has_capability('mod/adaptivequiz:viewreport', $context);
 if ($canviewattemptsreport) {
-    $attemtslistprefsform = new user_preferences_form($PAGE->url->out());
+    $reportuserprefs = user_preferences_repository::get(users_attempts_table::UNIQUE_ID);
 
-    $reportuserprefs = report_user_preferences_repository::get(users_attempts_table::UNIQUE_ID);
-    if ($prefsformdata = $attemtslistprefsform->get_data()) {
-        $reportuserprefs = report_user_preferences::from_plain_object($prefsformdata);
+    $reportuserprefsform = new user_preferences_form($PAGE->url->out());
+    if ($prefsformdata = $reportuserprefsform->get_data()) {
+        $reportuserprefs = user_preferences::from_plain_object($prefsformdata);
 
-        report_user_preferences_repository::save(users_attempts_table::UNIQUE_ID, $reportuserprefs);
+        if (!$reportuserprefs->persistent_filter() && $reportuserprefs->has_filter_preference()) {
+            $reportuserprefs = $reportuserprefs->without_filter_preference();
+        }
+
+        user_preferences_repository::save(users_attempts_table::UNIQUE_ID, $reportuserprefs);
+    }
+    $reportuserprefsform->set_data($reportuserprefs->as_array());
+
+    $filter = users_attempts_filter::from_vars($adaptivequiz->id, groups_get_activity_group($cm, true));
+    if ($resetfilter) {
+        $filter->fill_from_array(['users' => filter_options::users_option_default(),
+            'includeinactiveenrolments' => filter_options::INCLUDE_INACTIVE_ENROLMENTS_DEFAULT]);
     }
 
-    $attemtslistprefsform->set_data($reportuserprefs->as_array());
+    $reportfilterform = new filter_form($PAGE->url->out(), ['actionurl' => $PAGE->url]);
+    if ($reportuserprefs->persistent_filter() && $reportuserprefs->has_filter_preference()) {
+        $filter->fill_from_preference($reportuserprefs->filter());
+        $reportfilterform->set_data($reportuserprefs->filter()->as_array());
+    }
+    if ($resetfilter) {
+        $filterdefaultsarray = ['users' => filter_options::users_option_default(),
+            'includeinactiveenrolments' => filter_options::INCLUDE_INACTIVE_ENROLMENTS_DEFAULT];
 
-    $attemptsreporttable = new users_attempts_table($renderer, $cm->id, $PAGE->url,
-        users_attempts_filter::from_vars($adaptivequiz->id, groups_get_activity_group($cm, true)));
+        $filter->fill_from_array($filterdefaultsarray);
+
+        if ($reportuserprefs->persistent_filter()) {
+            user_preferences_repository::save(
+                users_attempts_table::UNIQUE_ID,
+                $reportuserprefs->with_filter_preference(filter_user_preferences::from_array($filterdefaultsarray))
+            );
+        }
+
+        $reportfilterform->set_data($filterdefaultsarray);
+    }
+    if ($filterformdata = $reportfilterform->get_data()) {
+        $filter->fill_from_array((array) $filterformdata);
+
+        if ($reportuserprefs->persistent_filter()) {
+            user_preferences_repository::save(
+                users_attempts_table::UNIQUE_ID,
+                $reportuserprefs->with_filter_preference(filter_user_preferences::from_array((array) $filterformdata))
+            );
+        }
+    }
+
+    $attemptsreporttable = new users_attempts_table($renderer, $cm->id,
+        questions_difficulty_range::from_activity_instance($adaptivequiz), $PAGE->url, $context, $filter);
     $attemptsreporttable->is_downloading($downloadusersattempts,
         get_string('reportattemptsdownloadfilename', 'adaptivequiz', format_string($adaptivequiz->name)));
     if ($attemptsreporttable->is_downloading()) {
@@ -145,12 +190,20 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
 
 if ($canviewattemptsreport) {
     echo $renderer->heading(get_string('activityreports', 'adaptivequiz'), '3');
+
     groups_print_activity_menu($cm, new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]));
+
     echo $renderer->container_start('usersattemptstable-wrapper');
     $attemptsreporttable->out($reportuserprefs->rows_per_page(), $reportuserprefs->show_initials_bar());
     echo $renderer->container_end();
 
-    $attemtslistprefsform->display();
+    $reportuserprefsform->display();
+
+    $reportfilterform->display();
+
+    $resetfilterul = $PAGE->url;
+    $resetfilterul->param('resetfilter', 1);
+    echo $renderer->reset_users_attempts_filter_action($resetfilterul);
 }
 
 echo $OUTPUT->footer();

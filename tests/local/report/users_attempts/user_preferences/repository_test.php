@@ -32,11 +32,10 @@ class repository_test extends advanced_testcase {
     public function it_stores_and_fetches_preferences(): void {
         $this->resetAfterTest();
 
-        $uniqueid = '_uniqueid_';
         $preferences = preferences::from_array(['perpage' => 20, 'showinitialsbar' => 0]);
 
-        repository::save($uniqueid, $preferences);
-        $this->assertEquals($preferences, repository::get($uniqueid));
+        repository::save($preferences);
+        $this->assertEquals($preferences, repository::get());
     }
 
     /**
@@ -47,19 +46,18 @@ class repository_test extends advanced_testcase {
 
         $this->resetAfterTest();
 
-        $uniqueid = '_uniqueid_';
         $preferences = preferences::from_array(['perpage' => 20, 'showinitialsbar' => 0]);
 
         // Check it will not query database to fetch preference after saving them
         $queriescountbefore = $DB->perf_get_reads();
 
-        repository::save($uniqueid, $preferences);
-        repository::get($uniqueid);
+        repository::save($preferences);
+        repository::get();
 
         $this->assertEquals($queriescountbefore, $DB->perf_get_reads());
 
         // Check it will not query the database for subsequent fetches of preferences
-        repository::get($uniqueid);
+        repository::get();
 
         $this->assertEquals($queriescountbefore, $DB->perf_get_reads());
     }

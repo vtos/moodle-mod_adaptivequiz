@@ -68,7 +68,7 @@ $renderer = $PAGE->get_renderer('mod_adaptivequiz');
 
 $canviewattemptsreport = has_capability('mod/adaptivequiz:viewreport', $context);
 if ($canviewattemptsreport) {
-    $reportuserprefs = user_preferences_repository::get(users_attempts_table::UNIQUE_ID);
+    $reportuserprefs = user_preferences_repository::get();
 
     $reportuserprefsform = new user_preferences_form($PAGE->url->out());
     if ($prefsformdata = $reportuserprefsform->get_data()) {
@@ -78,7 +78,7 @@ if ($canviewattemptsreport) {
             $reportuserprefs = $reportuserprefs->without_filter_preference();
         }
 
-        user_preferences_repository::save(users_attempts_table::UNIQUE_ID, $reportuserprefs);
+        user_preferences_repository::save($reportuserprefs);
     }
     $reportuserprefsform->set_data($reportuserprefs->as_array());
 
@@ -101,7 +101,6 @@ if ($canviewattemptsreport) {
 
         if ($reportuserprefs->persistent_filter()) {
             user_preferences_repository::save(
-                users_attempts_table::UNIQUE_ID,
                 $reportuserprefs->with_filter_preference(filter_user_preferences::from_array($filterdefaultsarray))
             );
         }
@@ -113,7 +112,6 @@ if ($canviewattemptsreport) {
 
         if ($reportuserprefs->persistent_filter()) {
             user_preferences_repository::save(
-                users_attempts_table::UNIQUE_ID,
                 $reportuserprefs->with_filter_preference(filter_user_preferences::from_array((array) $filterformdata))
             );
         }

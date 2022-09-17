@@ -14,7 +14,7 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A class to display a table with all attempts made by users.
+ * A class to display a table with users either with attempts or without them.
  *
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,9 +25,12 @@ namespace mod_adaptivequiz\local\report\users_attempts;
 defined('MOODLE_INTERNAL') || die();
 
 use coding_exception;
-use core_user\fields;
+use context;
 use dml_exception;
 use html_writer;
+use mod_adaptivequiz\local\report\individual_user_attempts\questions_difficulty_range;
+use mod_adaptivequiz\local\report\users_attempts\filter\filter;
+use mod_adaptivequiz\local\report\users_attempts\sql\sql_resolver;
 use mod_adaptivequiz_renderer;
 use moodle_exception;
 use moodle_url;
@@ -49,21 +52,28 @@ final class table extends table_sql {
     private $cmid;
 
     /**
-     * @var filter $filter
+     * @var questions_difficulty_range $questionsdifficultyrange
      */
-    private $filter;
+    private $questionsdifficultyrange;
 
     /**
      * @throws coding_exception
      */
-    public function __construct(mod_adaptivequiz_renderer $renderer, int $cmid, moodle_url $baseurl, filter $filter) {
+    public function __construct(
+        mod_adaptivequiz_renderer $renderer,
+        int $cmid,
+        questions_difficulty_range $questionsdifficultyrange,
+        moodle_url $baseurl,
+        context $context,
+        filter $filter
+    ) {
         parent::__construct(self::UNIQUE_ID);
 
         $this->renderer = $renderer;
         $this->cmid = $cmid;
-        $this->filter = $filter;
+        $this->questionsdifficultyrange = $questionsdifficultyrange;
 
-        $this->init($baseurl);
+        $this->init($baseurl, $context, $filter);
     }
 
     /**
@@ -99,12 +109,16 @@ final class table extends table_sql {
             $this->pagesize($pagesize, $total);
         }
 
-        $groupby = $this->sql_group_by_clause();
-
         $sort = $this->get_sql_sort();
         if ($sort) {
             $sort = "ORDER BY $sort";
         }
+
+        $groupby = $this->sql->groupby ?? '';
+        if ($groupby) {
+            $groupby = "GROUP BY $groupby";
+        }
+
         $sql = "SELECT
                 {$this->sql->fields}
                 FROM {$this->sql->from}
@@ -120,6 +134,10 @@ final class table extends table_sql {
     }
 
     protected function col_attemptsnum(stdClass $row): string {
+        if (!$row->attemptsnum) {
+            return '-';
+        }
+
         if (!$this->is_downloading()) {
             return html_writer::link(
                 new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['userid' => $row->id, 'cmid' => $this->cmid]),
@@ -134,7 +152,12 @@ final class table extends table_sql {
      * @throws moodle_exception
      */
     protected function col_measure(stdClass $row): string {
-        $measure = $this->renderer->format_measure($row);
+        $formatmeasureparams = new stdClass();
+        $formatmeasureparams->measure = $row->measure;
+        $formatmeasureparams->highestlevel = $this->questionsdifficultyrange->highestlevel;
+        $formatmeasureparams->lowestlevel = $this->questionsdifficultyrange->lowestlevel;
+
+        $measure = $this->renderer->format_measure($formatmeasureparams);
         if (!$row->uniqueid) {
             return $measure;
         }
@@ -176,7 +199,7 @@ final class table extends table_sql {
      * @param moodle_url $baseurl
      * @throws coding_exception
      */
-    private function init(moodle_url $baseurl): void {
+    private function init(moodle_url $baseurl, context $context, filter $filter): void {
         $this->define_columns([
             'fullname', 'email', 'attemptsnum', 'measure', 'stderror', 'attempttimefinished',
         ]);
@@ -195,96 +218,14 @@ final class table extends table_sql {
         $this->sortable(true, 'lastname');
         $this->is_downloadable(true);
 
-        $sqlfrom = '
-            {adaptivequiz_attempt} aa
-            JOIN {user} u ON u.id = aa.userid
-            JOIN {adaptivequiz} a ON a.id = aa.instance
-        ';
-        $sqlwhere = 'aa.instance = :instance';
-        $sqlparams = [
-            'attemptstate1' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-            'attemptstate2' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-            'attemptstate3' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-            'attemptstate4' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-            'instance' => $this->filter->adaptivequizid,
-        ];
-        if ($this->filter->groupid) {
-            $sqlfrom .= ' INNER JOIN {groups_members} gm ON u.id = gm.userid';
-            $sqlwhere .= ' AND gm.groupid = :groupid';
-            $sqlparams['groupid'] = $this->filter->groupid;
-        }
-        $this->set_sql(
-            '
-                u.id' . fields::for_name()->get_sql('u')->selects . ', u.email, a.highestlevel, a.lowestlevel,
-                (
-                    SELECT COUNT(*)
-                    FROM {adaptivequiz_attempt} caa
-                    WHERE caa.userid = u.id
-                    AND caa.instance = aa.instance
-                ) AS attemptsnum,
-                (
-                    SELECT maa.measure
-                    FROM {adaptivequiz_attempt} maa
-                    WHERE maa.instance = a.id
-                    AND maa.userid = u.id
-                    AND maa.attemptstate = :attemptstate1
-                    AND maa.standarderror > 0.0
-                    ORDER BY measure DESC
-                    LIMIT 1
-                ) AS measure,
-                (
-                    SELECT saa.standarderror
-                    FROM {adaptivequiz_attempt} saa
-                    WHERE saa.instance = a.id
-                    AND saa.userid = u.id
-                    AND saa.attemptstate = :attemptstate2
-                    AND saa.standarderror > 0.0
-                    ORDER BY measure DESC
-                    LIMIT 1
-                ) AS stderror,
-                (
-                    SELECT taa.timemodified
-                    FROM {adaptivequiz_attempt} taa
-                    WHERE taa.instance = a.id
-                    AND taa.userid = u.id
-                    AND taa.attemptstate = :attemptstate3
-                    AND taa.standarderror > 0.0
-                    ORDER BY measure DESC
-                    LIMIT 1
-                ) AS attempttimefinished,
-                (
-                    SELECT iaa.uniqueid
-                    FROM {adaptivequiz_attempt} iaa
-                    WHERE iaa.instance = a.id
-                    AND iaa.userid = u.id
-                    AND iaa.attemptstate = :attemptstate4
-                    AND iaa.standarderror > 0.0
-                    ORDER BY measure DESC
-                    LIMIT 1
-                ) AS uniqueid
-            ',
-            $sqlfrom,
-            $sqlwhere,
-            $sqlparams
-        );
-
-        $sqlcountfrom = '
-            {adaptivequiz_attempt} aa
-            JOIN {user} u ON u.id = aa.userid
-        ';
-        $sqlcountwhere = 'instance = :instance';
-        $sqlcountparams = ['instance' => $this->filter->adaptivequizid];
-        if ($this->filter->groupid) {
-            $sqlcountfrom .= ' INNER JOIN {groups_members} gm ON aa.userid = gm.userid';
-            $sqlcountwhere .= ' AND gm.groupid = :groupid';
-            $sqlcountparams['groupid'] = $this->filter->groupid;
-        }
-        $this->set_count_sql("SELECT COUNT(DISTINCT aa.userid) FROM $sqlcountfrom WHERE $sqlcountwhere",
-            $sqlcountparams);
+        $sqlandparams = sql_resolver::sql_and_params($filter, $context);
+        $this->set_sql($sqlandparams->fields(), $sqlandparams->from(), $sqlandparams->where(), $sqlandparams->params());
+        $this->set_group_by_sql($sqlandparams->group_by());
+        $this->set_count_sql($sqlandparams->count_sql(), $sqlandparams->count_sql_params());
     }
 
-    private function sql_group_by_clause(): string {
-        return 'GROUP BY u.id, aa.instance, a.id, a.highestlevel, a.lowestlevel';
+    private function set_group_by_sql(?string $clause): void {
+        $this->sql->groupby = $clause;
     }
 
     private function set_content_alignment_in_columns(): void {

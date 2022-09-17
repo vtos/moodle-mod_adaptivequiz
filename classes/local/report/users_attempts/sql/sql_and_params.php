@@ -130,7 +130,7 @@ final class sql_and_params {
             . ', ' . $attemptsql
         ;
         $from = '{adaptivequiz_attempt} aa JOIN {user} u ON u.id = aa.userid';
-        $where = self::base_where_sql() . ' AND aa.instance = :instance';
+        $where = 'aa.instance = :instance';
         $params = array_merge($params, ['instance' => $adaptivequizid]);
 
         $sqlcount = "SELECT COUNT(DISTINCT u.id) FROM $from WHERE $where";
@@ -178,8 +178,8 @@ final class sql_and_params {
         $fields = 'DISTINCT u.id' . fields::for_name()->including('email')->get_sql('u')->selects
             . ', ' . $attemptsql;
         $from = '{adaptivequiz_attempt} aa JOIN {user} u ON u.id = aa.userid';
-        $where = self::base_where_sql() . "
-            AND aa.instance = :instance AND NOT EXISTS (
+        $where = "
+            aa.instance = :instance AND NOT EXISTS (
                 SELECT DISTINCT u.id FROM {user} u
                 $enrolledjoin->joins
                 WHERE u.id = aa.userid AND $enrolledjoin->wheres
@@ -238,9 +238,5 @@ final class sql_and_params {
 
     private static function group_by_sql(): string {
         return 'u.id, aa.instance';
-    }
-
-    private static function base_where_sql(): string {
-        return 'u.deleted = 0';
     }
 }

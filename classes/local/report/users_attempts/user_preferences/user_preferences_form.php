@@ -45,16 +45,16 @@ class user_preferences_form extends moodleform {
         $form->addElement('header', 'prefsheader', get_string('reportattemptsprefsformheader', 'adaptivequiz'));
 
         $form->addElement('select', 'perpage', get_string('reportattemptsusersperpage', 'adaptivequiz'),
-            array_combine(preferences::PER_PAGE_OPTIONS, preferences::PER_PAGE_OPTIONS));
-        $form->setDefault('perpage', preferences::PER_PAGE_DEFAULT);
+            array_combine(user_preferences::PER_PAGE_OPTIONS, user_preferences::PER_PAGE_OPTIONS));
+        $form->setDefault('perpage', user_preferences::PER_PAGE_DEFAULT);
 
         $form->addElement('advcheckbox', 'showinitialsbar',
             get_string('reportattemptsshowinitialbars', 'adaptivequiz'), '&nbsp;', null, [0, 1]);
-        $form->setDefault('showinitialsbar', preferences::SHOW_INITIALS_BAR_DEFAULT);
+        $form->setDefault('showinitialsbar', user_preferences::SHOW_INITIALS_BAR_DEFAULT);
 
         $form->addElement('advcheckbox', 'persistentfilter',
             get_string('reportattemptspersistentfilter', 'adaptivequiz'), '&nbsp;', null, [0, 1]);
-        $form->setDefault('persistentfilter', preferences::PERSISTENT_FILTER_DEFAULT);
+        $form->setDefault('persistentfilter', user_preferences::PERSISTENT_FILTER_DEFAULT);
         $form->addHelpButton('persistentfilter', 'reportattemptspersistentfilter', 'adaptivequiz');
 
         $this->add_action_buttons();

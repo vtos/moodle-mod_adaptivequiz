@@ -25,11 +25,11 @@ namespace mod_adaptivequiz\local\report\users_attempts\user_preferences;
 
 defined('MOODLE_INTERNAL') || die();
 
-final class repository {
+final class user_preferences_repository {
 
     private const PREFERENCE_NAME = 'adaptivequiz_users_attempts_report';
 
-    public static function save(preferences $prefs): void {
+    public static function save(user_preferences $prefs): void {
         global $SESSION;
 
         $prefsarr = $prefs->as_array();
@@ -38,7 +38,7 @@ final class repository {
         set_user_preference(self::PREFERENCE_NAME, json_encode($prefsarr));
     }
 
-    public static function get(): preferences {
+    public static function get(): user_preferences {
         global $SESSION;
 
         $storedprefsarr = empty($SESSION->flextableextra[self::PREFERENCE_NAME])
@@ -46,6 +46,6 @@ final class repository {
             : $SESSION->flextableextra[self::PREFERENCE_NAME]
         ;
 
-        return empty($storedprefsarr) ? preferences::defaults() : preferences::from_array($storedprefsarr);
+        return empty($storedprefsarr) ? user_preferences::defaults() : user_preferences::from_array($storedprefsarr);
     }
 }

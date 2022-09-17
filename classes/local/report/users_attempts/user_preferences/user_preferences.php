@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use stdClass;
 
-final class preferences {
+final class user_preferences {
 
     public const PER_PAGE_OPTIONS = [5, 10, 15, 20, 25, 50];
 

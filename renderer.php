@@ -785,6 +785,10 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         return $this->attempt_summary_listing($attempt, $user);
     }
 
+    public function reset_users_attempts_filter_action(moodle_url $url): string {
+        return html_writer::link($url, get_string('reportattemptsresetfilter', 'adaptivequiz'));
+    }
+
     /**
      *
      * @param int $uniqueid See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab()}.

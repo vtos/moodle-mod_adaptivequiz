@@ -37,7 +37,7 @@ use moodle_url;
 use stdClass;
 use table_sql;
 
-final class table extends table_sql {
+final class users_attempts_table extends table_sql {
 
     private const UNIQUE_ID = 'usersattemptstable';
 

@@ -21,10 +21,10 @@
 namespace local\report\users_attempts\user_preferences;
 
 use advanced_testcase;
-use mod_adaptivequiz\local\report\users_attempts\user_preferences\preferences;
-use mod_adaptivequiz\local\report\users_attempts\user_preferences\repository;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_repository;
 
-class repository_test extends advanced_testcase {
+class user_preferences_repository_test extends advanced_testcase {
 
     /**
      * @test
@@ -32,10 +32,10 @@ class repository_test extends advanced_testcase {
     public function it_stores_and_fetches_preferences(): void {
         $this->resetAfterTest();
 
-        $preferences = preferences::from_array(['perpage' => 20, 'showinitialsbar' => 0]);
+        $preferences = user_preferences::from_array(['perpage' => 20, 'showinitialsbar' => 0]);
 
-        repository::save($preferences);
-        $this->assertEquals($preferences, repository::get());
+        user_preferences_repository::save($preferences);
+        $this->assertEquals($preferences, user_preferences_repository::get());
     }
 
     /**
@@ -46,18 +46,18 @@ class repository_test extends advanced_testcase {
 
         $this->resetAfterTest();
 
-        $preferences = preferences::from_array(['perpage' => 20, 'showinitialsbar' => 0]);
+        $preferences = user_preferences::from_array(['perpage' => 20, 'showinitialsbar' => 0]);
 
         // Check it will not query database to fetch preference after saving them
         $queriescountbefore = $DB->perf_get_reads();
 
-        repository::save($preferences);
-        repository::get();
+        user_preferences_repository::save($preferences);
+        user_preferences_repository::get();
 
         $this->assertEquals($queriescountbefore, $DB->perf_get_reads());
 
         // Check it will not query the database for subsequent fetches of preferences
-        repository::get();
+        user_preferences_repository::get();
 
         $this->assertEquals($queriescountbefore, $DB->perf_get_reads());
     }

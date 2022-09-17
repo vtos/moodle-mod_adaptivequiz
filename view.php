@@ -28,15 +28,15 @@ require_once $CFG->dirroot.'/mod/adaptivequiz/locallib.php';
 use core\activity_dates;
 use core_completion\cm_completion_details;
 use mod_adaptivequiz\local\report\individual_user_attempts\questions_difficulty_range;
-use mod_adaptivequiz\local\report\users_attempts\filter\filter as users_attempts_filter;
+use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\filter_user_preferences;
 use mod_adaptivequiz\local\user_attempts_table;
-use mod_adaptivequiz\local\report\users_attempts\table as users_attempts_table;
+use mod_adaptivequiz\local\report\users_attempts\users_attempts_table;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_form;
-use mod_adaptivequiz\local\report\users_attempts\user_preferences\repository as user_preferences_repository;
-use mod_adaptivequiz\local\report\users_attempts\user_preferences\preferences as user_preferences;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_repository;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences;
 use mod_adaptivequiz\output\user_attempt_summary;
 
 $id = optional_param('id', 0, PARAM_INT);
@@ -82,7 +82,7 @@ if ($canviewattemptsreport) {
     }
     $reportuserprefsform->set_data($reportuserprefs->as_array());
 
-    $filter = users_attempts_filter::from_vars($adaptivequiz->id, groups_get_activity_group($cm, true));
+    $filter = filter::from_vars($adaptivequiz->id, groups_get_activity_group($cm, true));
     if ($resetfilter) {
         $filter->fill_from_array(['users' => filter_options::users_option_default(),
             'includeinactiveenrolments' => filter_options::INCLUDE_INACTIVE_ENROLMENTS_DEFAULT]);

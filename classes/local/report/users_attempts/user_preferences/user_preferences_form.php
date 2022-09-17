@@ -26,7 +26,7 @@ require_once($CFG->libdir . '/formslib.php');
 
 use moodleform;
 
-class form extends moodleform {
+class user_preferences_form extends moodleform {
 
     /**
      * Overrides the parent method to remove mandatory closing of fieldset before the submit button.
@@ -36,7 +36,7 @@ class form extends moodleform {
      */
     public function add_action_buttons($cancel = true, $submitlabel=null) {
         $form =& $this->_form;
-        $form->addElement('submit', 'submitbutton', get_string('reportattemptsprefsformsubmit', 'adaptivequiz'));
+        $form->addElement('submit', 'prefssubmit', get_string('reportattemptsprefsformsubmit', 'adaptivequiz'));
     }
 
     protected function definition() {
@@ -52,6 +52,11 @@ class form extends moodleform {
             get_string('reportattemptsshowinitialbars', 'adaptivequiz'), '&nbsp;', null, [0, 1]);
         $form->setDefault('showinitialsbar', preferences::SHOW_INITIALS_BAR_DEFAULT);
 
-        $this->add_action_buttons(false, get_string('reportattemptsprefsformsubmit', 'adaptivequiz'));
+        $form->addElement('advcheckbox', 'persistentfilter',
+            get_string('reportattemptspersistentfilter', 'adaptivequiz'), '&nbsp;', null, [0, 1]);
+        $form->setDefault('persistentfilter', preferences::PERSISTENT_FILTER_DEFAULT);
+        $form->addHelpButton('persistentfilter', 'reportattemptspersistentfilter', 'adaptivequiz');
+
+        $this->add_action_buttons();
     }
 }

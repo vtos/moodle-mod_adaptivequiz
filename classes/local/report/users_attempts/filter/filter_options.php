@@ -14,33 +14,36 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A class containing the data to filter the attempts list by.
- *
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz\local\report\users_attempts;
+namespace mod_adaptivequiz\local\report\users_attempts\filter;
 
 defined('MOODLE_INTERNAL') || die();
 
-final class filter {
+final class filter_options {
 
-    /**
-     * @var int $adaptivequizid
-     */
-    public $adaptivequizid;
+    public const ENROLLED_USERS_WITH_NO_ATTEMPTS = 1;
 
-    /**
-     * @var int $groupid
-     */
-    public $groupid;
+    public const ENROLLED_USERS_WITH_ATTEMPTS = 2;
 
-    public static function from_vars(int $adaptivequizid, int $groupid): self {
-        $return = new self();
-        $return->adaptivequizid = $adaptivequizid;
-        $return->groupid = $groupid;
+    public const BOTH_ENROLLED_AND_NOT_ENROLLED_USERS_WITH_ATTEMPTS = 3;
 
-        return $return;
+    public const NOT_ENROLLED_USERS_WITH_ATTEMPTS = 4;
+
+    public const INCLUDE_INACTIVE_ENROLMENTS_DEFAULT = 1;
+
+    public static function users_option_default(): int {
+        return self::BOTH_ENROLLED_AND_NOT_ENROLLED_USERS_WITH_ATTEMPTS;
+    }
+
+    public static function users_option_exists(int $option): bool {
+        return in_array($option, [
+            self::ENROLLED_USERS_WITH_NO_ATTEMPTS,
+            self::ENROLLED_USERS_WITH_ATTEMPTS,
+            self::BOTH_ENROLLED_AND_NOT_ENROLLED_USERS_WITH_ATTEMPTS,
+            self::NOT_ENROLLED_USERS_WITH_ATTEMPTS
+        ]);
     }
 }

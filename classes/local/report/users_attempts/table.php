@@ -39,7 +39,7 @@ use table_sql;
 
 final class table extends table_sql {
 
-    public const UNIQUE_ID = 'usersattemptstable';
+    private const UNIQUE_ID = 'usersattemptstable';
 
     /**
      * @var mod_adaptivequiz_renderer $renderer

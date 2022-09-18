@@ -62,7 +62,7 @@ function adaptivequiz_supports($feature) {
             return true;
         case FEATURE_GRADE_HAS_GRADE:
             return true;
-		case FEATURE_USES_QUESTIONS:
+        case FEATURE_USES_QUESTIONS:
             return true;
         case FEATURE_MOD_PURPOSE:
             return MOD_PURPOSE_ASSESSMENT;
@@ -212,8 +212,7 @@ function adaptivequiz_delete_instance($id) {
     }
 
     // Remove association table data.
-	if ($DB->record_exists('adaptivequiz_question', array ('instance' => $id))) {
-    //if ($DB->get_record('adaptivequiz_question', array('instance' => $id))) {
+    if ($DB->record_exists('adaptivequiz_question', array ('instance' => $id))) {
         $DB->delete_records('adaptivequiz_question', array('instance' => $id));
     }
 
@@ -263,7 +262,7 @@ function adaptivequiz_user_complete($course, $user, $mod, $adaptivequiz) {
  * @return boolean
  */
 function adaptivequiz_print_recent_activity($course, $viewfullnames, $timestart) {
-    return false;  //  True if anything was printed, otherwise false.
+    return false;  // True if anything was printed, otherwise false.
 }
 
 /**
@@ -352,7 +351,7 @@ function adaptivequiz_get_recent_mod_activity(&$activities, &$index, $timestart,
                 continue;
             }
 
-            if ($groupmode == SEPARATEGROUPS and !$accessallgroups) {
+            if ($groupmode == SEPARATEGROUPS && !$accessallgroups) {
                 if (is_null($usersgroups)) {
                     $usersgroups = groups_get_all_groups($course->id, $attempt->userid, $cm->groupingid);
                     if (is_array($usersgroups)) {
@@ -586,7 +585,7 @@ function adaptivequiz_update_grades(stdClass $adaptivequiz, $userid=0, $nullifno
     if ($grades = adaptivequiz_get_user_grades($adaptivequiz, $userid)) {
         // Set all user grades.
         adaptivequiz_grade_item_update($adaptivequiz, $grades);
-    } else if ($userid and $nullifnone) {
+    } else if ($userid && $nullifnone) {
         // Reset all user grades.
         $grade = new stdClass();
         $grade->userid   = $userid;
@@ -697,20 +696,21 @@ function mod_adaptivequiz_question_pluginfile($course, $context, $component,
     global $CFG, $DB, $USER;
 
     if (!$cm = get_coursemodule_from_id('adaptivequiz', $course->id)) {
-        print_error('invalidcoursemodule');
+        throw new moodle_exception('invalidcoursemodule');
     }
     require_login($course, true, $cm);
 
     // Check if the user has the attempt capability.
     if (!has_capability('mod/adaptivequiz:attempt', $context) && !has_capability('mod/adaptivequiz:viewreport', $context)) {
-      print_error('nopermission', 'adaptivequiz');
+        throw new moodle_exception('nopermission', 'adaptivequiz');
     }
 
-    $quiz_context = $context->get_parent_context();
+    $quizcontext = $context->get_parent_context();
     // Load the quiz data.
     try {
-        $adaptivequiz  = $DB->get_record('adaptivequiz', array('id' => $quiz_context->instanceid), '*', MUST_EXIST);
-        $attemptrec = $DB->get_record('adaptivequiz_attempt', array('uniqueid' => $qubaid, 'instance' => $quiz_context->instanceid), '*', MUST_EXIST);
+        $adaptivequiz  = $DB->get_record('adaptivequiz', array('id' => $quizcontext->instanceid), '*', MUST_EXIST);
+        $attemptrec = $DB->get_record('adaptivequiz_attempt', ['uniqueid' => $qubaid, 'instance' => $quizcontext->instanceid], '*',
+            MUST_EXIST);
     } catch (dml_exception $e) {
 
         $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $id));
@@ -719,38 +719,41 @@ function mod_adaptivequiz_question_pluginfile($course, $context, $component,
         if (!empty($e->debuginfo)) {
             $debuginfo = $e->debuginfo;
         }
-        print_error('invalidmodule', 'error', $url, $e->getMessage(), $debuginfo);
+        throw new moodle_exception('invalidmodule', 'error', $url, $e->getMessage(), $debuginfo);
     }
 
     // If we are reviewing an attempt, require the viewreport capability.
     if ($attemptrec->userid != $USER->id) {
-      require_capability('mod/adaptivequiz:viewreport', $context);
-    }
-    // Otherwise, check that the attempt is active.
-    else {
-      require_once($CFG->dirroot.'/mod/adaptivequiz/adaptiveattempt.class.php');
-      require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
+        require_capability('mod/adaptivequiz:viewreport', $context);
+    } else { // Otherwise, check that the attempt is active.
+        require_once($CFG->dirroot.'/mod/adaptivequiz/adaptiveattempt.class.php');
+        require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
-      // Check if the user has any previous attempts at this activity.
-      $count = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
-      if (!adaptivequiz_allowed_attempt($adaptivequiz->attempts, $count)) {
-          print_error('noattemptsallowed', 'adaptivequiz');
-      }
+        // Check if the user has any previous attempts at this activity.
+        $count = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
+        if (!adaptivequiz_allowed_attempt($adaptivequiz->attempts, $count)) {
+            throw new moodle_exception('noattemptsallowed', 'adaptivequiz');
+        }
 
-      // Check if the uniqueid belongs to the same attempt record the user is currently using.
-      if (!adaptivequiz_uniqueid_part_of_attempt($qubaid, $cm->instance, $USER->id)) {
-          print_error('uniquenotpartofattempt', 'adaptivequiz');
-      }
-      // Verify that the attempt is still in progress.
-      if ($attemptrec->attemptstate != adaptiveattempt::ADAPTIVEQUIZ_ATTEMPT_INPROGRESS) {
-        print_error('notinprogress', 'adaptivequiz');
-      }
+        // Check if the uniqueid belongs to the same attempt record the user is currently using.
+        if (!adaptivequiz_uniqueid_part_of_attempt($qubaid, $cm->instance, $USER->id)) {
+            throw new moodle_exception('uniquenotpartofattempt', 'adaptivequiz');
+        }
+        // Verify that the attempt is still in progress.
+        if ($attemptrec->attemptstate != adaptiveattempt::ADAPTIVEQUIZ_ATTEMPT_INPROGRESS) {
+            throw new moodle_exception('notinprogress', 'adaptivequiz');
+        }
     }
 
     $fs = get_file_storage();
     $relativepath = implode('/', $args);
     $fullpath = "/$context->id/$component/$filearea/$relativepath";
-    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+
+    $file = $fs->get_file_by_hash(sha1($fullpath));
+    if (!$file) {
+        send_file_not_found();
+    }
+    if (!$file->is_directory()) {
         send_file_not_found();
     }
 

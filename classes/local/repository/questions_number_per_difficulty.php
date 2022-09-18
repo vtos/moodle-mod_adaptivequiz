@@ -16,14 +16,14 @@
 /**
  * The class represents questions number per each difficulty, this is what
  * {@link questions_repository::count_questions_number_per_difficulty()} returns.
+ * The purpose of this class is keeping the related pieces of data together, as the client code normally requires both
+ * difficulty level and number of questions for this difficulty set to perform its task.
  *
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace mod_adaptivequiz\local\repository;
-
-defined('MOODLE_INTERNAL') || die();
 
 final class questions_number_per_difficulty {
     /**

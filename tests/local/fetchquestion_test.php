@@ -21,25 +21,24 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz;
+namespace mod_adaptivequiz\local;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/tests/dummyfetchquestion.class.php');
 
 use advanced_testcase;
 use coding_exception;
-use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
+use mod_adaptivequiz\mock_fetchquestion;
 use stdClass;
 
 /**
  * @group mod_adaptivequiz
  */
-class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
+class fetchquestion_test extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */
     protected $activityinstance = null;
 
@@ -57,7 +56,7 @@ class mod_adaptivequiz_fetchquestion_testcase extends advanced_testcase {
      */
     protected function setup_test_data_xml() {
         $this->dataset_from_files(
-            [__DIR__.'/fixtures/mod_adaptivequiz_findquestion.xml']
+            [__DIR__.'/../fixtures/mod_adaptivequiz_findquestion.xml']
         )->to_database();
     }
 

@@ -14,19 +14,28 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines the course module viewed event.
- *
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz\event;
+namespace mod_adaptivequiz\local\report;
 
-class course_module_viewed extends \core\event\course_module_viewed {
+use basic_testcase;
+use stdClass;
 
-    protected function init() {
-        $this->data['objecttable'] = 'adaptivequiz';
-        parent::init();
+class questions_difficulty_range_test extends basic_testcase {
+
+    /**
+     * @test
+     */
+    public function it_can_be_created_from_activity_record(): void {
+        $record = new stdClass();
+        $record->lowestlevel = 5;
+        $record->highestlevel = 25;
+
+        $range = questions_difficulty_range::from_activity_instance($record);
+
+        $this->assertEquals(5, $range->lowest_level());
+        $this->assertEquals(25, $range->highest_level());
     }
 }

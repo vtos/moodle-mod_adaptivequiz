@@ -18,7 +18,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz\tests\local\repository;
+namespace mod_adaptivequiz\local\repository;
 
 use advanced_testcase;
 use coding_exception;
@@ -28,12 +28,10 @@ use core_question\local\bank\question_version_status;
 use core_question_generator;
 use core_tag_tag;
 use dml_missing_record_exception;
-use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
-use mod_adaptivequiz\local\repository\questions_repository;
 use question_bank;
 use stdClass;
 
-final class questions_repository_test extends advanced_testcase {
+class questions_repository_test extends advanced_testcase {
     /**
      * @test
      */
@@ -47,34 +45,34 @@ final class questions_repository_test extends advanced_testcase {
         $course = $generator->create_course();
 
         $questionscat1 = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $question1 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
         $questionsgenerator->create_question_tag(
-            ['questionid' => $question1->id, 'tag' => 'adpq_1',]
+            ['questionid' => $question1->id, 'tag' => 'adpq_1']
         );
         $question2 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
         $questionsgenerator->create_question_tag(
-            ['questionid' => $question2->id, 'tag' => 'adpq_2',]
+            ['questionid' => $question2->id, 'tag' => 'adpq_2']
         );
         $question3 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
         $questionsgenerator->create_question_tag(
-            ['questionid' => $question3->id, 'tag' => 'adpq_001',]
+            ['questionid' => $question3->id, 'tag' => 'adpq_001']
         );
 
         $questionscat2 = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $this->assertEquals(1, questions_repository::count_adaptive_questions_in_pool_with_level(
-            [$questionscat1->id, $questionscat2->id,], 1
+            [$questionscat1->id, $questionscat2->id], 1
         ));
 
         $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat2->id]);
 
         $questionsgenerator->create_question_tag(
-            ['questionid' => $question2->id, 'tag' => 'truefalse_1',]
+            ['questionid' => $question2->id, 'tag' => 'truefalse_1']
         );
 
         $this->assertEquals(1, questions_repository::count_adaptive_questions_in_pool_with_level(
@@ -82,7 +80,7 @@ final class questions_repository_test extends advanced_testcase {
         ));
 
         $questionscat3 = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $this->assertEquals(0, questions_repository::count_adaptive_questions_in_pool_with_level(
@@ -117,7 +115,7 @@ final class questions_repository_test extends advanced_testcase {
 
         $question3 = $questionsgenerator->create_question('truefalse', null, ['category' => $category1->id]);
 
-        // Update one of the questions to populate several versions in the database
+        // Update one of the questions to populate several versions in the database.
         $questionsgenerator->update_question($question3, null, ['name' => 'New question version']);
 
         $question3tag = $this->create_question_tag($question3->id, 'adpq_4');
@@ -148,7 +146,7 @@ final class questions_repository_test extends advanced_testcase {
     public function it_finds_questions_with_tags(): void {
         $this->resetAfterTest();
 
-        // It returns empty array when no tags or no question categories specified
+        // It returns empty array when no tags or no question categories specified.
         self::assertEquals([], questions_repository::find_questions_with_tags([], [1, 2], []));
         self::assertEquals([], questions_repository::find_questions_with_tags([1, 2], [], []));
 
@@ -172,7 +170,7 @@ final class questions_repository_test extends advanced_testcase {
         $question2 = $questionsgenerator->create_question('truefalse', null,
             ['name' => 'Question 2', 'category' => $category2->id]);
 
-        // Update one of the questions to populate several versions in the database
+        // Update one of the questions to populate several versions in the database.
         $question2 = $questionsgenerator->update_question($question2, null, ['name' => 'New question version']);
 
         $question2tag = $this->create_question_tag($question2->id, 'adpq_4');
@@ -203,7 +201,7 @@ final class questions_repository_test extends advanced_testcase {
 
         self::assertEquals($expectedresult, $result);
 
-        // It can handle excluded questions
+        // It can handle excluded questions.
         $result = questions_repository::find_questions_with_tags($tagidlist, $categoryidlist, [$question1->id]);
 
         $expectedresult = [];

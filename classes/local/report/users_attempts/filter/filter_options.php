@@ -14,6 +14,8 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Emulates an enum type to keep available filtering options. Defines default values for the options as well.
+ *
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

@@ -23,8 +23,6 @@
 
 namespace mod_adaptivequiz\local\repository;
 
-defined('MOODLE_INTERNAL') || die();
-
 use coding_exception;
 use core_question\local\bank\question_version_status;
 use core_tag_tag;
@@ -40,20 +38,20 @@ final class questions_repository {
      * @param int $level Question difficulty which is contained in the question's tag.
      */
     public static function count_adaptive_questions_in_pool_with_level(array $qcategoryidlist, int $level): int {
-        if (!$raw = question_finder::get_instance()->get_questions_from_categories($qcategoryidlist,'')) {
+        if (!$raw = question_finder::get_instance()->get_questions_from_categories($qcategoryidlist, '')) {
             return 0;
         }
 
         $questionstags = core_tag_tag::get_items_tags('core_question', 'question', array_keys($raw));
 
-        // Filter non-'adaptive' and level mismatching tags out
+        // Filter 'non-adaptive' and level mismatching tags out.
         $questionstags = array_map(function(array $tags) use ($level) {
             return array_filter($tags, function(core_tag_tag $tag) use ($level) {
                 return substr($tag->name, strlen(ADAPTIVEQUIZ_QUESTION_TAG)) === (string)$level;
             });
         }, $questionstags);
 
-        // Filter empty tags arrays out
+        // Filter empty tags arrays out.
         $questionstags = array_filter($questionstags, function(array $tags) {
             return !empty($tags);
         });

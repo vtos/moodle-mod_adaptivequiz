@@ -23,7 +23,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->version = 2022050700;
 $plugin->release = '2.2.0';
-$plugin->requires = 2022041900; // 4.0 (Build: 20220419)
+$plugin->requires = 2022041900; // 4.0 (Build: 20220419).
 $plugin->cron = 0;
 $plugin->component = 'mod_adaptivequiz';
 $plugin->maturity = MATURITY_ALPHA;

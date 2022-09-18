@@ -20,11 +20,10 @@
 
 namespace mod_adaptivequiz\local\report\individual_user_attempts;
 
-defined('MOODLE_INTERNAL') || die();
-
 require_once($CFG->libdir . '/tablelib.php');
 
 use html_writer;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz_renderer;
 use moodle_url;
 use stdClass;
@@ -88,8 +87,8 @@ final class table extends table_sql {
 
         $formatmeasureparams = new stdClass();
         $formatmeasureparams->measure = $row->measure;
-        $formatmeasureparams->highestlevel = $this->questionsdifficultyrange->highestlevel;
-        $formatmeasureparams->lowestlevel = $this->questionsdifficultyrange->lowestlevel;
+        $formatmeasureparams->highestlevel = $this->questionsdifficultyrange->highest_level();
+        $formatmeasureparams->lowestlevel = $this->questionsdifficultyrange->lowest_level();
 
         return $this->renderer->format_measure($formatmeasureparams) .
             ' ' . $this->renderer->format_standard_error($row);

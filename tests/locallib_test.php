@@ -244,9 +244,6 @@ class locallib_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         $this->setup_test_data_xml();
 
-
-
-
         $result = adaptivequiz_update_attempt_data(3, 13, 3, 50, 0.002, 0.99);
         $record = $DB->get_record('adaptivequiz_attempt', array('id' => 2));
 

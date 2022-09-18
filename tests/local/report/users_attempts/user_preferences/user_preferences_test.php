@@ -18,15 +18,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local\report\users_attempts\user_preferences;
+namespace mod_adaptivequiz\local\report\users_attempts\user_preferences;
 
-use base_testcase;
+use basic_testcase;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
-use mod_adaptivequiz\local\report\users_attempts\user_preferences\filter_user_preferences;
-use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences;
 use stdClass;
 
-class user_preferences_test extends base_testcase {
+class user_preferences_test extends basic_testcase {
 
     /**
      * @test

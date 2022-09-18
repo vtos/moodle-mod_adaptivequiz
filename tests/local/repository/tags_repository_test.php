@@ -26,7 +26,7 @@ use context_course;
 use core_question_generator;
 use core_tag_tag;
 
-final class tags_repository_test extends advanced_testcase {
+class tags_repository_test extends advanced_testcase {
     /**
      * @test
      */
@@ -36,7 +36,7 @@ final class tags_repository_test extends advanced_testcase {
         $this->assertEquals(
             [],
             tags_repository::get_question_level_to_tag_id_mapping_by_tag_names(
-                ['adpq_5','adpq_6',]
+                ['adpq_5', 'adpq_6',]
             )
         );
 
@@ -46,7 +46,7 @@ final class tags_repository_test extends advanced_testcase {
 
         $course = $generator->create_course();
         $questionscat = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $question1 = $questionsgenerator->create_question('shortanswer', null, ['category' => $questionscat->id]);
@@ -61,7 +61,7 @@ final class tags_repository_test extends advanced_testcase {
         core_tag_tag::add_item_tag('core', 'course', $course->id, context_course::instance($course->id), 'adpq_5');
 
         $map = tags_repository::get_question_level_to_tag_id_mapping_by_tag_names(
-            ['adpq_5','adpq_6',]
+            ['adpq_5', 'adpq_6',]
         );
 
         $questionstags = core_tag_tag::get_items_tags('core_question', 'question', [$question1->id, $question2->id]);
@@ -74,7 +74,7 @@ final class tags_repository_test extends advanced_testcase {
 
         $this->assertEquals(2, count($map));
         $this->assertEquals(
-            [5 => array_shift($tagidlist), 6 => array_shift($tagidlist),],
+            [5 => array_shift($tagidlist), 6 => array_shift($tagidlist)],
             $map
         );
     }
@@ -96,7 +96,7 @@ final class tags_repository_test extends advanced_testcase {
         $this->assertEquals(
             [],
             tags_repository::get_tag_id_list_by_tag_names(
-                ['adpq_10','adpq_11',]
+                ['adpq_10', 'adpq_11']
             )
         );
 
@@ -106,7 +106,7 @@ final class tags_repository_test extends advanced_testcase {
 
         $course = $generator->create_course();
         $questionscat = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $question1 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat->id]);
@@ -121,7 +121,7 @@ final class tags_repository_test extends advanced_testcase {
         core_tag_tag::add_item_tag('core', 'course', $course->id, context_course::instance($course->id), 'adpq_10');
 
         $tagidlist = tags_repository::get_tag_id_list_by_tag_names(
-            ['adpq_10','adpq_11',]
+            ['adpq_10','adpq_11']
         );
 
         $questionstags = core_tag_tag::get_items_tags('core_question', 'question', [$question1->id, $question2->id]);
@@ -134,7 +134,7 @@ final class tags_repository_test extends advanced_testcase {
 
         $this->assertEquals(2, count($tagidlist));
         $this->assertEquals(
-            [0 => array_shift($itemtagidlist), 1 => array_shift($itemtagidlist),],
+            [0 => array_shift($itemtagidlist), 1 => array_shift($itemtagidlist)],
             $tagidlist
         );
     }

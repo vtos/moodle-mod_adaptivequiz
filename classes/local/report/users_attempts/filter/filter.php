@@ -22,8 +22,6 @@
 
 namespace mod_adaptivequiz\local\report\users_attempts\filter;
 
-defined('MOODLE_INTERNAL') || die();
-
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\filter_user_preferences;
 
 final class filter {

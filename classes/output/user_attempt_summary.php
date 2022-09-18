@@ -22,12 +22,11 @@
 
 namespace mod_adaptivequiz\output;
 
-defined('MOODLE_INTERNAL') || die();
-
 use renderable;
 use stdClass;
 
 final class user_attempt_summary implements renderable {
+
     /**
      * @var string $attemptstate
      */

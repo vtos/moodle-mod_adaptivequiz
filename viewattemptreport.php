@@ -14,7 +14,7 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive quiz view attempt report script
+ * Adaptive quiz view attempt report script.
  *
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -25,7 +25,7 @@ require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use mod_adaptivequiz\local\report\individual_user_attempts\filter as user_attempts_table;
-use mod_adaptivequiz\local\report\individual_user_attempts\questions_difficulty_range;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\individual_user_attempts\table as individual_user_attempts_table;
 
 $id = required_param('cmid', PARAM_INT);

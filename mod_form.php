@@ -23,8 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once $CFG->dirroot . '/course/moodleform_mod.php';
-require_once $CFG->dirroot . '/mod/adaptivequiz/locallib.php';
+require_once($CFG->dirroot . '/course/moodleform_mod.php');
+require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
 use mod_adaptivequiz\local\repository\questions_repository;
 
@@ -50,7 +50,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
         $mform->addHelpButton('name', 'adaptivequizname', 'adaptivequiz');
 
-        // Adding the standard "intro" and "introformat" fields...
+        // Adding the standard "intro" and "introformat" fields.
         // Use the non deprecated function if it exists.
         if (method_exists($this, 'standard_intro_elements')) {
             $this->standard_intro_elements();

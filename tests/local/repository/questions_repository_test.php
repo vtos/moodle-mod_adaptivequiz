@@ -25,7 +25,7 @@ use context_course;
 use core_question_generator;
 use core_tag_tag;
 
-final class questions_repository_test extends advanced_testcase {
+class questions_repository_test extends advanced_testcase {
     /**
      * @test
      */
@@ -39,7 +39,7 @@ final class questions_repository_test extends advanced_testcase {
         $course = $generator->create_course();
 
         $questionscat1 = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $question1 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
@@ -52,11 +52,11 @@ final class questions_repository_test extends advanced_testcase {
         core_tag_tag::add_item_tag('core_question', 'question', $question3->id, context_course::instance($course->id), 'adpq_001');
 
         $questionscat2 = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $this->assertEquals(1, questions_repository::count_adaptive_questions_in_pool_with_level(
-            [$questionscat1->id, $questionscat2->id,], 1
+            [$questionscat1->id, $questionscat2->id], 1
         ));
 
         $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat2->id]);
@@ -64,15 +64,15 @@ final class questions_repository_test extends advanced_testcase {
         core_tag_tag::add_item_tag('core_question', 'question', $question2->id, context_course::instance($course->id), 'truefalse_1');
 
         $this->assertEquals(1, questions_repository::count_adaptive_questions_in_pool_with_level(
-            [$questionscat1->id, $questionscat2->id,], 1
+            [$questionscat1->id, $questionscat2->id], 1
         ));
 
         $questionscat3 = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $this->assertEquals(0, questions_repository::count_adaptive_questions_in_pool_with_level(
-            [$questionscat3->id,], 1
+            [$questionscat3->id], 1
         ));
     }
 }

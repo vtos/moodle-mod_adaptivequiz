@@ -21,9 +21,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once __DIR__ . '/../../config.php';
-require_once $CFG->dirroot . '/tag/lib.php';
-require_once $CFG->dirroot . '/mod/adaptivequiz/locallib.php';
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/tag/lib.php');
+require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
 $id = required_param('cmid', PARAM_INT);
 $uniqueid = required_param('uniqueid', PARAM_INT);
@@ -32,10 +32,10 @@ $page = optional_param('page', 0, PARAM_INT);
 $tab = optional_param('tab', 'attemptsummary', PARAM_ALPHA);
 
 if (!$cm = get_coursemodule_from_id('adaptivequiz', $id)) {
-    print_error('invalidcoursemodule');
+    throw new moodle_exception('invalidcoursemodule');
 }
 if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-    print_error("coursemisconf");
+    throw new moodle_exception("coursemisconf");
 }
 
 require_login($course, true, $cm);

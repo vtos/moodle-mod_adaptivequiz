@@ -27,14 +27,14 @@ require_once $CFG->dirroot . '/mod/adaptivequiz/locallib.php';
 use mod_adaptivequiz\output\ability_measure;
 
 $cmid = required_param('cmid', PARAM_INT); // Course module id.
-$instance = required_param('id', PARAM_INT); // activity instance id.
-$uniqueid = required_param('uattid', PARAM_INT); // attempt unique id.
+$instance = required_param('id', PARAM_INT); // Activity instance id.
+$uniqueid = required_param('uattid', PARAM_INT); // Attempt unique id.
 
 if (!$cm = get_coursemodule_from_id('adaptivequiz', $cmid)) {
-    print_error('invalidcoursemodule');
+    throw new moodle_exception('invalidcoursemodule');
 }
 if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-    print_error("coursemisconf");
+    throw new moodle_exception('coursemisconf');
 }
 
 $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $cm->instance], '*', MUST_EXIST);
@@ -56,7 +56,7 @@ $validattempt = adaptivequiz_uniqueid_part_of_attempt($uniqueid, $instance, $USE
 // Display an error message if this is not the owner of the attempt.
 if (!$validattempt) {
     $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $cm->id));
-    print_error('notyourattempt', 'adaptivequiz', $url);
+    throw new moodle_exception('notyourattempt', 'adaptivequiz', $url);
 }
 
 $PAGE->set_url('/mod/adaptivequiz/view.php', array('id' => $cm->id));

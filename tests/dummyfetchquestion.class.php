@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A dummy class that extends fetchquestion class. The purpose of this class is to expose the protected method of retrieve_question_categories()
+ * A dummy class that extends fetchquestion class.
+ * The purpose of this class is to expose the protected method of retrieve_question_categories().
  *
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -29,9 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 use mod_adaptivequiz\local\fetchquestion;
 
 class mock_fetchquestion extends fetchquestion {
-    /**
-     * Constructor
-     */
+
     public function __construct($adaptivequiz, $level = 1, $minimumlevel, $maximumlevel, $tags = array()) {
         parent::__construct($adaptivequiz, $level, $minimumlevel, $maximumlevel, $tags);
     }

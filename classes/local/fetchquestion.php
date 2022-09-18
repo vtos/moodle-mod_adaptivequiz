@@ -15,7 +15,7 @@
 
 /**
  * This class does the work of fetching a questions associated with a level of difficulty and within
- * a question category
+ * a question category.
  *
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -23,8 +23,6 @@
  */
 
 namespace mod_adaptivequiz\local;
-
-defined('MOODLE_INTERNAL') || die();
 
 use coding_exception;
 use dml_exception;

@@ -14,7 +14,7 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive quiz backup files
+ * Restore task that provides all the settings and steps to perform one complete restore of the activity.
  *
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -25,13 +25,6 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/mod/adaptivequiz/backup/moodle2/restore_adaptivequiz_stepslib.php');
 
-/**
- * adaptivequiz restore task that provides all the settings and steps to perform one
- * complete restore of the activity
- *
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 class restore_adaptivequiz_activity_task extends restore_activity_task {
     /**
      * Define (add) particular settings this activity can have

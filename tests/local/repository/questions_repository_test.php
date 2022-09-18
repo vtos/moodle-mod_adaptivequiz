@@ -21,10 +21,17 @@
 namespace mod_adaptivequiz\local\repository;
 
 use advanced_testcase;
+use coding_exception;
+use context;
 use context_course;
+use core_question\local\bank\question_version_status;
 use core_question_generator;
+use core_tag_tag;
+use dml_missing_record_exception;
+use question_bank;
+use stdClass;
 
-final class questions_repository_test extends advanced_testcase {
+class questions_repository_test extends advanced_testcase {
     /**
      * @test
      */
@@ -38,34 +45,34 @@ final class questions_repository_test extends advanced_testcase {
         $course = $generator->create_course();
 
         $questionscat1 = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $question1 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
         $questionsgenerator->create_question_tag(
-            ['questionid' => $question1->id, 'tag' => 'adpq_1',]
+            ['questionid' => $question1->id, 'tag' => 'adpq_1']
         );
         $question2 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
         $questionsgenerator->create_question_tag(
-            ['questionid' => $question2->id, 'tag' => 'adpq_2',]
+            ['questionid' => $question2->id, 'tag' => 'adpq_2']
         );
         $question3 = $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat1->id]);
         $questionsgenerator->create_question_tag(
-            ['questionid' => $question3->id, 'tag' => 'adpq_001',]
+            ['questionid' => $question3->id, 'tag' => 'adpq_001']
         );
 
         $questionscat2 = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $this->assertEquals(1, questions_repository::count_adaptive_questions_in_pool_with_level(
-            [$questionscat1->id, $questionscat2->id,], 1
+            [$questionscat1->id, $questionscat2->id], 1
         ));
 
         $questionsgenerator->create_question('truefalse', null, ['category' => $questionscat2->id]);
 
         $questionsgenerator->create_question_tag(
-            ['questionid' => $question2->id, 'tag' => 'truefalse_1',]
+            ['questionid' => $question2->id, 'tag' => 'truefalse_1']
         );
 
         $this->assertEquals(1, questions_repository::count_adaptive_questions_in_pool_with_level(
@@ -73,7 +80,7 @@ final class questions_repository_test extends advanced_testcase {
         ));
 
         $questionscat3 = $questionsgenerator->create_question_category(
-            ['contextid' => context_course::instance($course->id)->id,]
+            ['contextid' => context_course::instance($course->id)->id]
         );
 
         $this->assertEquals(0, questions_repository::count_adaptive_questions_in_pool_with_level(

@@ -14,20 +14,15 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The class defines a configuration object with range of questions difficulty. Acts as a container for related piece
- * of data.
- * Normally is set from a corresponding activity record's values, thus, it doesn't perform any parameters validation
- * and keeps its properties public.
+ * The class defines a configuration object with range of questions difficulty. Acts as a container for related pieces
+ * of data - a value object. Normally is set from a corresponding activity record's values, thus, it doesn't perform
+ * any validation of the parameters when instantiated.
  *
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-declare(strict_types=1);
-
-namespace mod_adaptivequiz\local\report\individual_user_attempts;
-
-defined('MOODLE_INTERNAL') || die();
+namespace mod_adaptivequiz\local\report;
 
 use stdClass;
 
@@ -36,21 +31,30 @@ final class questions_difficulty_range {
     /**
      * @var int $lowestlevel
      */
-    public $lowestlevel;
+    private $lowestlevel;
 
     /**
      * @var int $highestlevel
      */
-    public $highestlevel;
+    private $highestlevel;
+
+    private function __construct(int $lowestlevel, int $highestlevel) {
+        $this->lowestlevel = $lowestlevel;
+        $this->highestlevel = $highestlevel;
+    }
+
+    public function lowest_level(): int {
+        return $this->lowestlevel;
+    }
+
+    public function highest_level(): int {
+        return $this->highestlevel;
+    }
 
     /**
      * @param stdClass $instance A record from {adaptivequiz}.
      */
     public static function from_activity_instance(stdClass $instance): self {
-        $return = new self();
-        $return->lowestlevel = $instance->lowestlevel;
-        $return->highestlevel = $instance->highestlevel;
-
-        return $return;
+        return new self($instance->lowestlevel, $instance->highestlevel);
     }
 }

@@ -209,7 +209,7 @@ function adaptivequiz_update_attempt_data($uniqueid, $instance, $userid, $level,
             $debuginfo = $e->debuginfo;
         }
 
-        print_error('updateattempterror', 'adaptivequiz', '', $e->getMessage(), $debuginfo);
+        throw new moodle_exception('updateattempterror', 'adaptivequiz', '', $e->getMessage(), $debuginfo);
     }
 
     $attempt->difficultysum = (float) $attempt->difficultysum + (float) $level;

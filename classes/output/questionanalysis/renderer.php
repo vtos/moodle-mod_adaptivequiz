@@ -97,8 +97,6 @@ class renderer extends plugin_renderer_base {
      * @return array an array of column headers (firstname / lastname, number of attempts, standard error)
      */
     public function format_report_table_headers($headers, $cm, $baseurl, $sort, $sortdir) {
-        global $OUTPUT;
-
         /* Create header links */
         $contents = array();
         foreach ($headers as $key => $name) {
@@ -106,11 +104,11 @@ class renderer extends plugin_renderer_base {
                 $seperator = ' ';
                 if ($sortdir == 'DESC') {
                     $sortdir = 'ASC';
-                    $imageparam = array('src' => $OUTPUT->image_url('t/up'), 'alt' => '');
+                    $imageparam = array('src' => $this->image_url('t/up'), 'alt' => '');
                     $icon = html_writer::empty_tag('img', $imageparam);
                 } else {
                     $sortdir = 'DESC';
-                    $imageparam = array('src' => $OUTPUT->image_url('t/down'), 'alt' => '');
+                    $imageparam = array('src' => $this->image_url('t/down'), 'alt' => '');
                     $icon = html_writer::empty_tag('img', $imageparam);
                 }
             } else {
@@ -134,12 +132,10 @@ class renderer extends plugin_renderer_base {
      * @return string HTML markup
      */
     public function print_paging_bar($totalrecords, $page, $perpage, $cm, $baseurl, $sort, $sortdir) {
-        global $OUTPUT;
-
         $url = new moodle_url($baseurl, array('cmid' => $cm->id, 'sort' => $sort, 'sortdir' => $sortdir));
 
         $output = '';
-        $output .= $OUTPUT->paging_bar($totalrecords, $page, $perpage, $url);
+        $output .= $this->paging_bar($totalrecords, $page, $perpage, $url);
         return $output;
     }
 

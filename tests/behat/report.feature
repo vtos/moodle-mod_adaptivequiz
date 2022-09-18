@@ -72,6 +72,40 @@ Feature: Attempt an adaptive quiz
     And "Peter The Student" row "Number of attempts" column of "usersattemptstable" table should contain "1"
 
   @javascript
+  Scenario: Deleted user should not appear in the attempts report
+    Given the following "user" exists:
+      | username     | student2                    |
+      | firstname    | Henry                       |
+      | lastname     | The Student                 |
+      | email        | henrythestudent@example.com |
+    And the following "course enrolment" exists:
+      | user         | student2 |
+      | course       | C1       |
+      | role         | student  |
+    And I log in as "student2"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
+    And I press "Start attempt"
+    And I click on "True" "radio" in the "First question" "question"
+    And I press "Submit answer"
+    And I click on "True" "radio" in the "Second question" "question"
+    And I press "Submit answer"
+    And I press "Continue"
+    And I log out
+    And I log in as "admin"
+    And I navigate to "Users > Accounts > Bulk user actions" in site administration
+    And I set the field "Available" to "Henry The Student"
+    And I press "Add to selection"
+    And I set the field "id_action" to "Delete"
+    And I press "Go"
+    And I press "Yes"
+    And I log out
+    When I log in as "teacher1"
+    And I am on "Course 1" course homepage
+    And I follow "Adaptive Quiz"
+    Then "Henry The Student" "table_row" should not exist
+
+  @javascript
   Scenario: Individual user attempts report
     When I log in as "teacher1"
     And I am on "Course 1" course homepage

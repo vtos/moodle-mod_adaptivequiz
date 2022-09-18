@@ -14,30 +14,26 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * adaptive attempt PHPUnit tests
- *
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz;
+namespace mod_adaptivequiz\local;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use context_module;
-use mod_adaptivequiz\local\adaptiveattempt;
 use stdClass;
 
 /**
  * @group mod_adaptivequiz
  */
-class adaptiveattempt_testcase extends advanced_testcase {
+class adaptiveattempt_test extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */
     protected $activityinstance = null;
 
@@ -52,7 +48,7 @@ class adaptiveattempt_testcase extends advanced_testcase {
      */
     protected function setup_test_data_xml() {
         $this->dataset_from_files(
-            [__DIR__.'/fixtures/mod_adaptivequiz_adaptiveattempt.xml']
+            [__DIR__.'/../fixtures/mod_adaptivequiz_adaptiveattempt.xml']
         )->to_database();
     }
 
@@ -70,12 +66,12 @@ class adaptiveattempt_testcase extends advanced_testcase {
      * @return void
      */
     protected function setup_generator_data() {
-        // Create test user
+        // Create test user.
         $this->user = $this->getDataGenerator()->create_user();
         $this->setUser($this->user);
         $this->setAdminUser();
 
-        // Create activity
+        // Create activity.
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
         $options = array(
             'highestlevel' => 10,
@@ -151,13 +147,13 @@ class adaptiveattempt_testcase extends advanced_testcase {
 
         $adaptiveattempt = new adaptiveattempt($this->activityinstance, $this->user->id);
 
-        // Test a non initialized quba
+        // Test a non initialized quba.
         $this->assertNull($adaptiveattempt->get_quba());
 
-        // Test a property initializes quba
+        // Test a property initializes quba.
         $mockquba = $this->getMockBuilder('question_usage_by_activity')
-                ->disableOriginalConstructor()
-                ->getMock();
+            ->disableOriginalConstructor()
+            ->getMock();
 
         $adaptiveattempt->set_quba($mockquba);
         $this->assertInstanceOf('question_usage_by_activity', $adaptiveattempt->get_quba());
@@ -243,7 +239,9 @@ class adaptiveattempt_testcase extends advanced_testcase {
         $result = $adaptiveattempt->return_random_question(array());
         $this->assertEquals(0, $result);
 
-        $result = (string) $adaptiveattempt->return_random_question(array(1 => 'quest 1', 2 => 'quest 2', 3 => 'quest 3', 4 => 'quest 4'));
+        $result = (string) $adaptiveattempt->return_random_question(
+            [1 => 'quest 1', 2 => 'quest 2', 3 => 'quest 3', 4 => 'quest 4']
+        );
         $this->assertRegExp('/[1-4]/', $result);
     }
 
@@ -281,7 +279,7 @@ class adaptiveattempt_testcase extends advanced_testcase {
 
         $this->assertInstanceOf('question_usage_by_activity', $quba);
 
-        // Check if the uniqueid of the adaptive attempt equals the id of the object loaded by quba class
+        // Check if the uniqueid of the adaptive attempt equals the id of the object loaded by quba class.
         $this->assertEquals(330, $quba->get_id());
     }
 
@@ -332,11 +330,11 @@ class adaptiveattempt_testcase extends advanced_testcase {
             ->disableOriginalConstructor()
             ->getMock();
 
-        // Test passing an invalid object instance
+        // Test passing an invalid object instance.
         $result = $adaptiveattempt->find_last_quest_used_by_attempt($dummy);
         $this->assertEquals(0, $result);
 
-        // Test getting an empty slot value
+        // Test getting an empty slot value.
         $mockquba = $this->getMockBuilder('question_usage_by_activity')
             ->disableOriginalConstructor()
             ->getMock();
@@ -515,7 +513,7 @@ class adaptiveattempt_testcase extends advanced_testcase {
     public function test_get_question_mark_with_quba_return_float() {
         $this->resetAfterTest(true);
 
-        // Test quba returning a mark of 1.0
+        // Test quba returning a mark of 1.0.
         $mockquba = $this->createMock('question_usage_by_activity', array(), array(), '', false);
 
         $mockquba->expects($this->once())
@@ -535,7 +533,7 @@ class adaptiveattempt_testcase extends advanced_testcase {
     public function test_get_question_mark_with_quba_return_non_float() {
         $this->resetAfterTest(true);
 
-        // Test quba returning a non float value
+        // Test quba returning a non float value.
         $mockqubatwo = $this->createMock('question_usage_by_activity', array(), array(), '', false);
 
         $mockqubatwo->expects($this->once())
@@ -555,12 +553,12 @@ class adaptiveattempt_testcase extends advanced_testcase {
     public function test_get_question_mark_with_quba_return_non_null() {
         $this->resetAfterTest(true);
 
-        // Test quba returning null
+        // Test quba returning null.
         $mockqubathree = $this->createMock('question_usage_by_activity', array(), array(), '', false);
 
         $mockqubathree->expects($this->once())
-                ->method('get_question_mark')
-                ->will($this->returnValue(null));
+            ->method('get_question_mark')
+            ->will($this->returnValue(null));
 
         $dummy = new stdClass();
         $userid = 1;
@@ -585,7 +583,8 @@ class adaptiveattempt_testcase extends advanced_testcase {
     }
 
     /**
-     * This function tests what happens when a question slot number is not found, but the number of submitted answers is greater than zero
+     * This function tests what happens when a question slot number is not found, but the number of submitted answers is greater
+     * than zero.
      */
     public function test_start_attempt_quest_slot_empty_quest_submit_greater_than_one() {
         $dummyadaptivequiz = new stdClass();

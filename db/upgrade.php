@@ -14,12 +14,12 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Adaptive quiz upgrade steps.
+ *
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
 
 function xmldb_adaptivequiz_upgrade($oldversion) {
     global $CFG, $DB;
@@ -42,7 +42,8 @@ function xmldb_adaptivequiz_upgrade($oldversion) {
 
     if ($oldversion < 2022012600) {
         $table = new xmldb_table('adaptivequiz');
-        $field = new xmldb_field('showabilitymeasure', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, false, '0', 'attemptfeedbackformat');
+        $field = new xmldb_field('showabilitymeasure', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, false, '0',
+            'attemptfeedbackformat');
 
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);

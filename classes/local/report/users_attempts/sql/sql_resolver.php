@@ -14,6 +14,9 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * A class to keep the logic of resolving what sql with its parameters should be used for the report
+ * depending on filtering requested, etc.
+ *
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

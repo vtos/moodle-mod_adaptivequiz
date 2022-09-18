@@ -1,5 +1,5 @@
 @mod @mod_adaptivequiz
-Feature: Attempt an adaptive quiz
+Feature: View students results in adaptive quiz
   In order to control what results students have on attempting adaptive quizzes
   As a teacher
   I need an access to attempts reporting

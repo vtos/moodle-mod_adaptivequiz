@@ -17,11 +17,9 @@
  * Define all the backup steps that will be used by the backup_adaptivequiz_activity_task.
  *
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
- * Structure step to restore one adaptivequiz activity
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
 
 class backup_adaptivequiz_activity_structure_step extends backup_questions_activity_structure_step {
 

@@ -22,8 +22,6 @@
  */
 namespace mod_adaptivequiz\local\repository;
 
-defined('MOODLE_INTERNAL') || die();
-
 use coding_exception;
 use dml_exception;
 use stdClass;

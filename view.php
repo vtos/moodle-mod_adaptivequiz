@@ -27,7 +27,7 @@ require_once $CFG->dirroot.'/mod/adaptivequiz/locallib.php';
 
 use core\activity_dates;
 use core_completion\cm_completion_details;
-use mod_adaptivequiz\local\report\individual_user_attempts\questions_difficulty_range;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;

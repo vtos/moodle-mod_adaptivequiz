@@ -22,13 +22,11 @@
 
 namespace mod_adaptivequiz\local\report\users_attempts;
 
-defined('MOODLE_INTERNAL') || die();
-
 use coding_exception;
 use context;
 use dml_exception;
 use html_writer;
-use mod_adaptivequiz\local\report\individual_user_attempts\questions_difficulty_range;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\sql\sql_resolver;
 use mod_adaptivequiz_renderer;
@@ -80,11 +78,11 @@ final class users_attempts_table extends table_sql {
      * {@inheritdoc}
      * @throws dml_exception
      */
-    public function query_db($pagesize, $useinitialsbar=true): void {
+    public function query_db($pagesize, $useinitialsbar = true): void {
         global $DB;
 
         if (!$this->is_downloading()) {
-            if ($this->countsql === NULL) {
+            if ($this->countsql === null) {
                 $this->countsql = 'SELECT COUNT(1) FROM '.$this->sql->from.' WHERE '.$this->sql->where;
                 $this->countparams = $this->sql->params;
             }
@@ -127,7 +125,8 @@ final class users_attempts_table extends table_sql {
                 {$sort}";
 
         if (!$this->is_downloading()) {
-            $this->rawdata = $DB->get_records_sql($sql, $this->sql->params, $this->get_page_start(), $this->get_page_size());
+            $this->rawdata = $DB->get_records_sql($sql, $this->sql->params, $this->get_page_start(),
+                $this->get_page_size());
         } else {
             $this->rawdata = $DB->get_records_sql($sql, $this->sql->params);
         }
@@ -140,7 +139,10 @@ final class users_attempts_table extends table_sql {
 
         if (!$this->is_downloading()) {
             return html_writer::link(
-                new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['userid' => $row->id, 'cmid' => $this->cmid]),
+                new moodle_url(
+                    '/mod/adaptivequiz/viewattemptreport.php',
+                    ['userid' => $row->id, 'cmid' => $this->cmid]
+                ),
                 $row->attemptsnum
             );
         }
@@ -154,8 +156,8 @@ final class users_attempts_table extends table_sql {
     protected function col_measure(stdClass $row): string {
         $formatmeasureparams = new stdClass();
         $formatmeasureparams->measure = $row->measure;
-        $formatmeasureparams->highestlevel = $this->questionsdifficultyrange->highestlevel;
-        $formatmeasureparams->lowestlevel = $this->questionsdifficultyrange->lowestlevel;
+        $formatmeasureparams->highestlevel = $this->questionsdifficultyrange->highest_level();
+        $formatmeasureparams->lowestlevel = $this->questionsdifficultyrange->lowest_level();
 
         $measure = $this->renderer->format_measure($formatmeasureparams);
         if (!$row->uniqueid) {

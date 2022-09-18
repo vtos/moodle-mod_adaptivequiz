@@ -14,12 +14,14 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive quiz renderer class
+ * Adaptive quiz renderer class.
  *
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
 
 use mod_adaptivequiz\form\requiredpassword;
 use mod_adaptivequiz\local\catalgo;
@@ -321,8 +323,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @return array an array of column headers (firstname / lastname, number of attempts, standard error)
      */
     public function format_report_table_headers($cm, $sort, $sortdir) {
-        global $OUTPUT;
-
         $firstname = '';
         $lastname = '';
         $email = '';
@@ -334,12 +334,12 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         /* Determine the next sorting direction and icon to display */
         switch ($sortdir) {
             case 'ASC':
-                $imageparam = array('src' => $OUTPUT->image_url('t/down'), 'alt' => '');
+                $imageparam = array('src' => $this->image_url('t/down'), 'alt' => '');
                 $columnicon = html_writer::empty_tag('img', $imageparam);
                 $newsortdir = 'DESC';
                 break;
             default:
-                $imageparam = array('src' => $OUTPUT->image_url('t/up'), 'alt' => '');
+                $imageparam = array('src' => $this->image_url('t/up'), 'alt' => '');
                 $columnicon = html_writer::empty_tag('img', $imageparam);
                 $newsortdir = 'ASC';
                 break;
@@ -456,14 +456,12 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @return string HTML markup
      */
     public function print_paging_bar($totalrecords, $page, $perpage) {
-        global $OUTPUT;
-
         $baseurl = $this->sorturl;
         /* Set the currently set group filter and sort dir */
         $baseurl->params(array('group' => $this->groupid, 'sortdir' => $this->sortdir));
 
         $output = '';
-        $output .= $OUTPUT->paging_bar($totalrecords, $page, $perpage, $baseurl);
+        $output .= $this->paging_bar($totalrecords, $page, $perpage, $baseurl);
         return $output;
     }
 

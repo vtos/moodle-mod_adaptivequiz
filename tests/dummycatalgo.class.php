@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A dummy class that extands catalgo class.  The purpose of this class is to expose the protected method of return_current_diff_level()
+ * A dummy class that extands catalgo class.
+ * The purpose of this class is to expose the protected method of return_current_diff_level().
  *
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>

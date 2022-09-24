@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -24,7 +25,7 @@ use basic_testcase;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
 use stdClass;
 
-class user_preferences_test extends basic_testcase {
+class user_preferences_testcase extends basic_testcase {
 
     /**
      * @test
@@ -46,11 +47,11 @@ class user_preferences_test extends basic_testcase {
         $this->assertFalse($preferences->persistent_filter());
         $this->assertNull($preferences->filter());
 
-        $preferencesAsObject = new stdClass();
-        $preferencesAsObject->perpage = -25;
-        $preferencesAsObject->showinitialsbar = 100;
-        $preferencesAsObject->persistentfilter = "12";
-        $preferences = user_preferences::from_plain_object($preferencesAsObject);
+        $preferencesobject = new stdClass();
+        $preferencesobject->perpage = -25;
+        $preferencesobject->showinitialsbar = 100;
+        $preferencesobject->persistentfilter = "12";
+        $preferences = user_preferences::from_plain_object($preferencesobject);
 
         $this->assertEquals(15, $preferences->rows_per_page());
         $this->assertTrue($preferences->show_initials_bar());

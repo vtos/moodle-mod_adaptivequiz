@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * The class contains all possible sql options needed to build the users' attempts table.
@@ -22,12 +23,8 @@
 
 namespace mod_adaptivequiz\local\report\users_attempts\sql;
 
-use context;
 use core\dml\sql_join;
 use core_user\fields;
-use mod_adaptivequiz\local\report\users_attempts\filter\filter;
-
-defined('MOODLE_INTERNAL') || die();
 
 final class sql_and_params {
 
@@ -127,8 +124,8 @@ final class sql_and_params {
         $fields = fields::for_name()
             ->including('id', 'email')
             ->get_sql('u', false, '', '', false)->selects
-            . ', ' . $attemptsql
-        ;
+            . ', ' . $attemptsql;
+
         $from = '{adaptivequiz_attempt} aa JOIN {user} u ON u.id = aa.userid';
         $where = self::base_where_sql() . ' AND aa.instance = :instance';
         $params = array_merge($params, ['instance' => $adaptivequizid]);

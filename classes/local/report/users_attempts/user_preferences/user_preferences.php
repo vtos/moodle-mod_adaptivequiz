@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * A value object encapsulating user preferences to set up the report table.
@@ -21,8 +22,6 @@
  */
 
 namespace mod_adaptivequiz\local\report\users_attempts\user_preferences;
-
-defined('MOODLE_INTERNAL') || die();
 
 use stdClass;
 
@@ -63,14 +62,15 @@ final class user_preferences {
         ?filter_user_preferences $filter
     ) {
         $this->perpage = in_array($perpage, self::PER_PAGE_OPTIONS) ? $perpage : self::PER_PAGE_DEFAULT;
+
         $this->showinitialsbar = in_array($showinitialsbar, [0, 1])
             ? $showinitialsbar
-            : self::SHOW_INITIALS_BAR_DEFAULT
-        ;
+            : self::SHOW_INITIALS_BAR_DEFAULT;
+
         $this->persistentfilter = in_array($persistentfilter, [0, 1])
             ? $persistentfilter
-            : self::PERSISTENT_FILTER_DEFAULT
-        ;
+            : self::PERSISTENT_FILTER_DEFAULT;
+
         $this->filter = $filter;
     }
 

@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive testing core library functions
+ * Adaptive testing core library functions.
  *
  * @package    mod_adaptivequiz
- * @category   activity
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -52,24 +52,16 @@ define('ADAPTIVEQUIZ_ATTEMPTLAST',  '4');
  */
 function adaptivequiz_supports($feature) {
     switch($feature) {
-        case FEATURE_GROUPS:
-            return true;
-        case FEATURE_GROUPINGS:
-            return true;
-        case FEATURE_GROUPMEMBERSONLY:
-            return true;
-        case FEATURE_MOD_INTRO:
-            return true;
-        case FEATURE_BACKUP_MOODLE2:
-            return true;
-        case FEATURE_SHOW_DESCRIPTION:
-            return true;
-        case FEATURE_GRADE_HAS_GRADE:
-            return true;
-        case FEATURE_USES_QUESTIONS:
-            return true;
-        default:
-            return null;
+        case FEATURE_GROUPS: return true;
+        case FEATURE_GROUPINGS: return true;
+        case FEATURE_GROUPMEMBERSONLY: return true;
+        case FEATURE_MOD_INTRO: return true;
+        case FEATURE_BACKUP_MOODLE2: return true;
+        case FEATURE_SHOW_DESCRIPTION: return true;
+        case FEATURE_GRADE_HAS_GRADE: return true;
+        case FEATURE_USES_QUESTIONS: return true;
+        case FEATURE_COMPLETION_HAS_RULES: return true;
+        default: return null;
     }
 }
 

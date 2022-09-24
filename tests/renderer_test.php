@@ -41,6 +41,7 @@ use stdClass;
  * @group mod_adaptivequiz
  */
 class renderer_test extends advanced_testcase {
+
     /**
      * This function tests the output for the start attempt form
      */
@@ -75,7 +76,7 @@ class renderer_test extends advanced_testcase {
         $this->assertContains('/mod/adaptivequiz/module.js', $output);
         $this->assertArrayHasKey('requires', $output);
         $this->assertEquals(
-            array('base', 'dom', 'event-delegate', 'event-key', 'core_question_engine', 'moodle-core-formchangechecker'),
+            ['base', 'dom', 'event-delegate', 'event-key', 'core_question_engine', 'moodle-core-formchangechecker'],
             $output['requires']
         );
         $this->assertArrayHasKey('strings', $output);

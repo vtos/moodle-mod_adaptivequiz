@@ -51,36 +51,21 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         'menubar' => false
     );
 
-    /**
-     * This function displays a form with a button to start the assessment attempt
-     * @param string $cmid course module id
-     * @return string HTML markup displaying the description and form with a submit button
-     */
-    public function display_start_attempt_form($cmid) {
-        $html = '';
+    public function attempt_controls_or_notification(int $cmid, bool $attemptallowed, bool $browsersecurityenabled): string {
+        if (!$attemptallowed) {
+            return html_writer::div(get_string('noattemptsallowed', 'adaptivequiz'), 'alert alert-info text-center');
+        }
 
-        $param = ['cmid' => $cmid];
-        $target = new moodle_url('/mod/adaptivequiz/attempt.php', $param);
-        $attributes = ['method' => 'POST', 'action' => $target];
+        if ($browsersecurityenabled) {
+            return $this->display_start_attempt_form_secured($cmid);
+        }
 
-        $html .= html_writer::start_div('text-center');
-
-        $html .= html_writer::start_tag('form', $attributes);
-
-        $html .= html_writer::empty_tag('br');
-        $html .= html_writer::empty_tag('br');
-
-        $buttonlabel = get_string('startattemptbtn', 'adaptivequiz');
-        $params = ['type' => 'submit', 'value' => $buttonlabel,
-            'class' => 'submitbtns adaptivequizbtn btn btn-secondary'];
-        $html .= html_writer::empty_tag('input', $params);
-        $params = ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()];
-        $html .= html_writer::empty_tag('input', $params);
-        $html .= html_writer::end_tag('form');
-
-        $html .= html_writer::end_div();
-
-        return $html;
+        return $this->render(new single_button(
+            new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cmid, 'sesskey' => sesskey()]),
+            get_string('startattemptbtn', 'adaptivequiz'),
+            'post',
+            true
+        ));
     }
 
     /**
@@ -216,7 +201,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             $this->page->requires->js_init_call('M.mod_adaptivequiz.secure_window.init_close_button', [$url],
                 $this->adaptivequiz_get_js_module());
             $output .= html_writer::empty_tag('input', ['type' => 'button', 'value' => get_string('continue'),
-                'id' => 'secureclosebutton']);
+                'id' => 'secureclosebutton', 'class' => 'btn btn-primary']);
         }
 
         $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $cmid]);
@@ -487,49 +472,18 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Initialized secure browsing mode
+     * Initialize secure browsing mode.
      */
-    public function init_browser_security() {
+    public function init_browser_security($disablejsfeatures = true) {
         $this->page->set_popup_notification_allowed(false); // Prevent message notifications.
         $this->page->set_cacheable(false);
         $this->page->set_pagelayout('popup');
 
-        $this->page->add_body_class('quiz-secure-window');
-        $this->page->requires->js_init_call('M.mod_adaptivequiz.secure_window.init',
+        if ($disablejsfeatures) {
+            $this->page->add_body_class('quiz-secure-window');
+            $this->page->requires->js_init_call('M.mod_adaptivequiz.secure_window.init',
                 null, false, $this->adaptivequiz_get_js_module());
-    }
-
-    /**
-     * This functions prints the start attempt button to start a secured browser attempt
-     * TODO: fix function name typo
-     * @param int $cmid course module id
-     * @return string HTML markup for a button
-     */
-    public function display_start_attempt_form_scured($cmid) {
-        $param = ['cmid' => $cmid];
-        $url = new moodle_url('/mod/adaptivequiz/attempt.php', $param);
-
-        $buttonlabel = get_string('startattemptbtn', 'adaptivequiz');
-        $button = new single_button($url, $buttonlabel);
-        $button->class .= ' adaptivequizstartbuttondiv btn btn-secondary';
-
-        $this->page->requires->js_module($this->adaptivequiz_get_js_module());
-        $this->page->requires->js('/mod/adaptivequiz/module.js');
-
-        $popupaction = new popup_action('click', $url, 'adaptivequizpopup', self::$popupoptions);
-        $button->class .= ' adaptivequizsecuremoderequired';
-        $button->add_action(new component_action('click',
-                'M.mod_adaptivequiz.secure_window.start_attempt_action', [
-                    'url' => $url->out(false),
-                    'windowname' => 'adaptivequizpopup',
-                    'options' => $popupaction->get_js_options(),
-                    'fullscreen' => true,
-                    'startattemptwarning' => '',
-                ]));
-
-        $warning = html_writer::tag('noscript', $this->heading(get_string('noscript', 'quiz')));
-
-        return $this->render($button).$warning;
+        }
     }
 
     /**
@@ -1117,6 +1071,32 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         }
 
         return html_writer::table($table);
+    }
+
+    /**
+     * This functions prints the start attempt button to start a secured browser attempt.
+     */
+    private function display_start_attempt_form_secured(int $cmid): string {
+        $url = new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cmid]);
+
+        $button = new single_button($url, get_string('startattemptbtn', 'adaptivequiz'), 'post', true);
+
+        $this->page->requires->js_module($this->adaptivequiz_get_js_module());
+        $this->page->requires->js('/mod/adaptivequiz/module.js');
+
+        $popupaction = new popup_action('click', $url, 'adaptivequizpopup', self::$popupoptions);
+        $button->add_action(new component_action('click',
+            'M.mod_adaptivequiz.secure_window.start_attempt_action', [
+                'url' => $url->out(false),
+                'windowname' => 'adaptivequizpopup',
+                'options' => $popupaction->get_js_options(),
+                'fullscreen' => true,
+                'startattemptwarning' => '',
+            ]));
+
+        $warning = html_writer::tag('noscript', $this->heading(get_string('noscript', 'quiz')));
+
+        return $this->render($button).$warning;
     }
 }
 

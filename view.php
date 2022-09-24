@@ -59,9 +59,9 @@ if ($id) {
 require_login($course, true, $cm);
 
 $context = context_module::instance($cm->id);
-$PAGE->set_context($context);
-
 $PAGE->set_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]);
+$PAGE->set_context($context);
+$PAGE->add_body_class('limitedwidth');
 
 /** @var mod_adaptivequiz_renderer $renderer */
 $renderer = $PAGE->get_renderer('mod_adaptivequiz');
@@ -139,18 +139,19 @@ $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_heading(format_string($course->fullname));
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($adaptivequiz->name));
-
-$cminfo = cm_info::create($cm);
-$completiondetails = cm_completion_details::get_instance($cminfo, $USER->id);
-$activitydates = activity_dates::get_dates_for_module($cminfo, $USER->id);
-echo $OUTPUT->activity_information($cminfo, $completiondetails, $activitydates);
 
 if ($adaptivequiz->intro) { // Conditions to show the intro can change to look for own settings or whatever.
     echo $OUTPUT->box(format_module_intro('adaptivequiz', $adaptivequiz, $cm->id), 'generalbox mod_introbox', 'newmoduleintro');
 }
 
 if (has_capability('mod/adaptivequiz:attempt', $context)) {
+    $completedattemptscount = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
+
+    echo $renderer->container_start('attempt-controls-or-notification-container pb-3');
+    echo $renderer->attempt_controls_or_notification($cm->id,
+        adaptivequiz_allowed_attempt($adaptivequiz->attempts, $completedattemptscount), $adaptivequiz->browsersecurity);
+    echo $renderer->container_end();
+
     $allattemptscount = $DB->count_records('adaptivequiz_attempt',
         ['instance' => $adaptivequiz->id, 'userid' => $USER->id]);
     if ($allattemptscount && $adaptivequiz->attempts == 1) {
@@ -161,7 +162,7 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
         if ($userattempts = $DB->get_records_sql($sql, [$adaptivequiz->id, $USER->id], 0,1)) {
             $userattempt = $userattempts[array_key_first($userattempts)];
 
-            echo $renderer->heading(get_string('attempt_summary', 'adaptivequiz'), 3);
+            echo $renderer->heading(get_string('attempt_summary', 'adaptivequiz'), 3, 'text-center');
             echo $renderer->render(user_attempt_summary::from_db_records($userattempt, $adaptivequiz));
         }
     }
@@ -170,26 +171,15 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
 
         $attemptstable = new user_attempts_table($renderer);
         $attemptstable->init($PAGE->url, $adaptivequiz, $USER->id);
-        $attemptstable->out(5, true);
+        $attemptstable->out(10, false);
     }
     if (!$allattemptscount) {
         echo html_writer::div(get_string('attemptsusernoprevious', 'adaptivequiz'), 'alert alert-info text-center');
     }
-
-    $completedattemptscount = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
-    if (adaptivequiz_allowed_attempt($adaptivequiz->attempts, $completedattemptscount)) {
-        if (empty($adaptivequiz->browsersecurity)) {
-            echo $renderer->display_start_attempt_form($cm->id);
-        } else {
-            echo $renderer->display_start_attempt_form_scured($cm->id);
-        }
-    } else {
-        echo html_writer::div(get_string('noattemptsallowed', 'adaptivequiz'), 'alert alert-info text-center');
-    }
 }
 
 if ($canviewattemptsreport) {
-    echo $renderer->heading(get_string('activityreports', 'adaptivequiz'), '3');
+    echo $renderer->heading(get_string('activityreports', 'adaptivequiz'), '3', 'text-center');
 
     groups_print_activity_menu($cm, new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]));
 

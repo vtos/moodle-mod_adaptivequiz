@@ -41,24 +41,6 @@ use stdClass;
  * @group mod_adaptivequiz
  */
 class renderer_test extends advanced_testcase {
-    /**
-     * This function tests the output for the start attempt form
-     */
-    public function test_display_start_attempt_form() {
-        $dummypage = new moodle_page();
-        $target = 'mod_adaptivequiz';
-        $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
-        $output = $renderer->display_start_attempt_form(9999);
-
-        $this->assertStringContainsString('<form', $output);
-        $this->assertStringContainsString('/mod/adaptivequiz/attempt.php?cmid=9999', $output);
-        $this->assertStringContainsString('<input', $output);
-        $this->assertStringContainsString('type="submit"', $output);
-        $this->assertStringContainsString('class="submitbtns adaptivequizbtn btn btn-secondary"', $output);
-        $this->assertStringContainsString('type="hidden"', $output);
-        $this->assertStringContainsString('name="sesskey"', $output);
-        $this->assertStringContainsString('</form>', $output);
-    }
 
     /**
      * This function tests the output from the get_js_module.
@@ -75,7 +57,7 @@ class renderer_test extends advanced_testcase {
         $this->assertContains('/mod/adaptivequiz/module.js', $output);
         $this->assertArrayHasKey('requires', $output);
         $this->assertEquals(
-            array('base', 'dom', 'event-delegate', 'event-key', 'core_question_engine', 'moodle-core-formchangechecker'),
+            ['base', 'dom', 'event-delegate', 'event-key', 'core_question_engine', 'moodle-core-formchangechecker'],
             $output['requires']
         );
         $this->assertArrayHasKey('strings', $output);

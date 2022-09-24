@@ -49,3 +49,7 @@ table.adpq_answers_table thead:first-child th.section {
 .usersattemptstable {
     margin-bottom: 0.75rem !important;
 }
+
+.attempt-controls-or-notification-container {
+    padding-top: 10px;
+}

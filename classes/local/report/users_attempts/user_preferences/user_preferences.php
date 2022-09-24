@@ -62,6 +62,7 @@ final class user_preferences {
         ?filter_user_preferences $filter
     ) {
         $this->perpage = in_array($perpage, self::PER_PAGE_OPTIONS) ? $perpage : self::PER_PAGE_DEFAULT;
+
         $this->showinitialsbar = in_array($showinitialsbar, [0, 1])
             ? $showinitialsbar
             : self::SHOW_INITIALS_BAR_DEFAULT;

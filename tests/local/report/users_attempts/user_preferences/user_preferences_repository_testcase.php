@@ -23,7 +23,7 @@ namespace mod_adaptivequiz\local\report\users_attempts\user_preferences;
 
 use advanced_testcase;
 
-class user_preferences_repository_test extends advanced_testcase {
+class user_preferences_repository_testcase extends advanced_testcase {
 
     public function test_it_stores_and_fetches_preferences(): void {
         $this->resetAfterTest();

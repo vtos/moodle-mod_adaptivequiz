@@ -39,13 +39,14 @@ use stdClass;
 
 /**
  * @group mod_adaptivequiz
+ * @covers mod_adaptivequiz_renderer
  */
 class renderer_test extends advanced_testcase {
 
     /**
      * This function tests the output from the get_js_module.
      */
-    public function test_adaptivequiz_get_js_module() {
+    public function test_adaptivequiz_get_js_module(): void {
         $dummypage = new moodle_page();
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
@@ -64,9 +65,9 @@ class renderer_test extends advanced_testcase {
     }
 
     /**
-     * This functions tests the output from create_report_table()
+     * This functions tests the output from create_report_table().
      */
-    public function test_create_report_table() {
+    public function test_create_report_table(): void {
         $dummypage = new moodle_page();
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);

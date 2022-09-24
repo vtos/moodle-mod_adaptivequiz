@@ -118,12 +118,7 @@ final class users_attempts_table extends table_sql {
             $groupby = "GROUP BY $groupby";
         }
 
-        $sql = "SELECT
-                {$this->sql->fields}
-                FROM {$this->sql->from}
-                WHERE {$this->sql->where}
-                {$groupby}
-                {$sort}";
+        $sql = "SELECT {$this->sql->fields} FROM {$this->sql->from} WHERE {$this->sql->where} {$groupby} {$sort}";
 
         if (!$this->is_downloading()) {
             $this->rawdata = $DB->get_records_sql($sql, $this->sql->params, $this->get_page_start(),

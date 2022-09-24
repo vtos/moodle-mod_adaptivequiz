@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -31,7 +32,8 @@ use dml_missing_record_exception;
 use question_bank;
 use stdClass;
 
-class questions_repository_test extends advanced_testcase {
+class questions_repository_testcase extends advanced_testcase {
+
     /**
      * @test
      */
@@ -76,16 +78,14 @@ class questions_repository_test extends advanced_testcase {
         );
 
         $this->assertEquals(1, questions_repository::count_adaptive_questions_in_pool_with_level(
-            [$questionscat1->id, $questionscat2->id,], 1
+            [$questionscat1->id, $questionscat2->id], 1
         ));
 
         $questionscat3 = $questionsgenerator->create_question_category(
             ['contextid' => context_course::instance($course->id)->id]
         );
 
-        $this->assertEquals(0, questions_repository::count_adaptive_questions_in_pool_with_level(
-            [$questionscat3->id,], 1
-        ));
+        $this->assertEquals(0, questions_repository::count_adaptive_questions_in_pool_with_level([$questionscat3->id], 1));
     }
 
     /**
@@ -133,8 +133,7 @@ class questions_repository_test extends advanced_testcase {
                 new questions_number_per_difficulty(4, 2),
             ],
             questions_repository::count_questions_number_per_difficulty(
-                [$question1tag->id, $question2tag->id, $question3tag->id, $draftquestiontag->id,
-                    $hiddenquestiontag->id],
+                [$question1tag->id, $question2tag->id, $question3tag->id, $draftquestiontag->id, $hiddenquestiontag->id],
                 [$category1->id, $category2->id]
             )
         );

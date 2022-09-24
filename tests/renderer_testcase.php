@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * PHPUnit tests for the renderer class.
@@ -39,14 +40,14 @@ use stdClass;
 
 /**
  * @group mod_adaptivequiz
+ * @covers mod_adaptivequiz_renderer
  */
-class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
+class renderer_testcase extends advanced_testcase {
 
     /**
-     * This function tests the output from the get_js_module
-     * @return void
+     * This function tests the output from the get_js_module.
      */
-    public function test_adaptivequiz_get_js_module() {
+    public function test_adaptivequiz_get_js_module(): void {
         $dummypage = new moodle_page();
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
@@ -57,14 +58,17 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
         $this->assertArrayHasKey('fullpath', $output);
         $this->assertContains('/mod/adaptivequiz/module.js', $output);
         $this->assertArrayHasKey('requires', $output);
-        $this->assertEquals(array('base', 'dom', 'event-delegate', 'event-key', 'core_question_engine', 'moodle-core-formchangechecker'), $output['requires']);
+        $this->assertEquals(
+            ['base', 'dom', 'event-delegate', 'event-key', 'core_question_engine', 'moodle-core-formchangechecker'],
+            $output['requires']
+        );
         $this->assertArrayHasKey('strings', $output);
     }
 
     /**
-     * This functions tests the output from create_report_table()
+     * This functions tests the output from create_report_table().
      */
-    public function test_create_report_table() {
+    public function test_create_report_table(): void {
         $dummypage = new moodle_page();
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
@@ -121,7 +125,7 @@ class mod_adaptivequiz_renderer_testcase extends advanced_testcase {
             ->method('render_question_head_html')
             ->willReturn('');
 
-        // Only testing that the mock object's method is called once
+        // Only testing that the mock object's method is called once.
         $renderer->init_metadata($mockquba, 1);
     }
 

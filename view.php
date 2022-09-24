@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,22 +12,20 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive testing main view page script
+ * Adaptive testing main view page script.
  *
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once __DIR__ . '/../../config.php';
-require_once $CFG->libdir . '/tablelib.php';
-require_once $CFG->dirroot.'/mod/adaptivequiz/locallib.php';
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/tablelib.php');
+require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
-use core\activity_dates;
-use core_completion\cm_completion_details;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
@@ -53,7 +52,7 @@ if ($id) {
     $course     = $DB->get_record('course', ['id' => $adaptivequiz->course], '*', MUST_EXIST);
     $cm         = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id, false, MUST_EXIST);
 } else {
-    print_error('invalidarguments');
+    throw new moodle_exception('invalidarguments');
 }
 
 require_login($course, true, $cm);
@@ -159,7 +158,7 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
             FROM {adaptivequiz_attempt}
             WHERE instance = ? AND userid = ?
             ORDER BY timemodified DESC';
-        if ($userattempts = $DB->get_records_sql($sql, [$adaptivequiz->id, $USER->id], 0,1)) {
+        if ($userattempts = $DB->get_records_sql($sql, [$adaptivequiz->id, $USER->id], 0, 1)) {
             $userattempt = $userattempts[array_key_first($userattempts)];
 
             echo $renderer->heading(get_string('attempt_summary', 'adaptivequiz'), 3, 'text-center');

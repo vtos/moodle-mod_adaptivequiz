@@ -62,6 +62,8 @@ if (!$validattempt) {
 $PAGE->set_url('/mod/adaptivequiz/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_context($context);
+$PAGE->activityheader->disable();
+$PAGE->add_body_class('limitedwidth');
 
 $output = $PAGE->get_renderer('mod_adaptivequiz');
 
@@ -69,13 +71,12 @@ $output = $PAGE->get_renderer('mod_adaptivequiz');
 $popup = false;
 if (!empty($adaptivequiz->browsersecurity)) {
     $PAGE->blocks->show_only_fake_blocks();
-    $output->init_browser_security();
+    $output->init_browser_security(false);
     $popup = true;
 } else {
     $PAGE->set_heading(format_string($course->fullname));
 }
 
 echo $output->header();
-echo $output->heading(format_string($adaptivequiz->name));
 echo $output->attempt_feedback($adaptivequiz->attemptfeedback, $cm->id, $abilitymeasurerenderable, $popup);
 echo $output->footer();

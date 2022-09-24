@@ -64,6 +64,8 @@ $viewurl = new moodle_url('/mod/adaptivequiz/view.php', array('id' => $cm->id));
 $PAGE->set_url('/mod/adaptivequiz/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_context($context);
+$PAGE->activityheader->disable();
+$PAGE->add_body_class('limitedwidth');
 
 // Check if the user has the attempt capability.
 require_capability('mod/adaptivequiz:attempt', $context);

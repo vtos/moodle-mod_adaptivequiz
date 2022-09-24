@@ -70,13 +70,12 @@ $output = $PAGE->get_renderer('mod_adaptivequiz');
 $popup = false;
 if (!empty($adaptivequiz->browsersecurity)) {
     $PAGE->blocks->show_only_fake_blocks();
-    $output->init_browser_security();
+    $output->init_browser_security(false);
     $popup = true;
 } else {
     $PAGE->set_heading(format_string($course->fullname));
 }
 
 echo $output->header();
-echo $output->heading(format_string($adaptivequiz->name));
 echo $output->attempt_feedback($adaptivequiz->attemptfeedback, $cm->id, $abilitymeasurerenderable, $popup);
 echo $output->footer();

@@ -33,6 +33,7 @@ use stdClass;
 
 /**
  * @group mod_adaptivequiz
+ * @covers \mod_adaptivequiz\local\adaptiveattempt
  */
 class adaptiveattempt_test extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */

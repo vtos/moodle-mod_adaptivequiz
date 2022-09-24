@@ -30,6 +30,7 @@ use mod_quiz_generator;
 
 /**
  * @group mod_adaptivequiz
+ * @covers \mod_adaptivequiz_generator
  */
 class generator_test extends advanced_testcase {
 

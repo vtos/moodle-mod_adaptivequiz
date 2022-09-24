@@ -125,6 +125,7 @@ final class sql_and_params {
             ->including('id', 'email')
             ->get_sql('u', false, '', '', false)->selects
             . ', ' . $attemptsql;
+
         $from = '{adaptivequiz_attempt} aa JOIN {user} u ON u.id = aa.userid';
         $where = self::base_where_sql() . ' AND aa.instance = :instance';
         $params = array_merge($params, ['instance' => $adaptivequizid]);

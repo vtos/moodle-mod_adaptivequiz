@@ -36,6 +36,7 @@ use stdClass;
 
 /**
  * @group mod_adaptivequiz
+ * @covers \mod_adaptivequiz\local\catalgo
  */
 class catalgo_test extends advanced_testcase {
     /**
@@ -552,8 +553,8 @@ class catalgo_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the return data from perform_calculation_steps(), where compute_right_answers() returns 0, but the next
-     * difficulty number is returned.
+     * This function tests the return data from perform_calculation_steps(), where compute_right_answers() returns 0,
+     * but the next difficulty number is returned.
      */
     public function test_perform_calc_steps_right_ans_ret_zero_but_return_non_zero() {
         $this->resetAfterTest(true);
@@ -591,8 +592,8 @@ class catalgo_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the return data from perform_calculation_steps(), where compute_wrong_answers() returns 0, but the next
-     * difficulty number is returned.
+     * This function tests the return data from perform_calculation_steps(), where compute_wrong_answers() returns 0,
+     * but the next difficulty number is returned.
      */
     public function test_perform_calc_steps_wrong_ans_return_zero_but_return_non_zero() {
         $this->resetAfterTest(true);
@@ -671,8 +672,8 @@ class catalgo_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the return data from perform_calculation_steps(), where the sum of correct and incorrect answers does not
-     * equal the sum of questions attempted.
+     * This function tests the return data from perform_calculation_steps(), where the sum of correct and incorrect answers
+     * does not equal the sum of questions attempted.
      */
     public function test_perform_calc_steps_sum_corr_and_incorr_not_equl_sum_quest_attempt_fail() {
         $this->resetAfterTest(true);
@@ -875,7 +876,7 @@ class catalgo_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the return value from standard_error_within_parameters()
+     * This function tests the return value from standard_error_within_parameters().
      */
     public function test_standard_error_within_parameters_return_true_then_false() {
         $this->resetAfterTest(true);
@@ -891,7 +892,7 @@ class catalgo_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the return value from get_current_diff_level()
+     * This function tests the return value from get_current_diff_level().
      */
     public function test_get_current_diff_level_using_level_zero() {
         $this->resetAfterTest(true);

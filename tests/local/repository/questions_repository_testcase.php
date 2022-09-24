@@ -75,8 +75,6 @@ class questions_repository_test extends advanced_testcase {
             ['contextid' => context_course::instance($course->id)->id]
         );
 
-        $this->assertEquals(0, questions_repository::count_adaptive_questions_in_pool_with_level(
-            [$questionscat3->id], 1
-        ));
+        $this->assertEquals(0, questions_repository::count_adaptive_questions_in_pool_with_level([$questionscat3->id], 1));
     }
 }

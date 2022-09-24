@@ -39,32 +39,14 @@ use stdClass;
 
 /**
  * @group mod_adaptivequiz
+ * @covers mod_adaptivequiz_renderer
  */
 class renderer_test extends advanced_testcase {
 
     /**
-     * This function tests the output for the start attempt form
-     */
-    public function test_display_start_attempt_form() {
-        $dummypage = new moodle_page();
-        $target = 'mod_adaptivequiz';
-        $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
-        $output = $renderer->display_start_attempt_form(9999);
-
-        $this->assertStringContainsString('<form', $output);
-        $this->assertStringContainsString('/mod/adaptivequiz/attempt.php?cmid=9999', $output);
-        $this->assertStringContainsString('<input', $output);
-        $this->assertStringContainsString('type="submit"', $output);
-        $this->assertStringContainsString('class="submitbtns adaptivequizbtn btn btn-secondary"', $output);
-        $this->assertStringContainsString('type="hidden"', $output);
-        $this->assertStringContainsString('name="sesskey"', $output);
-        $this->assertStringContainsString('</form>', $output);
-    }
-
-    /**
      * This function tests the output from the get_js_module.
      */
-    public function test_adaptivequiz_get_js_module() {
+    public function test_adaptivequiz_get_js_module(): void {
         $dummypage = new moodle_page();
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);
@@ -83,9 +65,9 @@ class renderer_test extends advanced_testcase {
     }
 
     /**
-     * This functions tests the output from create_report_table()
+     * This functions tests the output from create_report_table().
      */
-    public function test_create_report_table() {
+    public function test_create_report_table(): void {
         $dummypage = new moodle_page();
         $target = 'mod_adaptivequiz';
         $renderer = new mod_adaptivequiz_renderer($dummypage, $target);

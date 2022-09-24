@@ -31,10 +31,12 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use coding_exception;
+use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
 use stdClass;
 
 /**
  * @group mod_adaptivequiz
+ * @covers \mod_adaptivequiz\local\fetchquestion
  */
 class fetchquestion_test extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */
@@ -568,7 +570,7 @@ class fetchquestion_test extends advanced_testcase {
      * This function tests the output from initalize_tags_with_quest_count()
      */
     public function test_initalize_tags_with_quest_count() {
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
@@ -602,11 +604,11 @@ class fetchquestion_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the output from initalize_tags_with_quest_count(), passing an already built difficulty question sum
-     * structure, forcing a rebuild.
+     * This function tests the output from initalize_tags_with_quest_count(), passing an already built difficulty question
+     * sum structure, forcing a rebuild.
      */
     public function test_initalize_tags_with_quest_count_pre_built_quest_sum_struct_rebuild_true() {
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
@@ -640,7 +642,7 @@ class fetchquestion_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the output from decrement_question_sum_from_difficulty()
+     * This function tests the output from decrement_question_sum_from_difficulty().
      */
     public function test_decrement_question_sum_from_difficulty() {
         $this->resetAfterTest(true);
@@ -655,7 +657,7 @@ class fetchquestion_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the output from decrement_question_sum_from_difficulty(), using a key that doesn't exist
+     * This function tests the output from decrement_question_sum_from_difficulty(), using a key that doesn't exist.
      */
     public function test_decrement_question_sum_from_difficulty_user_missing_key() {
         $this->resetAfterTest(true);

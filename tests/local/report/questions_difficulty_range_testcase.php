@@ -24,7 +24,7 @@ namespace mod_adaptivequiz\local\report;
 use basic_testcase;
 use stdClass;
 
-class questions_difficulty_range_test extends basic_testcase {
+class questions_difficulty_range_testcase extends basic_testcase {
 
     public function test_it_can_be_created_from_activity_record(): void {
         $record = new stdClass();

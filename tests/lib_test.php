@@ -69,11 +69,13 @@ class lib_test extends advanced_testcase {
     }
 
     /**
-     * Test insertion of question category association records
+     * Test insertion of question category association records.
+     *
      * @dataProvider questioncat_association_records
      * @param int $instance: activity instance id
      * @param object $adaptivequiz: An object from the form in mod_form.php
      * @group adaptivequiz_lib_test
+     * @covers ::adaptivequiz_add_questcat_association
      */
     public function test_questioncat_association_insert($instance, stdClass $adaptivequiz) {
         global $DB;
@@ -96,11 +98,13 @@ class lib_test extends advanced_testcase {
     }
 
     /**
-     * Test update of question category associations records
+     * Test update of question category associations records.
+     *
      * @dataProvider questioncat_association_records
      * @param int $instance: activity instance id
      * @param object $adaptivequiz: An object from the form in mod_form.php
      * @group adaptivequiz_lib_test
+     * @covers ::adaptivequiz_update_questcat_association
      */
     public function test_questioncat_association_update($instance, stdClass $adaptivequiz) {
         global $DB;
@@ -135,7 +139,9 @@ class lib_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the removal of an activity instance and all related data
+     * This function tests the removal of an activity instance and all related data.
+     *
+     * @covers ::adaptivequiz_delete_instance
      */
     public function test_adaptivequiz_delete_instance() {
         global $DB;
@@ -153,7 +159,9 @@ class lib_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the output from adaptivequiz_print_recent_mod_activity()
+     * This function tests the output from adaptivequiz_print_recent_mod_activity().
+     *
+     * @covers ::adaptivequiz_print_recent_mod_activity
      */
     public function test_adaptivequiz_print_recent_mod_activity_details_true() {
         $this->resetAfterTest(true);
@@ -190,7 +198,9 @@ class lib_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the output from adaptivequiz_print_recent_mod_activity()
+     * This function tests the output from adaptivequiz_print_recent_mod_activity().
+     *
+     * @covers ::adaptivequiz_print_recent_mod_activity
      */
     public function test_adaptivequiz_print_recent_mod_activity_details_false() {
         $this->resetAfterTest(true);

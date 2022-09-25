@@ -25,6 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 use mod_adaptivequiz\form\requiredpassword;
+use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgo;
 use mod_adaptivequiz\output\ability_measure;
 use mod_adaptivequiz\output\user_attempt_summary;
@@ -1043,7 +1044,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $headercell = new html_table_cell(get_string('attemptfinishedtimestamp', 'adaptivequiz'));
         $headercell->header = true;
 
-        $datacell = ($summary->attemptstate == ADAPTIVEQUIZ_ATTEMPT_COMPLETED)
+        $datacell = ($summary->attemptstate == attempt_state::COMPLETED)
             ? userdate($summary->timefinished)
             : '-';
 

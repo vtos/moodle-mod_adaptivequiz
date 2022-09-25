@@ -31,6 +31,7 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use context_module;
+use mod_adaptivequiz\local\attempt\attempt_state;
 
 /**
  * @group mod_adaptivequiz
@@ -281,7 +282,7 @@ class locallib_test extends advanced_testcase {
         $record = $DB->get_record('adaptivequiz_attempt', ['id' => 2]);
 
         $this->assertEquals('php unit test', $record->attemptstopcriteria);
-        $this->assertEquals(ADAPTIVEQUIZ_ATTEMPT_COMPLETED, $record->attemptstate);
+        $this->assertEquals(attempt_state::COMPLETED, $record->attemptstate);
         $this->assertEquals(1, $record->standarderror);
     }
 

@@ -24,6 +24,7 @@
 namespace mod_adaptivequiz\local\report\users_attempts\sql;
 
 use core\dml\sql_join;
+use mod_adaptivequiz\local\attempt\attempt_state;
 use user_picture;
 
 final class sql_and_params {
@@ -221,10 +222,10 @@ final class sql_and_params {
             ) AS uniqueid'
             ,
             [
-                'attemptstate1' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-                'attemptstate2' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-                'attemptstate3' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
-                'attemptstate4' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
+                'attemptstate1' => attempt_state::COMPLETED,
+                'attemptstate2' => attempt_state::COMPLETED,
+                'attemptstate3' => attempt_state::COMPLETED,
+                'attemptstate4' => attempt_state::COMPLETED,
             ]
         ];
     }

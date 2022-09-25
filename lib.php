@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/question/engine/lib.php');
 
-use mod_adaptivequiz\local\adaptiveattempt;
+use mod_adaptivequiz\local\attempt\attempt_state;
 
 /**
  * Option controlling what options are offered on the quiz settings form.
@@ -734,7 +734,7 @@ function mod_adaptivequiz_question_pluginfile($course, $context, $component,
             throw new moodle_exception('uniquenotpartofattempt', 'adaptivequiz');
         }
         // Verify that the attempt is still in progress.
-        if ($attemptrec->attemptstate != adaptiveattempt::ADAPTIVEQUIZ_ATTEMPT_INPROGRESS) {
+        if ($attemptrec->attemptstate != attempt_state::IN_PROGRESS) {
             throw new moodle_exception('notinprogress', 'adaptivequiz');
         }
     }

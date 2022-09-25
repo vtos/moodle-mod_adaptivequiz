@@ -24,17 +24,19 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot.'/mod/adaptivequiz/lib.php');
+require_once($CFG->dirroot.'/question/editlib.php');
+require_once($CFG->dirroot.'/lib/questionlib.php');
+require_once($CFG->dirroot.'/question/engine/lib.php');
+
 use core_question\local\bank\question_edit_contexts;
+use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgo;
 use qbank_managecategories\helper as qbank_managecategories_helper;
 
 // Default tagging used.
 define('ADAPTIVEQUIZ_QUESTION_TAG', 'adpq_');
 
-// Attempt was completed.
-define('ADAPTIVEQUIZ_ATTEMPT_COMPLETED', 'complete');
-// Attempt is still in progress.
-define('ADAPTIVEQUIZ_ATTEMPT_INPROGRESS', 'inprogress');
 // Number of attempts to display on the reporting page.
 define('ADAPTIVEQUIZ_REC_PER_PAGE', 30);
 // Number of questions to display for review on the page at one time.
@@ -51,11 +53,6 @@ define('ADAPTIVEQUIZ_STOPCRI_NOQUESTFOUND', 'noqest');
 define('ADAPTIVEQUIZ_STOPCRI_MAXLEVEL', 'maxlevel');
 // The user achieved the minimum difficulty level defined by the adaptive parameters, unable to retrieve another question.
 define('ADAPTIVEQUIZ_STOPCRI_MINLEVEL', 'minlevel');
-
-require_once($CFG->dirroot.'/mod/adaptivequiz/lib.php');
-require_once($CFG->dirroot.'/question/editlib.php');
-require_once($CFG->dirroot.'/lib/questionlib.php');
-require_once($CFG->dirroot.'/question/engine/lib.php');
 
 /**
  * This function returns an array of question bank categories accessible to the
@@ -146,7 +143,7 @@ function adaptivequiz_count_user_previous_attempts($instanceid = 0, $userid = 0)
         return 0;
     }
 
-    $param = array('instance' => $instanceid, 'userid' => $userid, 'attemptstate' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED);
+    $param = array('instance' => $instanceid, 'userid' => $userid, 'attemptstate' => attempt_state::COMPLETED);
     $count = $DB->count_records('adaptivequiz_attempt', $param);
 
     return $count;
@@ -245,7 +242,7 @@ function adaptivequiz_complete_attempt($uniqueid, $instance, $userid, $standarde
     $attempt = $DB->get_record('adaptivequiz_attempt',
         ['uniqueid' => $uniqueid, 'instance' => $instance, 'userid' => $userid], '*', MUST_EXIST);
 
-    $attempt->attemptstate = ADAPTIVEQUIZ_ATTEMPT_COMPLETED;
+    $attempt->attemptstate = attempt_state::COMPLETED;
     $attempt->attemptstopcriteria = $statusmessage;
     $attempt->timemodified = time();
     $attempt->standarderror = $standarderror;
@@ -371,7 +368,7 @@ function adaptivequiz_get_user_grades($adaptivequiz, $userid = 0) {
 
     $params = array(
         'instance' => $adaptivequiz->id,
-        'attemptstate' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
+        'attemptstate' => attempt_state::COMPLETED,
     );
     $userwhere = '';
     if ($userid) {

@@ -25,6 +25,7 @@
 namespace mod_adaptivequiz\local;
 
 use coding_exception;
+use mod_adaptivequiz\local\attempt\attempt_state;
 use moodle_exception;
 use question_bank;
 use question_engine;
@@ -47,19 +48,9 @@ class adaptiveattempt {
     const ATTEMPTBEHAVIOUR = 'deferredfeedback';
 
     /**
-     * The attempt state of in progress
+     * @var attempt_state $attemptstate
      */
-    const ADAPTIVEQUIZ_ATTEMPT_INPROGRESS = 'inprogress';
-
-    /**
-     * The attempt state of finished
-     */
-    const ADAPTIVEQUIZ_ATTEMPT_COMPLETED = 'completed';
-
-    /**
-     * The attempt state of finished
-     */
-    const ADAPTIVEQUIZ_MAX_QUEST_ANSW = 'completed';
+    private $attemptstate;
 
     /**
      * Flag to denote developer debugging is enabled and this class should write message to the debug
@@ -85,9 +76,6 @@ class adaptiveattempt {
 
     /** @var int $uniqueid a unique number identifying the activity usage of questions */
     protected $uniqueid;
-
-    /** @var string $attemptstate the state of the attempt */
-    protected $attemptstate;
 
     /** @var int $questionsattempted the total of question attempted */
     protected $questionsattempted;
@@ -477,17 +465,15 @@ class adaptiveattempt {
     }
 
     /**
-     * This function retrieves the most recent attempt, whose state is 'inprogress'.  If no attempt is found
+     * This function retrieves the most recent attempt, whose state is 'inprogress'. If no attempt is found
      * it creates a new attempt.  Lastly $adpqattempt instance property gets set.
+     *
      * @return stdClass adaptivequiz_attempt data object
      */
     public function get_attempt() {
         global $DB;
 
-        $param = array(
-            'instance' => $this->adaptivequiz->id,
-            'userid' => $this->userid,
-            'attemptstate' => self::ADAPTIVEQUIZ_ATTEMPT_INPROGRESS);
+        $param = ['instance' => $this->adaptivequiz->id, 'userid' => $this->userid, 'attemptstate' => attempt_state::IN_PROGRESS];
         $attempt = $DB->get_records('adaptivequiz_attempt', $param, 'timemodified DESC', '*', 0, 1);
 
         if (empty($attempt)) {
@@ -496,7 +482,7 @@ class adaptiveattempt {
             $attempt->instance = $this->adaptivequiz->id;
             $attempt->userid = $this->userid;
             $attempt->uniqueid = 0;
-            $attempt->attemptstate = self::ADAPTIVEQUIZ_ATTEMPT_INPROGRESS;
+            $attempt->attemptstate = attempt_state::IN_PROGRESS;
             $attempt->questionsattempted = 0;
             $attempt->standarderror = 999;
             $attempt->timecreated = $time;

@@ -32,6 +32,7 @@ require_once($CFG->dirroot.'/tag/lib.php');
 use core_tag_tag;
 use Exception;
 use InvalidArgumentException;
+use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\questionanalysis\statistics\question_statistic;
 use question_engine;
 use stdClass;
@@ -66,7 +67,7 @@ class quiz_analyser {
 
         // Get all of the completed attempts for this adaptive quiz instance.
         $attempts  = $DB->get_records('adaptivequiz_attempt',
-            ['instance' => $instance, 'attemptstate' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED]);
+            ['instance' => $instance, 'attemptstate' => attempt_state::COMPLETED]);
 
         foreach ($attempts as $attempt) {
             if ($attempt->uniqueid == 0) {

@@ -27,10 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 // Default tagging used.
 define('ADAPTIVEQUIZ_QUESTION_TAG', 'adpq_');
 
-// Attempt was completed.
-define('ADAPTIVEQUIZ_ATTEMPT_COMPLETED', 'complete');
-// Attempt is still in progress.
-define('ADAPTIVEQUIZ_ATTEMPT_INPROGRESS', 'inprogress');
 // Number of attempts to display on the reporting page.
 define('ADAPTIVEQUIZ_REC_PER_PAGE', 30);
 // Number of questions to display for review on the page at one time.
@@ -144,7 +140,7 @@ function adaptivequiz_count_user_previous_attempts($instanceid = 0, $userid = 0)
         return 0;
     }
 
-    $param = array('instance' => $instanceid, 'userid' => $userid, 'attemptstate' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED);
+    $param = array('instance' => $instanceid, 'userid' => $userid, 'attemptstate' => attempt_state::COMPLETED);
     $count = $DB->count_records('adaptivequiz_attempt', $param);
 
     return $count;
@@ -243,7 +239,7 @@ function adaptivequiz_complete_attempt($uniqueid, $instance, $userid, $standarde
     $attempt = $DB->get_record('adaptivequiz_attempt',
         ['uniqueid' => $uniqueid, 'instance' => $instance, 'userid' => $userid], '*', MUST_EXIST);
 
-    $attempt->attemptstate = ADAPTIVEQUIZ_ATTEMPT_COMPLETED;
+    $attempt->attemptstate = attempt_state::COMPLETED;
     $attempt->attemptstopcriteria = $statusmessage;
     $attempt->timemodified = time();
     $attempt->standarderror = $standarderror;
@@ -369,7 +365,7 @@ function adaptivequiz_get_user_grades($adaptivequiz, $userid = 0) {
 
     $params = array(
         'instance' => $adaptivequiz->id,
-        'attemptstate' => ADAPTIVEQUIZ_ATTEMPT_COMPLETED,
+        'attemptstate' => attempt_state::COMPLETED,
     );
     $userwhere = '';
     if ($userid) {

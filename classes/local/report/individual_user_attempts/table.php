@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/tablelib.php');
 
 use html_writer;
+use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz_renderer;
 use moodle_url;
@@ -76,7 +77,7 @@ final class table extends table_sql {
     }
 
     protected function col_attemptstate(stdClass $row): string {
-        if (0 == strcmp('inprogress', $row->attemptstate)) {
+        if (0 == strcmp(attempt_state::IN_PROGRESS, $row->attemptstate)) {
             return get_string('recentinprogress', 'adaptivequiz');
         }
 
@@ -115,7 +116,7 @@ final class table extends table_sql {
         );
         $return .= '&nbsp;&nbsp;';
 
-        if ($row->attemptstate != ADAPTIVEQUIZ_ATTEMPT_COMPLETED) {
+        if ($row->attemptstate != attempt_state::COMPLETED) {
             $return .= html_writer::link(
                 new moodle_url(
                     '/mod/adaptivequiz/closeattempt.php',

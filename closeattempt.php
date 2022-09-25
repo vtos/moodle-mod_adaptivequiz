@@ -25,6 +25,8 @@
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
+use mod_adaptivequiz\local\attempt\attempt_state;
+
 $id = required_param('cmid', PARAM_INT);
 $uniqueid = required_param('uniqueid', PARAM_INT);
 $userid = required_param('userid', PARAM_INT);
@@ -62,7 +64,7 @@ if (empty($adaptivequiz)) {
     throw new moodle_exception('errorclosingattempt', 'adaptivequiz', $returnurl);
 }
 
-if ($adaptivequiz->attemptstate == ADAPTIVEQUIZ_ATTEMPT_COMPLETED) {
+if ($adaptivequiz->attemptstate == attempt_state::COMPLETED) {
     throw new moodle_exception('errorclosingattempt_alreadycomplete', 'adaptivequiz', $returnurl);
 }
 

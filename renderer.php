@@ -258,51 +258,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * This function returns the HTML markup to display a table of the attempts taken at the activity
-     * @param stdClass $records attempt records from adaptivequiz_attempt table
-     * @param stdClass $cm course module object set to the instance of the activity
-     * @param string $sort the column the the table is to be sorted by
-     * @param string $sortdir the direction of the sort
-     * @return string HTML markup
-     */
-    public function print_report_table($records, $cm, $sort, $sortdir) {
-        $output = $this->heading(get_string('activityreports', 'adaptivequiz'));
-
-        $output .= html_writer::start_tag('div', array('class' => 'adpq_download'));
-        $csvurl = new moodle_url('/mod/adaptivequiz/viewreport.php',
-            array('cmid' => $cm->id, 'download' => 'csv', 'sort' => $sort, 'sortdir' => $sortdir));
-        $output .= html_writer::link($csvurl, get_string('downloadcsv', 'adaptivequiz'));
-        $output .= html_writer::end_tag('div');
-
-        $output .= $this->create_report_table($records, $cm, $sort, $sortdir);
-        return $output;
-    }
-
-    /**
-     * This function generates the HTML required to display the initial reports table
-     * @param stdClass $records attempt records from adaptivequiz_attempt table
-     * @param stdClass $cm course module object set to the instance of the activity
-     * @param string $sort the column the the table is to be sorted by
-     * @param string $sortdir the direction of the sort
-     * @return string HTML markup
-     */
-    public function create_report_table($records, $cm, $sort, $sortdir) {
-        $output = '';
-
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable quizsummaryofattempt boxaligncenter';
-        $table->head = $this->format_report_table_headers($cm, $sort, $sortdir);
-        $table->align = array('center', 'center', 'center', 'center', 'center', '');
-        $table->size = array('', '', '', '', '');
-
-        $table->data = array();
-        $this->get_report_table_rows($records, $cm, $table);
-        $output .= html_writer::table($table);
-
-        return $output;
-    }
-
-    /**
      * This function creates the table header links that will be used to allow instructor to sort the data
      * @param stdClass $cm a course module object set to the instance of the activity
      * @param string $sort the column the the table is to be sorted by

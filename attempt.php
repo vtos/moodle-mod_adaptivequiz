@@ -22,13 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_adaptivequiz\local\adaptiveattempt;
-use mod_adaptivequiz\local\catalgo;
-use mod_adaptivequiz\local\fetchquestion;
-
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot.'/tag/lib.php');
+
+use mod_adaptivequiz\local\attempt;
+use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\local\fetchquestion;
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
 $uniqueid  = optional_param('uniqueid', 0, PARAM_INT);  // Unique id of the attempt.
@@ -103,7 +103,7 @@ if (!empty($adaptivequiz->password)) {
 }
 
 // Create an instance of the adaptiveattempt class.
-$adaptiveattempt = new adaptiveattempt($adaptivequiz, $USER->id);
+$adaptiveattempt = new attempt($adaptivequiz, $USER->id);
 $algo = new stdClass();
 $nextdiff = null;
 $standarderror = 0.0;

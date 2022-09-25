@@ -36,7 +36,7 @@ use question_state_gradedwrong;
 use question_usage_by_activity;
 use stdClass;
 
-class adaptiveattempt {
+class attempt {
     /**
      * The name of the module
      */
@@ -116,26 +116,6 @@ class adaptiveattempt {
         if (debugging('', DEBUG_DEVELOPER)) {
             $this->debugenabled = true;
         }
-    }
-
-    /**
-     * This function adds a message to the debugging array
-     * @param string $message details of the debugging message
-     */
-    protected function print_debug($message = '') {
-        if ($this->debugenabled) {
-            $this->debug[] = $message;
-        }
-    }
-
-    /**
-     * Answer a string view of a variable for debugging purposes
-     * @param mixed $variable
-     */
-    protected function vardump($variable) {
-        ob_start();
-        var_dump($variable);
-        return ob_get_clean();
     }
 
     /**
@@ -359,6 +339,225 @@ class adaptiveattempt {
     }
 
     /**
+     * This function returns a random array element
+     * @param array $questions an array of question ids.  Array key values are question ids
+     * @return int a question id
+     */
+    public function return_random_question($questions) {
+        if (empty($questions)) {
+            return 0;
+        }
+
+        $questionid = array_rand($questions);
+        $this->print_debug('return_random_question() - random question chosen questionid: '.$questionid);
+
+        return (int) $questionid;
+    }
+
+    /**
+     * This function checks to see if the student answered the maximum number of questions
+     * @return bool true if the attempt is starting for the first time. Otherwise false
+     */
+    public function max_questions_answered() {
+        if ($this->adpqattempt->questionsattempted >= $this->adaptivequiz->maximumquestions) {
+            $this->print_debug('max_questions_answered() - maximum number of questions answered');
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * This function checks to see if the student answered the minimum number of questions
+     * @return bool true if the attempt is starting for the first time. Otherwise false
+     */
+    public function min_questions_answered() {
+        if ($this->adpqattempt->questionsattempted > $this->adaptivequiz->minimumquestions) {
+            $this->print_debug('min_questions_answered() - minimum number of questions answered');
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * This function retrieves the last question that was used in the attempt
+     * @throws moodle_exception - exception is thrown function parameter is not an instance of question_usage_by_activity class
+     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
+     * @return int question slot or 0 if no unmarked question could be found
+     */
+    public function find_last_quest_used_by_attempt($quba) {
+        if (!$quba instanceof question_usage_by_activity) {
+            throw new coding_exception('find_last_quest_used_by_attempt() - Argument was not a question_usage_by_activity object',
+                $this->vardump($quba));
+        }
+
+        // The last slot in the array should be the last question that was attempted (meaning it was either shown to the user
+        // or the user submitted an answer to it).
+        $questslots = $quba->get_slots();
+
+        if (empty($questslots) || !is_array($questslots)) {
+            $this->print_debug('find_last_quest_used_by_attempt() - No question slots found for this '.
+                'question_usage_by_activity object');
+            return 0;
+        }
+
+        $questslot = end($questslots);
+        $this->print_debug('find_last_quest_used_by_attempt() - Found a question slot: '.$questslot);
+        return $questslot;
+    }
+
+    /**
+     * This function determines if the user submitted an answer to the question
+     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
+     * @param int $slot question slot id
+     * @return bool true if an answer to the question was submitted, otherwise false
+     */
+    public function was_answer_submitted_to_question($quba, $slotid) {
+        $state = $quba->get_question_state($slotid);
+
+        // Check if the state of the quesiton attempted was graded right, partially right, wrong or gave up, count the question has
+        // having an answer submitted.
+        $marked = $state instanceof question_state_gradedright || $state instanceof question_state_gradedpartial
+            || $state instanceof question_state_gradedwrong || $state instanceof question_state_gaveup;
+
+        if ($marked) {
+            return true;
+        } else {
+            // Save some debugging information.
+            $this->print_debug('was_answer_submitted_to_question() - question state is unrecognized state: '.get_class($state).'
+                    question slotid: '.$slotid.' quba id: '.$quba->get_id());
+        }
+
+        return false;
+    }
+
+    /**
+     * This function initializes the question_usage_by_activity object.  If an attempt unfinished attempt
+     * has a usage id, a question_usage_by_activity object will be loaded using the usage id.  Otherwise a new
+     * question_usage_by_activity object is created.
+     * @throws moodle_exception - exception is thrown when required behaviour could not be found
+     * @return question_usage_by_activity|null returns a question usage by activity object or null
+     */
+    public function initialize_quba() {
+        $quba = null;
+
+        if (!$this->behaviour_exists()) {
+            throw new moodle_exception('Missing '.self::ATTEMPTBEHAVIOUR.' behaviour', 'Behaviour: '.self::ATTEMPTBEHAVIOUR.
+                ' must exist in order to use this activity');
+        }
+
+        if (0 == $this->adpqattempt->uniqueid) {
+            // Init question usage and set default behaviour of usage.
+            $quba = question_engine::make_questions_usage_by_activity(self::MODULENAME, $this->adaptivequiz->context);
+            $quba->set_preferred_behaviour(self::ATTEMPTBEHAVIOUR);
+
+            $this->quba = $quba;
+            $this->print_debug('initialized_quba() - question usage created');
+        } else {
+            // Load a previously used question by usage object.
+            $quba = question_engine::load_questions_usage_by_activity($this->adpqattempt->uniqueid);
+            $this->print_debug('initialized_quba() - Re-using unfinishd attempt');
+        }
+
+        // Set class property.
+        $this->quba = $quba;
+
+        return $quba;
+    }
+
+    /**
+     * This function retrieves the most recent attempt, whose state is 'inprogress'. If no attempt is found
+     * it creates a new attempt.  Lastly $adpqattempt instance property gets set.
+     *
+     * @return stdClass adaptivequiz_attempt data object
+     */
+    public function get_attempt() {
+        global $DB;
+
+        $param = ['instance' => $this->adaptivequiz->id, 'userid' => $this->userid, 'attemptstate' => attempt_state::IN_PROGRESS];
+        $attempt = $DB->get_records('adaptivequiz_attempt', $param, 'timemodified DESC', '*', 0, 1);
+
+        if (empty($attempt)) {
+            $time = time();
+            $attempt = new stdClass();
+            $attempt->instance = $this->adaptivequiz->id;
+            $attempt->userid = $this->userid;
+            $attempt->uniqueid = 0;
+            $attempt->attemptstate = attempt_state::IN_PROGRESS;
+            $attempt->questionsattempted = 0;
+            $attempt->standarderror = 999;
+            $attempt->timecreated = $time;
+            $attempt->timemodified = $time;
+
+            $id = $DB->insert_record('adaptivequiz_attempt', $attempt);
+
+            $attempt->id = $id;
+            $this->adpqattempt = $attempt;
+
+            $this->print_debug('get_attempt() - new attempt created: '.$this->vardump($attempt));
+        } else {
+            $attempt = current($attempt);
+            $this->adpqattempt = $attempt;
+
+            $this->print_debug('get_attempt() - previous attempt loaded: '.$this->vardump($attempt));
+        }
+
+        return $attempt;
+    }
+
+    /**
+     * This function determins whether the user answered the question correctly or incorrectly.
+     * If the answer is partially correct it is seen as correct.
+     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
+     * @param int $slotid the slot id of the question
+     * @return float a float representing the user's mark.  Or null if there was no mark
+     */
+    public function get_question_mark($quba, $slotid) {
+        $mark = $quba->get_question_mark($slotid);
+
+        if (is_float($mark)) {
+            return $mark;
+        }
+
+        $this->print_debug('get_question_mark() - Question mark was not a float slot id: '.$slotid.'.  Returning zero');
+        return 0;
+    }
+
+    /**
+     * This functions returns an array of all question ids that have been used in this attempt
+     *
+     * @return array an array of question ids
+     */
+    public function get_all_questions_in_attempt($uniqueid) {
+        global $DB;
+
+        $questions = $DB->get_records_menu('question_attempts', array('questionusageid' => $uniqueid), 'id ASC', 'id,questionid');
+
+        return $questions;
+    }
+
+    /**
+     * This function adds a message to the debugging array
+     * @param string $message details of the debugging message
+     */
+    protected function print_debug($message = '') {
+        if ($this->debugenabled) {
+            $this->debug[] = $message;
+        }
+    }
+
+    /**
+     * Answer a string view of a variable for debugging purposes
+     * @param mixed $variable
+     */
+    protected function vardump($variable) {
+        ob_start();
+        var_dump($variable);
+        return ob_get_clean();
+    }
+
+    /**
      * This function gets the question ready for display to the user.
      * @param fetchquestion $fetchquestion a fetchquestion object initialized to the activity instance of the attempt
      * @return bool true if everything went okay, otherwise false
@@ -411,48 +610,6 @@ class adaptiveattempt {
     }
 
     /**
-     * This function returns a random array element
-     * @param array $questions an array of question ids.  Array key values are question ids
-     * @return int a question id
-     */
-    public function return_random_question($questions) {
-        if (empty($questions)) {
-            return 0;
-        }
-
-        $questionid = array_rand($questions);
-        $this->print_debug('return_random_question() - random question chosen questionid: '.$questionid);
-
-        return (int) $questionid;
-    }
-
-    /**
-     * This function checks to see if the student answered the maximum number of questions
-     * @return bool true if the attempt is starting for the first time. Otherwise false
-     */
-    public function max_questions_answered() {
-        if ($this->adpqattempt->questionsattempted >= $this->adaptivequiz->maximumquestions) {
-            $this->print_debug('max_questions_answered() - maximum number of questions answered');
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * This function checks to see if the student answered the minimum number of questions
-     * @return bool true if the attempt is starting for the first time. Otherwise false
-     */
-    public function min_questions_answered() {
-        if ($this->adpqattempt->questionsattempted > $this->adaptivequiz->minimumquestions) {
-            $this->print_debug('min_questions_answered() - minimum number of questions answered');
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * This function updates the current attempt with the question_usage_by_activity id
      */
     protected function set_attempt_uniqueid() {
@@ -462,132 +619,6 @@ class adaptiveattempt {
         $this->timemodified = time();
         $DB->update_record('adaptivequiz_attempt', $this->adpqattempt);
         $this->print_debug('set_attempt_uniqueid() - attempt uniqueid set: '.$this->adpqattempt->uniqueid);
-    }
-
-    /**
-     * This function retrieves the most recent attempt, whose state is 'inprogress'. If no attempt is found
-     * it creates a new attempt.  Lastly $adpqattempt instance property gets set.
-     *
-     * @return stdClass adaptivequiz_attempt data object
-     */
-    public function get_attempt() {
-        global $DB;
-
-        $param = ['instance' => $this->adaptivequiz->id, 'userid' => $this->userid, 'attemptstate' => attempt_state::IN_PROGRESS];
-        $attempt = $DB->get_records('adaptivequiz_attempt', $param, 'timemodified DESC', '*', 0, 1);
-
-        if (empty($attempt)) {
-            $time = time();
-            $attempt = new stdClass();
-            $attempt->instance = $this->adaptivequiz->id;
-            $attempt->userid = $this->userid;
-            $attempt->uniqueid = 0;
-            $attempt->attemptstate = attempt_state::IN_PROGRESS;
-            $attempt->questionsattempted = 0;
-            $attempt->standarderror = 999;
-            $attempt->timecreated = $time;
-            $attempt->timemodified = $time;
-
-            $id = $DB->insert_record('adaptivequiz_attempt', $attempt);
-
-            $attempt->id = $id;
-            $this->adpqattempt = $attempt;
-
-            $this->print_debug('get_attempt() - new attempt created: '.$this->vardump($attempt));
-        } else {
-            $attempt = current($attempt);
-            $this->adpqattempt = $attempt;
-
-            $this->print_debug('get_attempt() - previous attempt loaded: '.$this->vardump($attempt));
-        }
-
-        return $attempt;
-    }
-
-    /**
-     * This function retrieves the last question that was used in the attempt
-     * @throws moodle_exception - exception is thrown function parameter is not an instance of question_usage_by_activity class
-     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
-     * @return int question slot or 0 if no unmarked question could be found
-     */
-    public function find_last_quest_used_by_attempt($quba) {
-        if (!$quba instanceof question_usage_by_activity) {
-            throw new coding_exception('find_last_quest_used_by_attempt() - Argument was not a question_usage_by_activity object',
-                $this->vardump($quba));
-        }
-
-        // The last slot in the array should be the last question that was attempted (meaning it was either shown to the user
-        // or the user submitted an answer to it).
-        $questslots = $quba->get_slots();
-
-        if (empty($questslots) || !is_array($questslots)) {
-            $this->print_debug('find_last_quest_used_by_attempt() - No question slots found for this '.
-                    'question_usage_by_activity object');
-            return 0;
-        }
-
-        $questslot = end($questslots);
-        $this->print_debug('find_last_quest_used_by_attempt() - Found a question slot: '.$questslot);
-        return $questslot;
-    }
-
-    /**
-     * This function determines if the user submitted an answer to the question
-     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
-     * @param int $slot question slot id
-     * @return bool true if an answer to the question was submitted, otherwise false
-     */
-    public function was_answer_submitted_to_question($quba, $slotid) {
-        $state = $quba->get_question_state($slotid);
-
-        // Check if the state of the quesiton attempted was graded right, partially right, wrong or gave up, count the question has
-        // having an answer submitted.
-        $marked = $state instanceof question_state_gradedright || $state instanceof question_state_gradedpartial
-                || $state instanceof question_state_gradedwrong || $state instanceof question_state_gaveup;
-
-        if ($marked) {
-            return true;
-        } else {
-            // Save some debugging information.
-            $this->print_debug('was_answer_submitted_to_question() - question state is unrecognized state: '.get_class($state).'
-                    question slotid: '.$slotid.' quba id: '.$quba->get_id());
-        }
-
-        return false;
-    }
-
-    /**
-     * This function initializes the question_usage_by_activity object.  If an attempt unfinished attempt
-     * has a usage id, a question_usage_by_activity object will be loaded using the usage id.  Otherwise a new
-     * question_usage_by_activity object is created.
-     * @throws moodle_exception - exception is thrown when required behaviour could not be found
-     * @return question_usage_by_activity|null returns a question usage by activity object or null
-     */
-    public function initialize_quba() {
-        $quba = null;
-
-        if (!$this->behaviour_exists()) {
-            throw new moodle_exception('Missing '.self::ATTEMPTBEHAVIOUR.' behaviour', 'Behaviour: '.self::ATTEMPTBEHAVIOUR.
-                    ' must exist in order to use this activity');
-        }
-
-        if (0 == $this->adpqattempt->uniqueid) {
-            // Init question usage and set default behaviour of usage.
-            $quba = question_engine::make_questions_usage_by_activity(self::MODULENAME, $this->adaptivequiz->context);
-            $quba->set_preferred_behaviour(self::ATTEMPTBEHAVIOUR);
-
-            $this->quba = $quba;
-            $this->print_debug('initialized_quba() - question usage created');
-        } else {
-            // Load a previously used question by usage object.
-            $quba = question_engine::load_questions_usage_by_activity($this->adpqattempt->uniqueid);
-            $this->print_debug('initialized_quba() - Re-using unfinishd attempt');
-        }
-
-        // Set class property.
-        $this->quba = $quba;
-
-        return $quba;
     }
 
     /**
@@ -609,36 +640,5 @@ class adaptiveattempt {
         }
 
         return $exists;
-    }
-
-    /**
-     * This function determins whether the user answered the question correctly or incorrectly.
-     * If the answer is partially correct it is seen as correct.
-     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
-     * @param int $slotid the slot id of the question
-     * @return float a float representing the user's mark.  Or null if there was no mark
-     */
-    public function get_question_mark($quba, $slotid) {
-        $mark = $quba->get_question_mark($slotid);
-
-        if (is_float($mark)) {
-            return $mark;
-        }
-
-        $this->print_debug('get_question_mark() - Question mark was not a float slot id: '.$slotid.'.  Returning zero');
-        return 0;
-    }
-
-    /**
-     * This functions returns an array of all question ids that have been used in this attempt
-     *
-     * @return array an array of question ids
-     */
-    public function get_all_questions_in_attempt($uniqueid) {
-        global $DB;
-
-        $questions = $DB->get_records_menu('question_attempts', array('questionusageid' => $uniqueid), 'id ASC', 'id,questionid');
-
-        return $questions;
     }
 }

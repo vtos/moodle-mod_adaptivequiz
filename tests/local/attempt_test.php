@@ -34,8 +34,9 @@ use stdClass;
 
 /**
  * @group mod_adaptivequiz
+ * @covers \mod_adaptivequiz\local\attempt
  */
-class adaptiveattempt_test extends advanced_testcase {
+class attempt_test extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */
     protected $activityinstance = null;
 
@@ -101,7 +102,7 @@ class adaptiveattempt_test extends advanced_testcase {
         $dummy->id = 220;
         $userid = 2;
 
-        $attempt = new adaptiveattempt($dummy, $userid);
+        $attempt = new attempt($dummy, $userid);
         $data = $attempt->get_attempt();
 
         $expected = new stdClass();
@@ -130,7 +131,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $this->activityinstance->context = context_module::instance($this->cm->id);
 
-        $adaptiveattempt = new adaptiveattempt($this->activityinstance, $this->user->id);
+        $adaptiveattempt = new attempt($this->activityinstance, $this->user->id);
 
         $this->expectException('coding_exception');
         $adaptiveattempt->set_quba(new stdClass());
@@ -145,7 +146,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $this->activityinstance->context = context_module::instance($this->cm->id);
 
-        $adaptiveattempt = new adaptiveattempt($this->activityinstance, $this->user->id);
+        $adaptiveattempt = new attempt($this->activityinstance, $this->user->id);
 
         // Test a non initialized quba.
         $this->assertNull($adaptiveattempt->get_quba());
@@ -171,22 +172,22 @@ class adaptiveattempt_test extends advanced_testcase {
         $dummy->maximumquestions = 20;
         $userid = 2;
 
-        $attempt = new adaptiveattempt($dummy, $userid);
+        $attempt = new attempt($dummy, $userid);
         $attempt->get_attempt();
         $this->assertEquals(false, $attempt->max_questions_answered());
 
         $dummy->id = 221;
-        $attempt = new adaptiveattempt($dummy, $userid);
+        $attempt = new attempt($dummy, $userid);
         $attempt->get_attempt();
         $this->assertEquals(false, $attempt->max_questions_answered());
 
         $dummy->id = 222;
-        $attempt = new adaptiveattempt($dummy, $userid);
+        $attempt = new attempt($dummy, $userid);
         $attempt->get_attempt();
         $this->assertEquals(true, $attempt->max_questions_answered());
 
         $dummy->id = 223;
-        $attempt = new adaptiveattempt($dummy, $userid);
+        $attempt = new attempt($dummy, $userid);
         $attempt->get_attempt();
         $this->assertEquals(true, $attempt->max_questions_answered());
     }
@@ -203,22 +204,22 @@ class adaptiveattempt_test extends advanced_testcase {
         $dummy->minimumquestions = 21;
         $userid = 2;
 
-        $attempt = new adaptiveattempt($dummy, $userid);
+        $attempt = new attempt($dummy, $userid);
         $attempt->get_attempt();
         $this->assertEquals(false, $attempt->min_questions_answered());
 
         $dummy->id = 221;
-        $attempt = new adaptiveattempt($dummy, $userid);
+        $attempt = new attempt($dummy, $userid);
         $attempt->get_attempt();
         $this->assertEquals(false, $attempt->min_questions_answered());
 
         $dummy->id = 222;
-        $attempt = new adaptiveattempt($dummy, $userid);
+        $attempt = new attempt($dummy, $userid);
         $attempt->get_attempt();
         $this->assertEquals(false, $attempt->min_questions_answered());
 
         $dummy->id = 223;
-        $attempt = new adaptiveattempt($dummy, $userid);
+        $attempt = new attempt($dummy, $userid);
         $attempt->get_attempt();
         $this->assertEquals(true, $attempt->min_questions_answered());
     }
@@ -234,7 +235,7 @@ class adaptiveattempt_test extends advanced_testcase {
         $dummy->minimumquestions = 21;
         $userid = 2;
 
-        $adaptiveattempt = new adaptiveattempt($dummy, $userid);
+        $adaptiveattempt = new attempt($dummy, $userid);
 
         $result = $adaptiveattempt->return_random_question(array());
         $this->assertEquals(0, $result);
@@ -254,7 +255,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $this->activityinstance->context = context_module::instance($this->cm->id);
 
-        $adaptiveattempt = new adaptiveattempt($this->activityinstance, $this->user->id);
+        $adaptiveattempt = new attempt($this->activityinstance, $this->user->id);
         $adaptiveattempt->get_attempt();
         $quba = $adaptiveattempt->initialize_quba();
 
@@ -273,7 +274,7 @@ class adaptiveattempt_test extends advanced_testcase {
         $param = array('id' => 330);
         $activityinstance = $DB->get_record('adaptivequiz', $param);
 
-        $adaptiveattempt = new adaptiveattempt($activityinstance, 2);
+        $adaptiveattempt = new attempt($activityinstance, 2);
         $adaptiveattempt->get_attempt();
         $quba = $adaptiveattempt->initialize_quba();
 
@@ -295,7 +296,7 @@ class adaptiveattempt_test extends advanced_testcase {
         $param = array('id' => 330);
         $activityinstance = $DB->get_record('adaptivequiz', $param);
 
-        $adaptiveattempt = new adaptiveattempt($activityinstance, 2);
+        $adaptiveattempt = new attempt($activityinstance, 2);
         $adaptiveattempt->get_attempt();
         $quba = $adaptiveattempt->initialize_quba();
 
@@ -312,7 +313,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $dummy = new stdClass();
 
-        $adaptiveattempt = new adaptiveattempt($dummy, 2);
+        $adaptiveattempt = new attempt($dummy, 2);
 
         $this->expectException('coding_exception');
         $adaptiveattempt->find_last_quest_used_by_attempt($dummy);
@@ -326,7 +327,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $dummy = new stdClass();
 
-        $adaptiveattempt = $this->getMockBuilder(adaptiveattempt::class)
+        $adaptiveattempt = $this->getMockBuilder(attempt::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -350,7 +351,7 @@ class adaptiveattempt_test extends advanced_testcase {
     public function test_was_answer_submitted_to_question_with_graded_right() {
         $this->resetAfterTest(true);
         $dummy = new stdClass();
-        $adaptiveattempt = new adaptiveattempt($dummy, 1);
+        $adaptiveattempt = new attempt($dummy, 1);
 
         $mockquba = $this->getMockBuilder('question_usage_by_activity')
             ->disableOriginalConstructor()
@@ -376,7 +377,7 @@ class adaptiveattempt_test extends advanced_testcase {
     public function test_was_answer_submitted_to_question_with_graded_wrong() {
         $this->resetAfterTest(true);
         $dummy = new stdClass();
-        $adaptiveattempt = new adaptiveattempt($dummy, 1);
+        $adaptiveattempt = new attempt($dummy, 1);
 
         $mockquba = $this->getMockBuilder('question_usage_by_activity')
             ->disableOriginalConstructor()
@@ -402,7 +403,7 @@ class adaptiveattempt_test extends advanced_testcase {
     public function test_was_answer_submitted_to_question_with_graded_partial() {
         $this->resetAfterTest(true);
         $dummy = new stdClass();
-        $adaptiveattempt = new adaptiveattempt($dummy, 1);
+        $adaptiveattempt = new attempt($dummy, 1);
 
         $mockquba = $this->getMockBuilder('question_usage_by_activity')
             ->disableOriginalConstructor()
@@ -428,7 +429,7 @@ class adaptiveattempt_test extends advanced_testcase {
     public function test_was_answer_submitted_to_question_with_graded_gaveup() {
         $this->resetAfterTest(true);
         $dummy = new stdClass();
-        $adaptiveattempt = new adaptiveattempt($dummy, 1);
+        $adaptiveattempt = new attempt($dummy, 1);
 
         $mockquba = $this->getMockBuilder('question_usage_by_activity')
             ->disableOriginalConstructor()
@@ -454,7 +455,7 @@ class adaptiveattempt_test extends advanced_testcase {
     public function test_was_answer_submitted_to_question_with_graded_todo() {
         $this->resetAfterTest(true);
         $dummy = new stdClass();
-        $adaptiveattempt = new adaptiveattempt($dummy, 1);
+        $adaptiveattempt = new attempt($dummy, 1);
 
         $mockquba = $this->getMockBuilder('question_usage_by_activity')
             ->disableOriginalConstructor()
@@ -483,7 +484,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $dummy = new stdClass();
         $userid = 1;
-        $adaptiveattempt = new adaptiveattempt($dummy, $userid);
+        $adaptiveattempt = new attempt($dummy, $userid);
 
         $adaptiveattempt->set_question_slot_number(2);
         $result = $adaptiveattempt->get_question_slot_number();
@@ -499,7 +500,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $dummy = new stdClass();
         $userid = 1;
-        $adaptiveattempt = new adaptiveattempt($dummy, $userid);
+        $adaptiveattempt = new attempt($dummy, $userid);
 
         $adaptiveattempt->set_level(2);
         $result = $adaptiveattempt->get_level();
@@ -522,7 +523,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $dummy = new stdClass();
         $userid = 1;
-        $adaptiveattempt = new adaptiveattempt($dummy, $userid);
+        $adaptiveattempt = new attempt($dummy, $userid);
         $result = $adaptiveattempt->get_question_mark($mockquba, 1);
         $this->assertEquals(1.0, $result);
     }
@@ -542,7 +543,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $dummy = new stdClass();
         $userid = 1;
-        $adaptiveattempttwo = new adaptiveattempt($dummy, $userid);
+        $adaptiveattempttwo = new attempt($dummy, $userid);
         $result = $adaptiveattempttwo->get_question_mark($mockqubatwo, 1);
         $this->assertEquals(0, $result);
     }
@@ -562,7 +563,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $dummy = new stdClass();
         $userid = 1;
-        $adaptiveattemptthree = new adaptiveattempt($dummy, $userid);
+        $adaptiveattemptthree = new attempt($dummy, $userid);
         $result = $adaptiveattemptthree->get_question_mark($mockqubathree, 1);
         $this->assertEquals(0, $result);
     }
@@ -573,7 +574,7 @@ class adaptiveattempt_test extends advanced_testcase {
     public function test_start_attempt_max_num_of_quest_answered() {
         $this->resetAfterTest(true);
 
-        $attempt = $this->createPartialMock(adaptiveattempt::class,
+        $attempt = $this->createPartialMock(attempt::class,
             ['get_attempt', 'level_in_bounds', 'max_questions_answered']);
         $attempt->method('get_attempt')->willReturn(new stdClass());
         $attempt->method('level_in_bounds')->willReturn(true);
@@ -592,7 +593,7 @@ class adaptiveattempt_test extends advanced_testcase {
         $dummyadaptivequiz->highestlevel = 100;
 
         $mockattemptthree = $this
-            ->getMockBuilder(adaptiveattempt::class)
+            ->getMockBuilder(attempt::class)
             ->setMethods(
                 ['get_attempt', 'max_questions_answered', 'initialize_quba', 'find_last_quest_used_by_attempt',
                     'level_in_bounds']
@@ -634,7 +635,7 @@ class adaptiveattempt_test extends advanced_testcase {
         $dummy->highestlevel = 10;
 
         $userid = 1;
-        $adaptiveattempt = new adaptiveattempt($dummy, $userid);
+        $adaptiveattempt = new attempt($dummy, $userid);
 
         $adaptivequiz = $adaptiveattempt->get_adaptivequiz();
 
@@ -652,7 +653,7 @@ class adaptiveattempt_test extends advanced_testcase {
 
         $dummy = new stdClass();
         $userid = 1;
-        $adaptiveattempt = new adaptiveattempt($dummy, $userid);
+        $adaptiveattempt = new attempt($dummy, $userid);
         $questids = $adaptiveattempt->get_all_questions_in_attempt(330);
 
         $this->assertEquals(2, count($questids));

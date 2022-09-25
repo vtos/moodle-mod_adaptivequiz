@@ -276,42 +276,6 @@ function adaptivequiz_min_attempts_reached($uniqueid, $instance, $userid) {
 }
 
 /**
- * This function constructs an ORDER BY caluse for the view attempts report page
- * @param string $sort the column to sort by
- * @param string $sortdir the direction to sort in
- * @return string an ordery by (ex. ORDER BY firstname ASC)
- */
-function adaptivequiz_construct_view_report_orderby($sort, $sortdir) {
-    $orderby = '';
-
-    switch (strtolower($sort)) {
-        case 'firstname':
-        case 'lastname':
-        case 'attempts':
-        case 'measure':
-        case 'stderror':
-        case 'timemodified':
-            $orderby = 'ORDER BY '.$sort;
-            break;
-        default:
-            $orderby = 'ORDER BY firstname';
-            break;
-    }
-
-    if (!empty($orderby)) {
-        switch (strtoupper($sortdir)) {
-            case 'DESC':
-                $orderby .= ' '.$sortdir;
-                break;
-            default:
-                $orderby .= ' ASC';
-        }
-    }
-
-    return $orderby;
-}
-
-/**
  * This checks if the session property, needed to beging an attempt with a password, has been initialized
  * @param int $instance the activity instance id
  * @return bool true

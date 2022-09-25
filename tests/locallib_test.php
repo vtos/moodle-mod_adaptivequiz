@@ -331,33 +331,4 @@ class locallib_test extends advanced_testcase {
         $result = adaptivequiz_min_attempts_reached(4, 13, 4);
         $this->assertTrue($result);
     }
-
-    /**
-     * This function tests the output from adaptivequiz_construct_view_report_orderby.
-     *
-     * @dataProvider view_reports_data
-     * @param string $sort the column to sort on
-     * @param string $sortdir the direction to sort in
-     * @covers ::adaptivequiz_construct_view_report_orderby
-     */
-    public function test_adaptivequiz_construct_view_report_orderby($sort, $sortdir) {
-        $this->resetAfterTest(true);
-
-        $data = adaptivequiz_construct_view_report_orderby($sort, $sortdir);
-        $this->assertStringContainsString('ORDER BY', $data);
-    }
-
-    /**
-     * This function tests the output from adaptivequiz_construct_view_report_orderby.
-     *
-     * @covers ::adaptivequiz_construct_view_report_orderby
-     */
-    public function test_adaptivequiz_construct_view_report_orderby_with_illegit_data() {
-        $this->resetAfterTest(true);
-
-        $data = adaptivequiz_construct_view_report_orderby('1234', 'ASC');
-        $this->assertStringContainsString('ORDER BY firstname', $data);
-        $data = adaptivequiz_construct_view_report_orderby('stderr', 'ASC');
-        $this->assertStringContainsString('ORDER BY firstname', $data);
-    }
 }

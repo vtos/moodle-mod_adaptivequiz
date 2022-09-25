@@ -25,6 +25,7 @@ namespace mod_adaptivequiz\local;
 
 use coding_exception;
 use help_icon;
+use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz_renderer;
 use moodle_url;
 use stdClass;
@@ -91,7 +92,7 @@ final class user_attempts_table extends table_sql {
     }
 
     protected function col_timefinished(stdClass $row): string {
-        if ($row->state != ADAPTIVEQUIZ_ATTEMPT_COMPLETED) {
+        if ($row->state != attempt_state::COMPLETED) {
             return '';
         }
 

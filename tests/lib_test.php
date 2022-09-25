@@ -31,6 +31,7 @@ global $CFG;
 require_once($CFG->dirroot.'/mod/adaptivequiz/lib.php');
 
 use advanced_testcase;
+use mod_adaptivequiz\local\attempt\attempt_state;
 use stdClass;
 
 /**
@@ -180,7 +181,7 @@ class lib_test extends advanced_testcase {
         $dummy->user->firstnamephonetic = 'user';
         $dummy->user->lastnamephonetic = 'phpunit';
         $dummy->content = new stdClass();
-        $dummy->content->attemptstate = 'inprogress';
+        $dummy->content->attemptstate = attempt_state::IN_PROGRESS;
         $dummy->content->questionsattempted = '12';
         $dummy->timestamp = 1234;
         $dummy->type = 'mod_adaptivequiz';
@@ -219,7 +220,7 @@ class lib_test extends advanced_testcase {
         $dummy->user->firstnamephonetic = 'user';
         $dummy->user->lastnamephonetic = 'phpunit';
         $dummy->content = new stdClass();
-        $dummy->content->attemptstate = 'inprogress';
+        $dummy->content->attemptstate = attempt_state::IN_PROGRESS;
         $dummy->content->questionsattempted = '12';
         $dummy->timestamp = 1234;
         $dummy->type = 'mod_adaptivequiz';

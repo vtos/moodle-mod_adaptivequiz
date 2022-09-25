@@ -29,6 +29,7 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use context_module;
+use mod_adaptivequiz\local\attempt\attempt_state;
 use stdClass;
 
 /**
@@ -111,7 +112,7 @@ class adaptiveattempt_test extends advanced_testcase {
         $expected->instance = '220';
         $expected->userid = '2';
         $expected->uniqueid = '1110';
-        $expected->attemptstate = 'inprogress';
+        $expected->attemptstate = attempt_state::IN_PROGRESS;
         $expected->questionsattempted = '0';
         $expected->attemptstopcriteria = '';
         $expected->standarderror = '1.00000';

@@ -214,12 +214,12 @@ final class sql_and_params {
                 LIMIT 1
             ) AS attempttimefinished,
             (
-                SELECT iaa.uniqueid FROM {adaptivequiz_attempt} iaa
+                SELECT iaa.id FROM {adaptivequiz_attempt} iaa
                 WHERE iaa.instance = aa.instance AND iaa.userid = u.id AND iaa.attemptstate = :attemptstate4
                 AND iaa.standarderror > 0.0
                 ORDER BY measure DESC
                 LIMIT 1
-            ) AS uniqueid'
+            ) AS attemptid'
             ,
             [
                 'attemptstate1' => attempt_state::COMPLETED,

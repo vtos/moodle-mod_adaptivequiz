@@ -161,16 +161,13 @@ final class users_attempts_table extends table_sql {
         $formatmeasureparams->lowestlevel = $this->questionsdifficultyrange->lowest_level();
 
         $measure = $this->renderer->format_measure($formatmeasureparams);
-        if (!$row->uniqueid) {
+        if (!$row->attemptid) {
             return $measure;
         }
 
         if (!$this->is_downloading()) {
             return html_writer::link(
-                new moodle_url(
-                    '/mod/adaptivequiz/reviewattempt.php',
-                    ['userid' => $row->id, 'uniqueid' => $row->uniqueid, 'cmid' => $this->cmid]
-                ),
+                new moodle_url('/mod/adaptivequiz/reviewattempt.php', ['attempt' => $row->attemptid]),
                 $measure
             );
         }

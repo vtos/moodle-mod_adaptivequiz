@@ -22,70 +22,48 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__).'/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 
-$id = required_param('cmid', PARAM_INT);
-$uniqueid = required_param('uniqueid', PARAM_INT);
-$userid = required_param('userid', PARAM_INT);
+$attemptid = required_param('attempt', PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 
-if (!$cm = get_coursemodule_from_id('adaptivequiz', $id)) {
-    throw new moodle_exception('invalidcoursemodule');
-}
-if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-    throw new moodle_exception("coursemisconf");
-}
-
-global $OUTPUT, $DB;
+$attempt = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid], '*', MUST_EXIST);
+$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $attempt->instance], '*', MUST_EXIST);
+$cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $adaptivequiz->course, false, MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $adaptivequiz->course], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
+
 $context = context_module::instance($cm->id);
 
 require_capability('mod/adaptivequiz:viewreport', $context);
 
-$param = array('uniqueid' => $uniqueid, 'userid' => $userid, 'activityid' => $cm->instance);
-$sql = 'SELECT a.name, aa.timemodified, aa.id, u.firstname, u.lastname
-          FROM {adaptivequiz} a
-          JOIN {adaptivequiz_attempt} aa ON a.id = aa.instance
-          JOIN {user} u ON u.id = aa.userid
-         WHERE aa.uniqueid = :uniqueid
-               AND aa.userid = :userid
-               AND a.id = :activityid
-      ORDER BY a.name ASC';
-$adaptivequiz  = $DB->get_record_sql($sql, $param);
+$user = $DB->get_record('user', ['id' => $attempt->userid], '*', MUST_EXIST);
 
-$returnurl = new moodle_url('/mod/adaptivequiz/viewattemptreport.php', array('cmid' => $cm->id, 'userid' => $userid));
-
-if (empty($adaptivequiz)) {
-    throw new moodle_exception('errordeletingattempt', 'adaptivequiz', $returnurl);
-}
-
-$PAGE->set_url('/mod/adaptivequiz/reviewattempt.php', array('cmid' => $cm->id));
+$PAGE->set_url('/mod/adaptivequiz/delattempt.php', ['attempt' => $attempt->id]);
 $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-// Are you usre confirmation message.
+$returnurl = new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['cmid' => $cm->id, 'userid' => $user->id]);
+
 $a = new stdClass();
-$a->name = format_string($adaptivequiz->firstname.' '.$adaptivequiz->lastname);
-$a->timecompleted = userdate($adaptivequiz->timemodified);
-$message = get_string('confirmdeleteattempt', 'adaptivequiz', $a);
+$a->name = fullname($user);
+$a->timecompleted = userdate($attempt->timemodified);
 
 if ($confirm) {
-    // Remove attempt record and redirect.
-    question_engine::delete_questions_usage_by_activity($uniqueid);
-    $DB->delete_records('adaptivequiz_attempt', array('instance' => $cm->instance, 'uniqueid' => $uniqueid, 'userid' => $userid));
+    question_engine::delete_questions_usage_by_activity($attempt->uniqueid);
+    $DB->delete_records('adaptivequiz_attempt', ['id' => $attempt->id]);
 
-    // Update the grade book with any changes.
-    $adaptivequiz = $DB->get_record('adaptivequiz', array('id' => $cm->instance));
-    adaptivequiz_update_grades($adaptivequiz, $userid);
+    adaptivequiz_update_grades($adaptivequiz, $user->id);
 
     $message = get_string('attemptdeleted', 'adaptivequiz', $a);
     redirect($returnurl, $message, 4);
 }
 
-$confirm = new moodle_url('/mod/adaptivequiz/delattempt.php', array('uniqueid' => $uniqueid, 'cmid' => $cm->id,
-    'userid' => $userid, 'confirm' => 1));
+$message = get_string('confirmdeleteattempt', 'adaptivequiz', $a);
+
+$confirm = new moodle_url('/mod/adaptivequiz/delattempt.php', ['attempt' => $attempt->id, 'confirm' => 1]);
 echo $OUTPUT->header();
 echo $OUTPUT->confirm($message, $confirm, $returnurl);
 echo $OUTPUT->footer();

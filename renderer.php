@@ -530,12 +530,13 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     /**
      * Answer the summery information about an attempt
      *
-     * @param stdClass $adaptivequiz The attempt record.
+     * @param stdClass $adaptivequiz See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab()}.
+     * @param stdClass $attempt See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab()}.
      * @param stdClass $user The user who took the quiz that created the attempt.
      * @return string
      * @throws coding_exception
      */
-    public function attempt_summary_listing(stdClass $adaptivequiz, stdClass $user): string {
+    public function attempt_summary_listing(stdClass $adaptivequiz, stdClass $attempt, stdClass $user): string {
         $table = new html_table();
         $table->attributes['class'] = 'generaltable attemptsummarytable';
 
@@ -554,7 +555,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $headercell = new html_table_cell(get_string('attempt_state', 'adaptivequiz'));
         $headercell->header = true;
 
-        $datacell = new html_table_cell($adaptivequiz->attemptstate);
+        $datacell = new html_table_cell($attempt->attemptstate);
 
         $row->cells = [$headercell, $datacell];
         $table->data[] = $row;
@@ -564,9 +565,9 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $headercell = new html_table_cell(get_string('score', 'adaptivequiz'));
         $headercell->header = true;
 
-        $abilityfraction = 1 / ( 1 + exp( (-1 * $adaptivequiz->measure) ) );
+        $abilityfraction = 1 / ( 1 + exp( (-1 * $attempt->measure) ) );
         $ability = (($adaptivequiz->highestlevel - $adaptivequiz->lowestlevel) * $abilityfraction) + $adaptivequiz->lowestlevel;
-        $stderror = catalgo::convert_logit_to_percent($adaptivequiz->standarderror);
+        $stderror = catalgo::convert_logit_to_percent($attempt->standarderror);
         $score = ($stderror > 0)
             ? round($ability, 2)." &nbsp; &plusmn; ".round($stderror * 100, 1)."%"
             : 'n/a';
@@ -580,7 +581,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $headercell = new html_table_cell(get_string('attemptstarttime', 'adaptivequiz'));
         $headercell->header = true;
 
-        $datacell = new html_table_cell(userdate($adaptivequiz->timecreated));
+        $datacell = new html_table_cell(userdate($attempt->timecreated));
 
         $row->cells = [$headercell, $datacell];
         $table->data[] = $row;
@@ -590,7 +591,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $headercell = new html_table_cell(get_string('attemptfinishedtimestamp', 'adaptivequiz'));
         $headercell->header = true;
 
-        $datacell = new html_table_cell(userdate($adaptivequiz->timemodified));
+        $datacell = new html_table_cell(userdate($attempt->timemodified));
 
         $row->cells = [$headercell, $datacell];
         $table->data[] = $row;
@@ -600,7 +601,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $headercell = new html_table_cell(get_string('attempttotaltime', 'adaptivequiz'));
         $headercell->header = true;
 
-        $totaltime = $adaptivequiz->timemodified - $adaptivequiz->timecreated;
+        $totaltime = $attempt->timemodified - $attempt->timecreated;
         $hours = floor($totaltime / 3600);
         $remainder = $totaltime - ($hours * 3600);
         $minutes = floor($remainder / 60);
@@ -616,7 +617,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $headercell = new html_table_cell(get_string('attemptstopcriteria', 'adaptivequiz'));
         $headercell->header = true;
 
-        $datacell = new html_table_cell($adaptivequiz->attemptstopcriteria);
+        $datacell = new html_table_cell($attempt->attemptstopcriteria);
 
         $row->cells = [$headercell, $datacell];
         $table->data[] = $row;
@@ -651,14 +652,15 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * @param moodle_url $pageurl
      * @param string $tabid
-     * @param stdClass $attempt A joined record from {adaptivequiz} and {adaptivequiz_attempt} which contains the
-     * required attempt data. The expected fields are: 'attemptstate', 'measure', 'highestlevel', 'lowestlevel',
-     * 'standarderror', 'timecreated', 'timemodified', 'attemptstopcriteria' and 'uniqueid'.
-     * @param stdClass $user A record from {user}. The expected fields are: 'id', 'firstname', 'lastname' and 'email'.
+     * @param stdClass $adaptivequiz A record from {adaptivequiz}. The expected fields are 'lowestlevel' and 'highestlevel'.
+     * @param stdClass $attempt A record from {adaptivequiz_attempt}. The expected fields are: 'attemptstate', 'measure',
+     *        'highestlevel', 'lowestlevel', 'standarderror', 'timecreated', 'timemodified', 'attemptstopcriteria' and 'uniqueid'.
+     * @param stdClass $user A record from {user}. The expected fields are: 'id', 'email' and those required for {@link fullname()}
+     *        call.
      * @param question_usage_by_activity $quba
      * @param int $cmid
+     * @param moodle_url $pageurl
      * @param int $page
      * @return string
      * @throws coding_exception
@@ -666,6 +668,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      */
     public function attempt_report_page_by_tab(
         string $tabid,
+        stdClass $adaptivequiz,
         stdClass $attempt,
         stdClass $user,
         question_usage_by_activity $quba,
@@ -676,14 +679,14 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         if ($tabid == 'attemptgraph') {
             $return = $this->attempt_graph($attempt->uniqueid, $cmid, $user->id);
             $return .= html_writer::empty_tag('br');
-            $return .= $this->attempt_scoring_table($attempt, $quba);
+            $return .= $this->attempt_scoring_table($adaptivequiz, $quba);
 
             return $return;
         }
         if ($tabid == 'answerdistribution') {
             $return = $this->attempt_answer_distribution_graph($attempt->uniqueid, $cmid, $user->id);
             $return .= html_writer::empty_tag('br');
-            $return .= $this->attempt_answer_distribution_table($attempt, $quba);
+            $return .= $this->attempt_answer_distribution_table($adaptivequiz, $quba);
 
             return $return;
         }
@@ -691,7 +694,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             return $this->attempt_questions_review($quba, $pageurl, $page);
         }
 
-        return $this->attempt_summary_listing($attempt, $user);
+        return $this->attempt_summary_listing($adaptivequiz, $attempt, $user);
     }
 
     public function reset_users_attempts_filter_action(moodle_url $url): string {

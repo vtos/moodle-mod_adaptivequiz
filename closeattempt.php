@@ -22,88 +22,71 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__).'/../../config.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
 use mod_adaptivequiz\local\attempt\attempt_state;
 
-$id = required_param('cmid', PARAM_INT);
-$uniqueid = required_param('uniqueid', PARAM_INT);
-$userid = required_param('userid', PARAM_INT);
+$attemptid = required_param('attempt', PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 
-if (!$cm = get_coursemodule_from_id('adaptivequiz', $id)) {
-    throw new moodle_exception('invalidcoursemodule');
-}
-if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-    throw new moodle_exception("coursemisconf");
-}
-
-global $OUTPUT, $DB;
+$attempt = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid], '*', MUST_EXIST);
+$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $attempt->instance], '*', MUST_EXIST);
+$cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $adaptivequiz->course, false, MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $adaptivequiz->course], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
+
 $context = context_module::instance($cm->id);
 
 require_capability('mod/adaptivequiz:viewreport', $context);
 
-$param = array('uniqueid' => $uniqueid, 'userid' => $userid, 'activityid' => $cm->instance);
-$sql = 'SELECT a.name, aa.attemptstate, aa.timecreated, aa.timemodified, aa.id, u.firstname, u.lastname, aa.attemptstate,
-               aa.questionsattempted, aa.measure, aa.standarderror AS stderror, a.highestlevel, a.lowestlevel
-          FROM {adaptivequiz} a
-          JOIN {adaptivequiz_attempt} aa ON a.id = aa.instance
-          JOIN {user} u ON u.id = aa.userid
-         WHERE aa.uniqueid = :uniqueid
-               AND aa.userid = :userid
-               AND a.id = :activityid
-      ORDER BY a.name ASC';
-$adaptivequiz  = $DB->get_record_sql($sql, $param);
+$returnurl = new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['cmid' => $cm->id, 'userid' => $attempt->userid]);
 
-$returnurl = new moodle_url('/mod/adaptivequiz/viewattemptreport.php', array('cmid' => $cm->id, 'userid' => $userid));
-
-if (empty($adaptivequiz)) {
-    throw new moodle_exception('errorclosingattempt', 'adaptivequiz', $returnurl);
-}
-
-if ($adaptivequiz->attemptstate == attempt_state::COMPLETED) {
+if ($attempt->attemptstate == attempt_state::COMPLETED) {
     throw new moodle_exception('errorclosingattempt_alreadycomplete', 'adaptivequiz', $returnurl);
 }
 
-$PAGE->set_url('/mod/adaptivequiz/reviewattempt.php', array('cmid' => $cm->id));
+$user = $DB->get_record('user', ['id' => $attempt->userid], '*', MUST_EXIST);
+
+$PAGE->set_url('/mod/adaptivequiz/closeattempt.php', ['attempt' => $attempt->id]);
 $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
 $renderer = $PAGE->get_renderer('mod_adaptivequiz');
 
-// Are you sure confirmation message.
-global $USER;
+$performancecalculation = new stdClass();
+$performancecalculation->measure = $attempt->measure;
+$performancecalculation->stderror = $attempt->standarderror;
+$performancecalculation->lowestlevel = $adaptivequiz->lowestlevel;
+$performancecalculation->highestlevel = $adaptivequiz->highestlevel;
+
 $a = new stdClass();
-$a->name = format_string($adaptivequiz->firstname.' '.$adaptivequiz->lastname);
-$a->started = userdate($adaptivequiz->timecreated);
-$a->modified = userdate($adaptivequiz->timemodified);
-$a->num_questions = format_string($adaptivequiz->questionsattempted);
-$a->measure = $renderer->format_measure($adaptivequiz);
-$a->standarderror = $renderer->format_standard_error($adaptivequiz);
-$a->current_user_name = format_string($USER->firstname.' '.$USER->lastname);
+$a->name = fullname($user);
+$a->started = userdate($attempt->timecreated);
+$a->modified = userdate($attempt->timemodified);
+$a->num_questions = format_string($attempt->questionsattempted);
+$a->measure = $renderer->format_measure($performancecalculation);
+$a->standarderror = $renderer->format_standard_error($performancecalculation);
+$a->current_user_name = fullname($USER);
 $a->current_user_id = format_string($USER->id);
 $a->now = userdate(time());
 
-$message = html_writer::tag('p', get_string('confirmcloseattempt', 'adaptivequiz', $a))
-    .html_writer::tag('p', get_string('confirmcloseattemptstats', 'adaptivequiz', $a))
-    .html_writer::tag('p', get_string('confirmcloseattemptscore', 'adaptivequiz', $a));
-
 if ($confirm) {
-    // Close the attempt record and redirect.
     $statusmessage = get_string('attemptclosedstatus', 'adaptivequiz', $a);
-
     $closemessage = get_string('attemptclosed', 'adaptivequiz', $a);
 
-    adaptivequiz_complete_attempt($uniqueid, $cm->instance, $userid, $adaptivequiz->stderror, $statusmessage);
+    adaptivequiz_complete_attempt($attempt->uniqueid, $cm->instance, $attempt->userid, $attempt->standarderror, $statusmessage);
     redirect($returnurl, $closemessage, 4);
 }
 
-$confirm = new moodle_url('/mod/adaptivequiz/closeattempt.php', array('uniqueid' => $uniqueid, 'cmid' => $cm->id,
-    'userid' => $userid, 'confirm' => 1));
-echo $OUTPUT->header();
-echo $OUTPUT->confirm($message, $confirm, $returnurl);
-echo $OUTPUT->footer();
+$message = html_writer::tag('p', get_string('confirmcloseattempt', 'adaptivequiz', $a)) .
+    html_writer::tag('p', get_string('confirmcloseattemptstats', 'adaptivequiz', $a)) .
+    html_writer::tag('p', get_string('confirmcloseattemptscore', 'adaptivequiz', $a));
+
+$confirm = new moodle_url('/mod/adaptivequiz/closeattempt.php', ['attempt' => $attempt->id, 'confirm' => 1]);
+
+echo $renderer->header();
+echo $renderer->confirm($message, $confirm, $returnurl);
+echo $renderer->footer();

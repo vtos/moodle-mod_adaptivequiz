@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive quiz view attempted questions
+ * Page to view info about a certain attempt.
  *
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -26,52 +26,31 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
-$id = required_param('cmid', PARAM_INT);
-$uniqueid = required_param('uniqueid', PARAM_INT);
-$userid = required_param('userid', PARAM_INT);
+$attemptid = required_param('attempt', PARAM_INT);
 $page = optional_param('page', 0, PARAM_INT);
 $tab = optional_param('tab', 'attemptsummary', PARAM_ALPHA);
 
-if (!$cm = get_coursemodule_from_id('adaptivequiz', $id)) {
-    throw new moodle_exception('invalidcoursemodule');
-}
-if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-    throw new moodle_exception("coursemisconf");
-}
+$attempt = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid], '*', MUST_EXIST);
+$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $attempt->instance], '*', MUST_EXIST);
+$cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $adaptivequiz->course, false, MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $adaptivequiz->course], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
+
 $context = context_module::instance($cm->id);
 
 require_capability('mod/adaptivequiz:viewreport', $context);
 
-$param = array('uniqueid' => $uniqueid, 'userid' => $userid, 'activityid' => $cm->instance);
-$sql = 'SELECT a.name, a.highestlevel, a.lowestlevel, aa.timecreated, aa.timemodified, aa.attemptstate, aa.attemptstopcriteria,
-               aa.questionsattempted, aa.difficultysum, aa.standarderror, aa.measure, aa.uniqueid
-          FROM {adaptivequiz} a
-          JOIN {adaptivequiz_attempt} aa ON a.id = aa.instance
-         WHERE aa.uniqueid = :uniqueid
-               AND aa.userid = :userid
-               AND a.id = :activityid
-      ORDER BY a.name ASC';
-$adaptivequiz  = $DB->get_record_sql($sql, $param);
-
-$quba = question_engine::load_questions_usage_by_activity($uniqueid);
-
-$user = $DB->get_record('user', ['id' => $userid]);
-if (!$user) {
-    $user = new stdClass();
-    $user->firstname = get_string('unknownuser', 'adaptivequiz');
-    $user->lastname = '#'.$userid;
-}
+$user = $DB->get_record('user', ['id' => $attempt->userid], '*', MUST_EXIST);
+$quba = question_engine::load_questions_usage_by_activity($attempt->uniqueid);
 
 $a = new stdClass();
 $a->quizname = format_string($adaptivequiz->name);
 $a->fullname = fullname($user);
-$a->finished = userdate($adaptivequiz->timemodified);
+$a->finished = userdate($attempt->timemodified);
 $title = get_string('reportattemptreviewpageheading', 'adaptivequiz', $a);
 
-$PAGE->set_url('/mod/adaptivequiz/reviewattempt.php',
-    ['cmid' => $cm->id, 'uniqueid' => $uniqueid, 'userid' => $userid, 'tab' => $tab]);
+$PAGE->set_url('/mod/adaptivequiz/reviewattempt.php', ['attempt' => $attempt->id, 'tab' => $tab]);
 $PAGE->set_title($title);
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
@@ -80,12 +59,12 @@ $PAGE->navbar->add(get_string('reportuserattemptstitleshort', 'adaptivequiz', fu
     new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['userid' => $user->id, 'cmid' => $cm->id]));
 $PAGE->navbar->add(get_string('reviewattempt', 'adaptivequiz'));
 
-$output = $PAGE->get_renderer('mod_adaptivequiz');
+$renderer = $PAGE->get_renderer('mod_adaptivequiz');
 
-echo $output->print_header();
-echo $output->heading($title);
+echo $renderer->print_header();
+echo $renderer->heading($title);
 
-echo $output->attempt_review_tabs($PAGE->url, $tab);
-echo $output->attempt_report_page_by_tab($tab, $adaptivequiz, $user, $quba, $cm->id, $PAGE->url, $page);
+echo $renderer->attempt_review_tabs($PAGE->url, $tab);
+echo $renderer->attempt_report_page_by_tab($tab, $adaptivequiz, $attempt, $user, $quba, $cm->id, $PAGE->url, $page);
 
-echo $output->print_footer();
+echo $renderer->print_footer();

@@ -108,30 +108,21 @@ final class table extends table_sql {
 
     protected function col_actions(stdClass $row): string {
         $return = html_writer::link(
-            new moodle_url(
-                '/mod/adaptivequiz/reviewattempt.php',
-                ['uniqueid' => $row->uniqueid, 'cmid' => $this->cmid, 'userid' => $row->userid]
-            ),
+            new moodle_url('/mod/adaptivequiz/reviewattempt.php', ['attempt' => $row->id]),
             get_string('reviewattempt', 'adaptivequiz')
         );
         $return .= '&nbsp;&nbsp;';
 
         if ($row->attemptstate != attempt_state::COMPLETED) {
             $return .= html_writer::link(
-                new moodle_url(
-                    '/mod/adaptivequiz/closeattempt.php',
-                    ['uniqueid' => $row->uniqueid, 'cmid' => $this->cmid, 'userid' => $row->userid]
-                ),
+                new moodle_url('/mod/adaptivequiz/closeattempt.php', ['attempt' => $row->id]),
                 get_string('closeattempt', 'adaptivequiz')
             );
             $return .= '&nbsp;&nbsp;';
         }
 
         $return .= html_writer::link(
-            new moodle_url(
-                '/mod/adaptivequiz/delattempt.php',
-                ['uniqueid' => $row->uniqueid, 'cmid' => $this->cmid, 'userid' => $row->userid]
-            ),
+            new moodle_url('/mod/adaptivequiz/delattempt.php', ['attempt' => $row->id]),
             get_string('deleteattemp', 'adaptivequiz')
         );
 

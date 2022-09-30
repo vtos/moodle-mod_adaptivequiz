@@ -70,7 +70,7 @@
             <value>10</value>
             <value>2</value>
             <value>1</value>
-            <value>5</value>
+            <value>5,6</value>
         </row>
     </table>
     <table name="course_modules">
@@ -84,6 +84,13 @@
             <value>2</value>
             <value>50</value>
             <value>13</value>
+            <value>10</value>
+        </row>
+        <row>
+            <value>6</value>
+            <value>2</value>
+            <value>50</value>
+            <value>1</value>
             <value>10</value>
         </row>
     </table>

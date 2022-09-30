@@ -31,6 +31,7 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use context_module;
+use mod_adaptivequiz\event\attempt_completed;
 use mod_adaptivequiz\local\attempt\attempt_state;
 
 /**
@@ -59,7 +60,6 @@ class locallib_test extends advanced_testcase {
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
         $this->activitycontext = context_module::instance($cm->id);
-
     }
 
     /**
@@ -300,20 +300,61 @@ class locallib_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->setup_test_data_xml();
 
-        adaptivequiz_complete_attempt(3, 13, 3, 1, 'php unit test');
-        $record = $DB->get_record('adaptivequiz_attempt', ['id' => 2]);
+        $adaptivequizid = 1;
+        $cmid = 5;
+        $userid = 2;
+        $attemptid = 1;
+        $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
+        $context = context_module::instance($cmid);
 
-        $this->assertEquals('php unit test', $record->attemptstopcriteria);
-        $this->assertEquals(attempt_state::COMPLETED, $record->attemptstate);
-        $this->assertEquals(1, $record->standarderror);
+        adaptivequiz_complete_attempt(3, $adaptivequiz, $context, $userid, '1', 'php unit test');
+        $attempt = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid]);
+
+        $this->assertEquals('php unit test', $attempt->attemptstopcriteria);
+        $this->assertEquals(attempt_state::COMPLETED, $attempt->attemptstate);
+        $this->assertEquals('1.00000', $attempt->standarderror);
     }
 
     /**
      * @test
+     * @covers ::adaptivequiz_complete_attempt
      */
-    public function it_fails_to_complete_an_attempt_with_a_zero_unique_id(): void {
-        $this->expectExceptionMessage('Unique id of an attempt to complete must be a positive integer, got 0.');
-        adaptivequiz_complete_attempt(0, 13, 3, 1, 'php unit test');
+    public function event_is_triggered_on_attempt_completion(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setup_test_data_xml();
+        $eventsink = $this->redirectEvents();
+
+        // This comes from fixtures unless we switch over to using generators.
+        $adaptivequizid = 1;
+        $cmid = 5;
+        $userid = 2;
+        $attemptid = 1;
+
+        $attempt = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid]);
+        $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
+        $context = context_module::instance($cmid);
+
+        adaptivequiz_complete_attempt(3, $adaptivequiz, $context, $userid, '1', 'php unit test');
+
+        $events = $eventsink->get_events();
+
+        $attemptcompletedevent = null;
+        foreach ($events as $event) {
+            if ($event instanceof attempt_completed) {
+                $attemptcompletedevent = $event;
+                break;
+            }
+        }
+
+        $this->assertNotNull($attemptcompletedevent,
+            sprintf('Failed asserting that event %s was triggered.', attempt_completed::class));
+        $this->assertEquals($attemptid, $event->objectid);
+        $this->assertEquals($context, $attemptcompletedevent->get_context());
+        $this->assertEquals($userid, $event->userid);
+        $this->assertEquals($attempt, $event->get_record_snapshot('adaptivequiz_attempt', $attemptid));
+        $this->assertEquals($adaptivequiz, $event->get_record_snapshot('adaptivequiz',$adaptivequizid));
     }
 
     /**

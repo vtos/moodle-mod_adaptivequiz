@@ -32,6 +32,7 @@ $string['attempt_summary'] = 'Attempt Summary';
 $string['attemptsusernoprevious'] = 'You haven\'t attempted this quiz yet.';
 $string['attemptsuserprevious'] = 'Your previous attempts';
 $string['attemptnofirstquestion'] = 'Sorry, but couldn\'t define the first question to start the attempt, the quiz is possibly misconfigured. ';
+$string['eventattemptcompleted'] = 'Attempt completed';
 $string['showabilitymeasure'] = 'Show ability measure to students';
 $string['showabilitymeasure_help'] = 'Sometimes it may be useful to reveal ability estimations to students after taking an adaptive quiz. With this setting enabled a student may see ability estimation in the attempts summary and right after finishing an attempt as well.';
 $string['questionspoolerrornovalidstartingquestions'] = 'The selected questions categories do not contain questions which are properly tagged to match the selected starting level of difficulty.';

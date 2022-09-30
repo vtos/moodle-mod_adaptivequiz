@@ -22,9 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__).'/../../config.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
-require_once($CFG->dirroot.'/tag/lib.php');
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
+require_once($CFG->dirroot . '/tag/lib.php');
 
 use mod_adaptivequiz\local\attempt;
 use mod_adaptivequiz\local\catalgo;
@@ -161,7 +161,7 @@ if (!empty($uniqueid) && confirm_sesskey()) {
                 $standarderror = $algo->get_standarderror();
                 // Set the attempt to complete, update the standard error and attempt message, then redirect the user to the
                 // attempt finished page.
-                adaptivequiz_complete_attempt($uniqueid, $cm->instance, $USER->id, $standarderror, $message);
+                adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $USER->id, $standarderror, $message);
 
                 $param = array('cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid);
                 $url = new moodle_url('/mod/adaptivequiz/attemptfinished.php', $param);
@@ -229,7 +229,7 @@ if (empty($attemptstatus)) {
             (new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]))->out());
     }
 
-    adaptivequiz_complete_attempt($uniqueid, $cm->instance, $USER->id, $standarderror, $message);
+    adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $USER->id, $standarderror, $message);
     // Redirect the user to the attemptfeedback page.
     $param = array('cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid);
     $url = new moodle_url('/mod/adaptivequiz/attemptfinished.php', $param);

@@ -24,12 +24,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/mod/adaptivequiz/lib.php');
-require_once($CFG->dirroot.'/question/editlib.php');
-require_once($CFG->dirroot.'/lib/questionlib.php');
-require_once($CFG->dirroot.'/question/engine/lib.php');
+require_once($CFG->dirroot . '/mod/adaptivequiz/lib.php');
+require_once($CFG->dirroot . '/question/editlib.php');
+require_once($CFG->dirroot . '/lib/questionlib.php');
+require_once($CFG->dirroot . '/question/engine/lib.php');
 
 use core_question\local\bank\question_edit_contexts;
+use mod_adaptivequiz\event\attempt_completed;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgo;
 use qbank_managecategories\helper as qbank_managecategories_helper;
@@ -224,23 +225,24 @@ function adaptivequiz_update_attempt_data($uniqueid, $instance, $userid, $level,
 /**
  * This function sets the complete status for an attempt.
  *
- * @param int $uniqueid uniqueid value of the {adaptivequiz_attempt} record.
- * @param int $instance instance value of the {adaptivequiz_attempt} record.
- * @param int $userid userid value of the {adaptivequiz_attempt} record.
- * @param string $standarderror
- * @param string $statusmessage The status message to log for the attempt.
  * @throws dml_exception
  * @throws coding_exception
  */
-function adaptivequiz_complete_attempt($uniqueid, $instance, $userid, $standarderror, $statusmessage): void {
+function adaptivequiz_complete_attempt(
+    int $uniqueid,
+    stdClass $adaptivequiz,
+    context_module $context,
+    int $userid,
+    string $standarderror,
+    string $statusmessage
+): void {
     global $DB;
 
-    if ($uniqueid < 1) {
-        throw new coding_exception("Unique id of an attempt to complete must be a positive integer, got $uniqueid.");
-    }
-
     $attempt = $DB->get_record('adaptivequiz_attempt',
-        ['uniqueid' => $uniqueid, 'instance' => $instance, 'userid' => $userid], '*', MUST_EXIST);
+        ['uniqueid' => $uniqueid, 'instance' => $adaptivequiz->id, 'userid' => $userid], '*', MUST_EXIST);
+
+    // Need to keep the record as it is before triggering the event below.
+    $attemptrecordsnapshot = clone $attempt;
 
     $attempt->attemptstate = attempt_state::COMPLETED;
     $attempt->attemptstopcriteria = $statusmessage;
@@ -248,9 +250,16 @@ function adaptivequiz_complete_attempt($uniqueid, $instance, $userid, $standarde
     $attempt->standarderror = $standarderror;
     $DB->update_record('adaptivequiz_attempt', $attempt);
 
-    // Update the gradebook entries.
-    $adaptivequiz = $DB->get_record('adaptivequiz', array('id' => $instance));
     adaptivequiz_update_grades($adaptivequiz, $userid);
+
+    $event = attempt_completed::create([
+        'objectid' => $attempt->id,
+        'context' => $context,
+        'userid' => $userid
+    ]);
+    $event->add_record_snapshot('adaptivequiz_attempt', $attemptrecordsnapshot);
+    $event->add_record_snapshot('adaptivequiz', $adaptivequiz);
+    $event->trigger();
 }
 
 /**

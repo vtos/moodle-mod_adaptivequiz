@@ -59,12 +59,14 @@
         <column>module</column>
         <column>instance</column>
         <column>section</column>
+        <column>completion</column>
         <row>
             <value>5</value>
             <value>200</value>
             <value>50</value>
             <value>330</value>
             <value>10</value>
+            <value>2</value>
         </row>
     </table>
     <table name="question_categories">
@@ -345,6 +347,7 @@
         <column>maximumquestions</column>
         <column>standarderror</column>
         <column>startinglevel</column>
+        <column>completionattemptcompleted</column>
         <row>
             <value>330</value>
             <value>200</value>
@@ -357,6 +360,7 @@
             <value>20</value>
             <value>1.0</value>
             <value>50</value>
+            <value>1</value>
         </row>
     </table>
     <table name="adaptivequiz_attempt">

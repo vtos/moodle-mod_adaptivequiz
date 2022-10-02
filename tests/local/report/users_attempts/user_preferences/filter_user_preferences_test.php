@@ -24,12 +24,12 @@ namespace mod_adaptivequiz\local\report\users_attempts\user_preferences;
 use basic_testcase;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
 
-class filter_user_preferences_testcase extends basic_testcase {
+/**
+ * @covers \mod_adaptivequiz\local\report\users_attempts\user_preferences\filter_user_preferences
+ */
+class filter_user_preferences_test extends basic_testcase {
 
-    /**
-     * @test
-     */
-    public function it_acquires_correct_default_values_when_unexpected_parameters_provided(): void {
+    public function test_it_acquires_correct_default_values_when_unexpected_parameters_provided(): void {
         $filter = filter_user_preferences::from_array([]);
 
         $this->assertEquals(filter_options::users_option_default(), $filter->users());
@@ -43,10 +43,7 @@ class filter_user_preferences_testcase extends basic_testcase {
             $filter->include_inactive_enrolments());
     }
 
-    /**
-     * @test
-     */
-    public function it_can_be_converted_to_array(): void {
+    public function test_it_can_be_converted_to_array(): void {
         $filterasarray = ['users' => filter_options::users_option_default(), 'includeinactiveenrolments' => 1];
         $filter = filter_user_preferences::from_array($filterasarray);
 

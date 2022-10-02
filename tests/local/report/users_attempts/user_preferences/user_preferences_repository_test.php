@@ -23,12 +23,12 @@ namespace mod_adaptivequiz\local\report\users_attempts\user_preferences;
 
 use advanced_testcase;
 
-class user_preferences_repository_testcase extends advanced_testcase {
+/**
+ * @covers \mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_repository
+ */
+class user_preferences_repository_test extends advanced_testcase {
 
-    /**
-     * @test
-     */
-    public function it_stores_and_fetches_preferences(): void {
+    public function test_it_stores_and_fetches_preferences(): void {
         $this->resetAfterTest();
 
         $preferences = user_preferences::from_array(['perpage' => 20, 'showinitialsbar' => 0]);
@@ -37,10 +37,7 @@ class user_preferences_repository_testcase extends advanced_testcase {
         $this->assertEquals($preferences, user_preferences_repository::get());
     }
 
-    /**
-     * @test
-     */
-    public function it_avoids_querying_database_when_not_needed(): void {
+    public function test_it_avoids_querying_database_when_not_needed(): void {
         global $DB;
 
         $this->resetAfterTest();

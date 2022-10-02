@@ -25,12 +25,12 @@ use basic_testcase;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
 use stdClass;
 
-class user_preferences_testcase extends basic_testcase {
+/**
+ * @covers \mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences
+ */
+class user_preferences_test extends basic_testcase {
 
-    /**
-     * @test
-     */
-    public function it_acquires_correct_default_values_when_provided_values_are_not_in_valid_range(): void {
+    public function test_it_acquires_correct_default_values_when_provided_values_are_not_in_valid_range(): void {
         $preferences = user_preferences::from_array(
             ['perpage' => 100, 'showinitialsbar' => 22, 'persistentfilter' => -1]
         );
@@ -59,10 +59,7 @@ class user_preferences_testcase extends basic_testcase {
         $this->assertNull($preferences->filter());
     }
 
-    /**
-     * @test
-     */
-    public function it_can_acquire_and_loose_filter_preferences_while_preserving_previously_set_preferences(): void {
+    public function test_it_can_acquire_and_loose_filter_preferences_while_preserving_previously_set_preferences(): void {
         $preferences = user_preferences::from_array(['perpage' => 10, 'showinitialsbar' => 0, 'persistentfilter' => 1]);
 
         $pfilterpreferencesarray = ['users' => filter_options::users_option_default(),
@@ -81,10 +78,7 @@ class user_preferences_testcase extends basic_testcase {
         $this->assertEquals(null, $preferences->filter());
     }
 
-    /**
-     * @test
-     */
-    public function it_can_be_converted_to_array(): void {
+    public function test_it_can_be_converted_to_array(): void {
         $preferences = user_preferences::defaults();
         $this->assertEquals(['perpage' => 15, 'showinitialsbar' => 1, 'persistentfilter' => 0, 'filter' => null],
             $preferences->as_array());

@@ -27,12 +27,12 @@ use context_course;
 use core_question_generator;
 use core_tag_tag;
 
-class tags_repository_testcase extends advanced_testcase {
+/**
+ * @covers \mod_adaptivequiz\local\repository\tags_repository
+ */
+class tags_repository_test extends advanced_testcase {
 
-    /**
-     * @test
-     */
-    public function it_gets_question_level_to_tag_id_mapping_by_tag_names(): void {
+    public function test_it_gets_question_level_to_tag_id_mapping_by_tag_names(): void {
         $this->resetAfterTest();
 
         $this->assertEquals(
@@ -83,18 +83,12 @@ class tags_repository_testcase extends advanced_testcase {
         );
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_to_get_question_level_to_tag_id_mapping_for_an_empty_array_of_tag_names(): void {
+    public function test_it_fails_to_get_question_level_to_tag_id_mapping_for_an_empty_array_of_tag_names(): void {
         $this->expectException(coding_exception::class);
         tags_repository::get_question_level_to_tag_id_mapping_by_tag_names([]);
     }
 
-    /**
-     * @test
-     */
-    public function it_gets_tag_id_list_by_tag_names(): void {
+    public function test_it_gets_tag_id_list_by_tag_names(): void {
         $this->resetAfterTest();
 
         $this->assertEquals(
@@ -145,10 +139,7 @@ class tags_repository_testcase extends advanced_testcase {
         );
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_to_get_a_list_of_tag_id_for_an_empty_array_of_tag_names(): void {
+    public function test_it_fails_to_get_a_list_of_tag_id_for_an_empty_array_of_tag_names(): void {
         $this->expectException(coding_exception::class);
         tags_repository::get_tag_id_list_by_tag_names([]);
     }

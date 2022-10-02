@@ -32,12 +32,12 @@ use dml_missing_record_exception;
 use question_bank;
 use stdClass;
 
-class questions_repository_testcase extends advanced_testcase {
+/**
+ * @covers \mod_adaptivequiz\local\repository\questions_repository
+ */
+class questions_repository_test extends advanced_testcase {
 
-    /**
-     * @test
-     */
-    public function it_can_count_adaptive_questions_in_pool(): void {
+    public function test_it_can_count_adaptive_questions_in_pool(): void {
         $this->resetAfterTest();
 
         $generator = $this->getDataGenerator();
@@ -88,10 +88,7 @@ class questions_repository_testcase extends advanced_testcase {
         $this->assertEquals(0, questions_repository::count_adaptive_questions_in_pool_with_level([$questionscat3->id], 1));
     }
 
-    /**
-     * @test
-     */
-    public function it_can_count_questions_number_per_difficulty(): void {
+    public function test_it_can_count_questions_number_per_difficulty(): void {
         $this->resetAfterTest();
 
         $generator = $this->getDataGenerator();
@@ -139,10 +136,7 @@ class questions_repository_testcase extends advanced_testcase {
         );
     }
 
-    /**
-     * @test
-     */
-    public function it_finds_questions_with_tags(): void {
+    public function test_it_finds_questions_with_tags(): void {
         $this->resetAfterTest();
 
         // It returns empty array when no tags or no question categories specified.

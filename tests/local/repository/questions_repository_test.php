@@ -25,6 +25,9 @@ use advanced_testcase;
 use context_course;
 use core_question_generator;
 
+/**
+ * @covers \mod_adaptivequiz\local\repository\questions_repository
+ */
 class questions_repository_test extends advanced_testcase {
 
     public function test_it_can_count_adaptive_questions_in_pool(): void {

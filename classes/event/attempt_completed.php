@@ -23,8 +23,6 @@
 
 namespace mod_adaptivequiz\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\event\base;
 use moodle_exception;
 use moodle_url;

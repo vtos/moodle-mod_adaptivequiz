@@ -661,4 +661,26 @@ class attempt_test extends advanced_testcase {
         $this->assertEquals(2, count($questids));
         $this->assertEquals(array('1' => 1, '2' => 2), $questids);
     }
+
+    /**
+     * @test
+     */
+    public function it_can_check_if_a_user_has_a_completed_attempt_on_a_quiz(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setup_test_data_xml();
+
+        $uniqueid = 330;
+        $adaptivequizid = 330;
+        $cmid = 5;
+        $userid = 2;
+
+        $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
+        $context = context_module::instance($cmid);
+
+        adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $userid, '', '');
+
+        $this->assertTrue(attempt::user_has_completed_on_quiz($adaptivequizid, $userid));
+    }
 }

@@ -25,6 +25,7 @@
 namespace mod_adaptivequiz\local;
 
 use coding_exception;
+use dml_exception;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use moodle_exception;
 use question_bank;
@@ -37,6 +38,9 @@ use question_usage_by_activity;
 use stdClass;
 
 class attempt {
+
+    private const TABLE = 'adaptivequiz_attempt';
+
     /**
      * The name of the module
      */
@@ -223,8 +227,9 @@ class attempt {
     }
 
     /**
-     * This function returns the currently set status message
-     * @return string the status message property
+     * This function returns the currently set status message.
+     *
+     * @return string The status message property.
      */
     public function get_status() {
         return $this->status;
@@ -232,11 +237,10 @@ class attempt {
 
     /**
      * This function does the work of initializing data required to fetch a new question for the attempt.
-     * @return bool true if attempt started okay otherwise false
+     *
+     * @return bool True if attempt started okay otherwise false.
      */
     public function start_attempt() {
-        global $DB;
-
         // Get most recent attempt or start a new one.
         $adpqattempt = $this->get_attempt();
 
@@ -404,6 +408,7 @@ class attempt {
 
         $questslot = end($questslots);
         $this->print_debug('find_last_quest_used_by_attempt() - Found a question slot: '.$questslot);
+
         return $questslot;
     }
 
@@ -436,12 +441,11 @@ class attempt {
      * This function initializes the question_usage_by_activity object.  If an attempt unfinished attempt
      * has a usage id, a question_usage_by_activity object will be loaded using the usage id.  Otherwise a new
      * question_usage_by_activity object is created.
-     * @throws moodle_exception - exception is thrown when required behaviour could not be found
-     * @return question_usage_by_activity|null returns a question usage by activity object or null
+     *
+     * @throws moodle_exception Exception is thrown when required behaviour could not be found.
+     * @return question_usage_by_activity|null Returns a question usage by activity object or null.
      */
     public function initialize_quba() {
-        $quba = null;
-
         if (!$this->behaviour_exists()) {
             throw new moodle_exception('Missing '.self::ATTEMPTBEHAVIOUR.' behaviour', 'Behaviour: '.self::ATTEMPTBEHAVIOUR.
                 ' must exist in order to use this activity');
@@ -476,7 +480,7 @@ class attempt {
         global $DB;
 
         $param = ['instance' => $this->adaptivequiz->id, 'userid' => $this->userid, 'attemptstate' => attempt_state::IN_PROGRESS];
-        $attempt = $DB->get_records('adaptivequiz_attempt', $param, 'timemodified DESC', '*', 0, 1);
+        $attempt = $DB->get_records(self::TABLE, $param, 'timemodified DESC', '*', 0, 1);
 
         if (empty($attempt)) {
             $time = time();
@@ -490,7 +494,7 @@ class attempt {
             $attempt->timecreated = $time;
             $attempt->timemodified = $time;
 
-            $id = $DB->insert_record('adaptivequiz_attempt', $attempt);
+            $id = $DB->insert_record(self::TABLE, $attempt);
 
             $attempt->id = $id;
             $this->adpqattempt = $attempt;
@@ -521,6 +525,7 @@ class attempt {
         }
 
         $this->print_debug('get_question_mark() - Question mark was not a float slot id: '.$slotid.'.  Returning zero');
+
         return 0;
     }
 
@@ -535,6 +540,16 @@ class attempt {
         $questions = $DB->get_records_menu('question_attempts', array('questionusageid' => $uniqueid), 'id ASC', 'id,questionid');
 
         return $questions;
+    }
+
+    /**
+     * @throws dml_exception
+     */
+    public static function user_has_completed_on_quiz(int $adaptivequizid, int $userid): bool {
+        global $DB;
+
+        return $DB->record_exists(self::TABLE,
+            ['userid' => $userid, 'instance' => $adaptivequizid, 'attemptstate' => attempt_state::COMPLETED]);
     }
 
     /**
@@ -567,10 +582,10 @@ class attempt {
         $exclude = $this->get_all_questions_in_attempt($this->adpqattempt->uniqueid);
         // Fetch questions for display.
         $questionids = $fetchquestion->fetch_questions($exclude);
-        $questiontodisplay = 0;
 
         if (empty($questionids)) {
             $this->print_debug('get_question_ready() - Unable to fetch a question $questionsids:'.$this->vardump($questionids));
+
             return false;
         }
         // Select one random question.
@@ -579,6 +594,7 @@ class attempt {
         if (empty($questiontodisplay)) {
             $this->print_debug('get_question_ready() - Unable to randomly select a question $questionstodisplay:'.
                     $questiontodisplay);
+
             return false;
         }
 
@@ -606,6 +622,7 @@ class attempt {
         $this->level = $fetchquestion->get_level();
         $this->print_debug('get_question_ready() - Question: '.$this->vardump($question).' loaded and attempt started. '.
                 'Question_usage_by_activity saved.');
+
         return true;
     }
 
@@ -617,7 +634,7 @@ class attempt {
 
         $this->adpqattempt->uniqueid = $this->quba->get_id();
         $this->timemodified = time();
-        $DB->update_record('adaptivequiz_attempt', $this->adpqattempt);
+        $DB->update_record(self::TABLE, $this->adpqattempt);
         $this->print_debug('set_attempt_uniqueid() - attempt uniqueid set: '.$this->adpqattempt->uniqueid);
     }
 

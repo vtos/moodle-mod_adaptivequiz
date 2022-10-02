@@ -27,7 +27,6 @@ namespace mod_adaptivequiz;
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-
 require_once($CFG->dirroot.'/mod/adaptivequiz/lib.php');
 
 use advanced_testcase;
@@ -234,5 +233,29 @@ class lib_test extends advanced_testcase {
         $this->assertStringContainsString('<td', $output);
         $this->assertStringContainsString('/user/view.php?id=2', $output);
         $this->assertStringContainsString('user phpunit', $output);
+    }
+
+    /**
+     * @covers ::adaptivequiz_get_completion_state
+     */
+    public function test_it_properly_reports_completion_state_for_completion_conditions(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setup_test_data_xml();
+
+        // Check an in-progress attempt.
+        $course = $DB->get_record('course', ['id' => 2], '*', MUST_EXIST);
+        $cm = get_coursemodule_from_id('adaptivequiz', 7);
+        $userid = 3;
+
+        $this->assertFalse(adaptivequiz_get_completion_state($course, $cm,$userid, COMPLETION_OR));
+
+        // Check a complete attempt.
+        $course = $DB->get_record('course', ['id' => 2], '*', MUST_EXIST);
+        $cm = get_coursemodule_from_id('adaptivequiz', 7);
+        $userid = 2;
+
+        $this->assertTrue(adaptivequiz_get_completion_state($course, $cm,$userid, COMPLETION_OR));
     }
 }

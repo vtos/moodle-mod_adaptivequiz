@@ -167,6 +167,21 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $this->add_action_buttons();
     }
 
+    public function add_completion_rules(): array {
+        $form = $this->_form;
+        $form->addElement('checkbox', 'completionattemptcompleted', ' ', get_string('completionattemptcompleted', 'adaptivequiz'));
+
+        return ['completionattemptcompleted'];
+    }
+
+    public function completion_rule_enabled($data): bool {
+        if (!isset($data['completionattemptcompleted'])) {
+            return false;
+        }
+
+        return $data['completionattemptcompleted'] != 0;
+    }
+
     /**
      * Perform extra validation. @see validation() in moodleform_mod.php.
      *
@@ -177,7 +192,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
      * @throws dml_exception
      */
     public function validation($data, $files) {
-        $errors = [];
+        $errors = parent::validation($data, $files);
 
         if (empty($data['questionpool'])) {
             $errors['questionpool'] = get_string('formquestionpool', 'adaptivequiz');

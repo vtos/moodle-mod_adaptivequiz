@@ -54,11 +54,13 @@
         <column>category</column>
         <column>fullname</column>
         <column>shortname</column>
+        <column>enablecompletion</column>
         <row>
             <value>2</value>
             <value>1</value>
             <value>101</value>
             <value>101</value>
+            <value>1</value>
         </row>
     </table>
     <table name="course_sections">
@@ -93,6 +95,13 @@
             <value>1</value>
             <value>10</value>
         </row>
+        <row>
+            <value>7</value>
+            <value>2</value>
+            <value>50</value>
+            <value>331</value>
+            <value>10</value>
+        </row>
     </table>
     <table name="adaptivequiz">
         <column>id</column>
@@ -106,6 +115,7 @@
         <column>maximumquestions</column>
         <column>standarderror</column>
         <column>startinglevel</column>
+        <column>completionattemptcompleted</column>
         <row>
             <value>1</value>
             <value>2</value>
@@ -118,6 +128,7 @@
             <value>20</value>
             <value>1.0</value>
             <value>50</value>
+            <value>0</value>
         </row>
         <row>
             <value>13</value>
@@ -131,6 +142,7 @@
             <value>20</value>
             <value>1.0</value>
             <value>50</value>
+            <value>0</value>
         </row>
         <row>
             <value>330</value>
@@ -144,6 +156,21 @@
             <value>20</value>
             <value>1.0</value>
             <value>50</value>
+            <value>0</value>
+        </row>
+        <row>
+            <value>331</value>
+            <value>2</value>
+            <value>Test completion on attempt complete</value>
+            <value>intro</value>
+            <value>attempt feedback</value>
+            <value>100</value>
+            <value>1</value>
+            <value>15</value>
+            <value>20</value>
+            <value>1.0</value>
+            <value>50</value>
+            <value>1</value>
         </row>
     </table>
     <table name="adaptivequiz_attempt">
@@ -192,6 +219,26 @@
             <value>330</value>
             <value>inprogress</value>
             <value>0</value>
+            <value>1</value>
+            <value>1</value>
+        </row>
+        <row>
+            <value>6</value>
+            <value>331</value>
+            <value>3</value>
+            <value>4</value>
+            <value>inprogress</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+        </row>
+        <row>
+            <value>7</value>
+            <value>331</value>
+            <value>2</value>
+            <value>4</value>
+            <value>complete</value>
+            <value>16</value>
             <value>1</value>
             <value>1</value>
         </row>

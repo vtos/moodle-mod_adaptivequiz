@@ -354,7 +354,7 @@ class locallib_test extends advanced_testcase {
         $this->assertEquals($context, $attemptcompletedevent->get_context());
         $this->assertEquals($userid, $event->userid);
         $this->assertEquals($attempt, $event->get_record_snapshot('adaptivequiz_attempt', $attemptid));
-        $this->assertEquals($adaptivequiz, $event->get_record_snapshot('adaptivequiz',$adaptivequizid));
+        $this->assertEquals($adaptivequiz, $event->get_record_snapshot('adaptivequiz', $adaptivequizid));
     }
 
     /**

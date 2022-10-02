@@ -7,7 +7,7 @@
         <column>path</column>
         <column>depth</column>
         <row>
-            <value>200</value>
+            <value>16</value>
             <value>50</value>
             <value>200</value>
             <value>/1/3/16</value>
@@ -16,9 +16,17 @@
         <row>
             <value>330</value>
             <value>70</value>
-            <value>2</value>
+            <value>5</value>
             <value>/1/3/16/330</value>
             <value>4</value>
+        </row>
+    </table>
+    <table name="modules">
+        <column>id</column>
+        <column>name</column>
+        <row>
+            <value>50</value>
+            <value>adaptivequiz</value>
         </row>
     </table>
     <table name="course">
@@ -31,6 +39,34 @@
             <value>1</value>
             <value>101</value>
             <value>101</value>
+        </row>
+    </table>
+    <table name="course_sections">
+        <column>id</column>
+        <column>course</column>
+        <column>section</column>
+        <column>sequence</column>
+        <row>
+            <value>10</value>
+            <value>200</value>
+            <value>1</value>
+            <value>5</value>
+        </row>
+    </table>
+    <table name="course_modules">
+        <column>id</column>
+        <column>course</column>
+        <column>module</column>
+        <column>instance</column>
+        <column>section</column>
+        <column>completion</column>
+        <row>
+            <value>5</value>
+            <value>200</value>
+            <value>50</value>
+            <value>330</value>
+            <value>10</value>
+            <value>2</value>
         </row>
     </table>
     <table name="question_categories">
@@ -299,7 +335,6 @@
             <value>0</value>
         </row>
     </table>
-<!-- Inserting fake adaptive quiz records (no associated course module id) and adaptie quiz attempts -->
     <table name="adaptivequiz">
         <column>id</column>
         <column>course</column>
@@ -312,9 +347,10 @@
         <column>maximumquestions</column>
         <column>standarderror</column>
         <column>startinglevel</column>
+        <column>completionattemptcompleted</column>
         <row>
             <value>330</value>
-            <value>1</value>
+            <value>200</value>
             <value>Test re-using quba</value>
             <value>intro asdf</value>
             <value>attempt feedback</value>
@@ -324,46 +360,8 @@
             <value>20</value>
             <value>1.0</value>
             <value>50</value>
+            <value>1</value>
         </row>
- <!--       <row>
-            <value>221</value>
-            <value>1</value>
-            <value>Test adaptivequiz activity 1</value>
-            <value>intro asdf</value>
-            <value>attempt feedback</value>
-            <value>100</value>
-            <value>1</value>
-            <value>15</value>
-            <value>20</value>
-            <value>1.0</value>
-            <value>50</value>
-        </row>
-        <row>
-            <value>222</value>
-            <value>1</value>
-            <value>Test adaptivequiz activity 2</value>
-            <value>intro asdf</value>
-            <value>attempt feedback</value>
-            <value>100</value>
-            <value>1</value>
-            <value>15</value>
-            <value>20</value>
-            <value>1.0</value>
-            <value>50</value>
-        </row>
-        <row>
-            <value>223</value>
-            <value>1</value>
-            <value>Test adaptivequiz activity 3</value>
-            <value>intro asdf</value>
-            <value>attempt feedback</value>
-            <value>100</value>
-            <value>1</value>
-            <value>15</value>
-            <value>20</value>
-            <value>1.0</value>
-            <value>50</value>
-        </row> -->
     </table>
     <table name="adaptivequiz_attempt">
         <column>id</column>
@@ -430,29 +428,5 @@
             <value>mod_adaptivequiz</value>
             <value>immediatefeedback</value>
         </row>
-<!--        <row>
-            <value>1110</value>
-            <value>1</value>
-            <value>mod_adaptivequiz</value>
-            <value>immediatefeedback</value>
-        </row>
-        <row>
-            <value>1111</value>
-            <value>1</value>
-            <value>mod_adaptivequiz</value>
-            <value>immediatefeedback</value>
-        </row>
-        <row>
-            <value>1112</value>
-            <value>1</value>
-            <value>mod_adaptivequiz</value>
-            <value>immediatefeedback</value>
-        </row>
-        <row>
-            <value>1113</value>
-            <value>1</value>
-            <value>mod_adaptivequiz</value>
-            <value>immediatefeedback</value>
-        </row> -->
     </table>
 </dataset>

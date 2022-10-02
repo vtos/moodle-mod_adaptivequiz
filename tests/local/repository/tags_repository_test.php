@@ -27,6 +27,9 @@ use context_course;
 use core_question_generator;
 use core_tag_tag;
 
+/**
+ * @covers \mod_adaptivequiz\local\repository\tags_repository
+ */
 class tags_repository_test extends advanced_testcase {
 
     public function test_it_gets_question_level_to_tag_id_mapping_by_tag_names(): void {

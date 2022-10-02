@@ -23,6 +23,9 @@ namespace mod_adaptivequiz\local\report\users_attempts\user_preferences;
 
 use advanced_testcase;
 
+/**
+ * @covers \mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_repository
+ */
 class user_preferences_repository_test extends advanced_testcase {
 
     public function test_it_stores_and_fetches_preferences(): void {

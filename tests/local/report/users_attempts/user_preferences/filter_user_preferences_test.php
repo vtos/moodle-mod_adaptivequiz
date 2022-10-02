@@ -24,6 +24,9 @@ namespace mod_adaptivequiz\local\report\users_attempts\user_preferences;
 use basic_testcase;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
 
+/**
+ * @covers \mod_adaptivequiz\local\report\users_attempts\user_preferences\filter_user_preferences
+ */
 class filter_user_preferences_test extends basic_testcase {
 
     public function test_it_acquires_correct_default_values_when_unexpected_parameters_provided(): void {

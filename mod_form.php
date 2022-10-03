@@ -169,7 +169,8 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
 
     public function add_completion_rules(): array {
         $form = $this->_form;
-        $form->addElement('checkbox', 'completionattemptcompleted', ' ', get_string('completionattemptcompleted', 'adaptivequiz'));
+        $form->addElement('checkbox', 'completionattemptcompleted', ' ',
+            get_string('completionattemptcompletedform', 'adaptivequiz'));
 
         return ['completionattemptcompleted'];
     }

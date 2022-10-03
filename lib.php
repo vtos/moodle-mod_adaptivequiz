@@ -773,3 +773,26 @@ function mod_adaptivequiz_question_pluginfile($course, $context, $component,
 
     send_stored_file($file, 0, 0, $forcedownload, $options);
 }
+
+/**
+ * This callback is used by the core to add any "extra" information to the activity. For example, completion info.
+ *
+ * @return false|cached_cm_info
+ */
+function adaptivequiz_get_coursemodule_info(stdClass $coursemodule) {
+    global $DB;
+
+    $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $coursemodule->instance], 'id, name, completionattemptcompleted');
+    if (!$adaptivequiz) {
+        return false;
+    }
+
+    $result = new cached_cm_info();
+    $result->name = $adaptivequiz->name;
+
+    if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
+        $result->customdata['customcompletionrules']['completionattemptcompleted'] = $adaptivequiz->completionattemptcompleted;
+    }
+
+    return $result;
+}

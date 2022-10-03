@@ -50,7 +50,7 @@ class custom_completion extends activity_custom_completion {
      * @inheritDoc
      */
     public function get_custom_rule_descriptions(): array {
-        return ['completionattemptcompleted' => get_string('completionattemptcompleted', 'adaptivequiz')];
+        return ['completionattemptcompleted' => get_string('completionattemptcompletedcminfo', 'adaptivequiz')];
     }
 
     /**

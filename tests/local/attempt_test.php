@@ -683,4 +683,27 @@ class attempt_test extends advanced_testcase {
 
         $this->assertTrue(attempt::user_has_completed_on_quiz($adaptivequizid, $userid));
     }
+
+    public function test_it_finds_an_in_progress_attempt_for_a_user(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+
+        // No attempt exists for the user at the moment.
+        $this->assertNull(attempt::find_in_progress_for_user($adaptivequiz, $user->id));
+
+        $attempt = new attempt($adaptivequiz, $user->id);
+        // This call should create an in-progress attempt record for the user and assign it to the relevant property.
+        $attempt->get_attempt();
+        // This call will fetch the record created above and assign it to the relevant record property.
+        // We make this second call to ensure the record's fields will have the types which a common Moodle's record has
+        // after having been fetched from the database. The record property after the previous call has different types set.
+        $attempt->get_attempt();
+
+        $this->assertEquals($attempt, attempt::find_in_progress_for_user($adaptivequiz, $user->id));
+    }
 }

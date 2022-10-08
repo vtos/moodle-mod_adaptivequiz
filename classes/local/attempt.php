@@ -497,15 +497,11 @@ class attempt {
             $id = $DB->insert_record(self::TABLE, $attempt);
 
             $attempt->id = $id;
-            $this->adpqattempt = $attempt;
-
-            $this->print_debug('get_attempt() - new attempt created: '.$this->vardump($attempt));
         } else {
             $attempt = current($attempt);
-            $this->adpqattempt = $attempt;
-
-            $this->print_debug('get_attempt() - previous attempt loaded: '.$this->vardump($attempt));
         }
+
+        $this->adpqattempt = $attempt;
 
         return $attempt;
     }
@@ -550,6 +546,23 @@ class attempt {
 
         return $DB->record_exists(self::TABLE,
             ['userid' => $userid, 'instance' => $adaptivequizid, 'attemptstate' => attempt_state::COMPLETED]);
+    }
+
+    public static function find_in_progress_for_user(stdClass $adaptivequiz, int $userid): ?self {
+        global $DB;
+
+        $record = $DB->get_record(
+            'adaptivequiz_attempt',
+            ['instance' => $adaptivequiz->id, 'userid' => $userid, 'attemptstate' => attempt_state::IN_PROGRESS]
+        );
+        if (!$record) {
+            return null;
+        }
+
+        $attempt = new self($adaptivequiz, $userid);
+        $attempt->adpqattempt = $record;
+
+        return $attempt;
     }
 
     /**

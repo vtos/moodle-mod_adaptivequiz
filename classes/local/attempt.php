@@ -565,6 +565,29 @@ class attempt {
         return $attempt;
     }
 
+    public static function create(stdClass $adaptivequiz, int $userid): self {
+        global $DB;
+
+        $time = time();
+
+        $record = new stdClass();
+        $record->instance = $adaptivequiz->id;
+        $record->userid = $userid;
+        $record->uniqueid = 0;
+        $record->attemptstate = attempt_state::IN_PROGRESS;
+        $record->questionsattempted = 0;
+        $record->standarderror = 999;
+        $record->timecreated = $time;
+        $record->timemodified = $time;
+
+        $record->id = $DB->insert_record(self::TABLE, $record);
+
+        $attempt = new self($adaptivequiz, $userid);
+        $attempt->adpqattempt = $record;
+
+        return $attempt;
+    }
+
     /**
      * This function adds a message to the debugging array
      * @param string $message details of the debugging message

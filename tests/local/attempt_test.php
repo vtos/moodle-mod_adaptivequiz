@@ -124,10 +124,7 @@ class attempt_test extends advanced_testcase {
         $this->assertEquals($expected, $data);
     }
 
-    /*
-     * @test
-     */
-    public function it_fails_to_set_quba_for_an_attempt_with_an_invalid_argument(): void {
+    public function test_it_fails_to_set_quba_for_an_attempt_with_an_invalid_argument(): void {
         $this->resetAfterTest(true);
         $this->setup_generator_data();
 
@@ -307,10 +304,7 @@ class attempt_test extends advanced_testcase {
         $this->assertEquals(2, $result);
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_to_find_the_last_question_used_by_attempt_with_an_invalid_argument() {
+    public function test_it_fails_to_find_the_last_question_used_by_attempt_with_an_invalid_argument() {
         $this->resetAfterTest(true);
 
         $dummy = new stdClass();
@@ -705,5 +699,36 @@ class attempt_test extends advanced_testcase {
         $attempt->get_attempt();
 
         $this->assertEquals($attempt, attempt::find_in_progress_for_user($adaptivequiz, $user->id));
+    }
+
+    public function test_it_creates_an_attempt(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+
+        attempt::create($adaptivequiz, $user->id);
+
+        // Check it inserted a record for the attempt.
+        $expectedfields = new stdClass();
+        $expectedfields->instance = $adaptivequiz->id;
+        $expectedfields->userid = $user->id;
+        $expectedfields->uniqueid = '0';
+        $expectedfields->attemptstate = attempt_state::IN_PROGRESS;
+        $expectedfields->questionsattempted = '0';
+        $expectedfields->standarderror = '999.00000';
+
+        $attemptfields = $DB->get_record('adaptivequiz_attempt',
+            ['instance' => $adaptivequiz->id, 'userid' => $user->id, 'attemptstate' => attempt_state::IN_PROGRESS],
+            'id, instance, userid, uniqueid, attemptstate, questionsattempted, standarderror', MUST_EXIST
+        );
+        $expectedfields->id = $attemptfields->id;
+
+        $this->assertEquals($expectedfields, $attemptfields);
     }
 }

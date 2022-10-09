@@ -89,7 +89,6 @@ $string['nopermission'] = 'Accès réservé';
 $string['maxquestattempted'] = 'Nombre maximum de items tentés';
 $string['notyourattempt'] = 'Cette tentative n’est pas la votre pour cette activité';
 $string['noattemptsallowed'] = 'Plus aucune tentative autorisée pour cette activité';
-$string['updateattempterror'] = 'Erreur lors de la mise à jour de l’enregistrement';
 $string['numofattemptshdr'] = 'Nombre de tentatives';
 $string['standarderrorhdr'] = 'Erreur standard';
 $string['errorlastattpquest'] = 'Erreur lors de la vérification de réponse du dernier item';

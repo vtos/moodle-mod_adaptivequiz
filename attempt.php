@@ -140,39 +140,30 @@ if (!empty($uniqueid) && confirm_sesskey()) {
             $nextdiff = $algo->perform_calculation_steps();
 
             // Increment difficulty level for attempt.
-            $everythingokay = false;
             $difflogit = $algo->get_levellogit();
-            $standarderror = $algo->get_standarderror();
-            $measure = $algo->get_measure();
-            $everythingokay = adaptivequiz_update_attempt_data($uniqueid, $cm->instance, $USER->id, $difflogit, $standarderror,
-                                    $measure);
-
-            // Something went wrong with updating the attempt.  Print an error.
-            if (!$everythingokay) {
-                $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $id));
-                throw new moodle_exception('unableupdatediffsum', 'adaptivequiz', $url);
+            if (is_infinite($difflogit)) {
+                throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
+                    new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $id]));
             }
+
+            $standarderror = $algo->get_standarderror();
+            adaptivequiz_update_attempt_data($uniqueid, $cm->instance, $USER->id, $difflogit, $standarderror, $algo->get_measure());
 
             // Check whether the status property is empty.
             $message = $algo->get_status();
 
             if (!empty($message)) {
-
-                $standarderror = $algo->get_standarderror();
-                // Set the attempt to complete, update the standard error and attempt message, then redirect the user to the
-                // attempt finished page.
-                adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $USER->id, $standarderror, $message);
-
-                $param = array('cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid);
-                $url = new moodle_url('/mod/adaptivequiz/attemptfinished.php', $param);
-                redirect($url);
+                adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $USER->id, $standarderror, $message);;
+                redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
+                    ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]));
             }
 
             // Lastly decrement the sum of questions for the attempted difficulty level.
-            $fetchquestion = new fetchquestion($quba, $difflevel, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
+            $fetchquestion = new fetchquestion($adaptivequiz, $difflevel, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
             $tagquestcount = $fetchquestion->get_tagquestsum();
             $tagquestcount = $fetchquestion->decrement_question_sum_from_difficulty($tagquestcount, $difflevel);
             $fetchquestion->set_tagquestsum($tagquestcount);
+
             // Force the class to deconstruct the object and save the updated mapping to the session global.
             unset($fetchquestion);
         }

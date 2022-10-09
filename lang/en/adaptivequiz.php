@@ -136,7 +136,6 @@ $string['nopermission'] = 'You don\t have permission to view this resource';
 $string['maxquestattempted'] = 'Maximum number of questions attempted';
 $string['notyourattempt'] = 'This is not your attempt at the activity';
 $string['noattemptsallowed'] = 'No more attempts allowed at this activity';
-$string['updateattempterror'] = 'Error trying to update attempt record';
 $string['numofattemptshdr'] = 'Number of attempts';
 $string['standarderrorhdr'] = 'Standard error';
 $string['errorlastattpquest'] = 'Error checking the response value for the last attempted question';

@@ -179,37 +179,20 @@ function adaptivequiz_uniqueid_part_of_attempt($uniqueid, $instance, $userid) {
 }
 
 /**
- * This function increments the difficultysum value and the number of questions attempted for the adaptivequiz_attempt record
- * @throws dml_exception A DML specific exception
+ * This function increments the difficultysum value and the number of questions attempted for the {adaptivequiz_attempt} record.
+ *
  * @param int $uniqueid uniqueid value of the adaptivequiz_attempt record
  * @param int $instance instance value of the adaptivequiz_attempt record
  * @param int $userid unerid value of the adaptivequiz_attempt record
  * @param float $level the logit of the difficulty level
  * @param float $standarderror the standard error of the user's attempt
  * @param float $measure the measure of ability for the attempt
- * @return bool true of update successful, otherwise false
  */
-function adaptivequiz_update_attempt_data($uniqueid, $instance, $userid, $level, $standarderror, $measure) {
+function adaptivequiz_update_attempt_data($uniqueid, $instance, $userid, $level, $standarderror, $measure): void {
     global $DB;
 
-    // Check if the is an infinity.
-    if (is_infinite($level)) {
-        return false;
-    }
-
-    $param = array('uniqueid' => $uniqueid, 'instance' => $instance, 'userid' => $userid);
-    try {
-        $fields = 'id,difficultysum,questionsattempted,timemodified,standarderror,measure';
-        $attempt = $DB->get_record('adaptivequiz_attempt', $param, $fields, MUST_EXIST);
-    } catch (dml_exception $e) {
-        $debuginfo = '';
-
-        if (!empty($e->debuginfo)) {
-            $debuginfo = $e->debuginfo;
-        }
-
-        throw new moodle_exception('updateattempterror', 'adaptivequiz', '', $e->getMessage(), $debuginfo);
-    }
+    $attempt = $DB->get_record('adaptivequiz_attempt', ['uniqueid' => $uniqueid, 'instance' => $instance, 'userid' => $userid],
+        'id, difficultysum, questionsattempted, timemodified, standarderror, measure', MUST_EXIST);
 
     $attempt->difficultysum = (float) $attempt->difficultysum + (float) $level;
     $attempt->questionsattempted = (int) $attempt->questionsattempted + 1;
@@ -218,8 +201,6 @@ function adaptivequiz_update_attempt_data($uniqueid, $instance, $userid, $level,
     $attempt->timemodified = time();
 
     $DB->update_record('adaptivequiz_attempt', $attempt);
-
-    return true;
 }
 
 /**

@@ -27,6 +27,7 @@ namespace mod_adaptivequiz\local;
 use coding_exception;
 use dml_exception;
 use mod_adaptivequiz\local\attempt\attempt_state;
+use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use moodle_exception;
 use question_bank;
 use question_engine;
@@ -539,6 +540,36 @@ class attempt {
     }
 
     /**
+     * @param cat_calculation_steps_result $calcstepsresult
+     * @param int $time Timestamp to save the time of attempt modification.
+     * @throws coding_exception
+     */
+    public function update_after_question_answered(cat_calculation_steps_result $calcstepsresult, int $time): void {
+        if ($this->adpqattempt === null) {
+            throw new coding_exception('attempt record must be set already when updating an attempt with any data');
+        }
+
+        $record = $this->adpqattempt;
+
+        $record->difficultysum = (float) $record->difficultysum + $calcstepsresult->logit()->as_float();
+        $record->questionsattempted = (int) $record->questionsattempted + 1;
+        $record->standarderror = $calcstepsresult->standard_error();
+        $record->measure = $calcstepsresult->measure();
+
+        $this->adpqattempt = $record;
+
+        $this->save($time);
+    }
+
+    private function save(int $time): void {
+        global $DB;
+
+        $this->adpqattempt->timemodified = $time;
+
+        $DB->update_record(self::TABLE, $this->adpqattempt);
+    }
+
+    /**
      * @throws dml_exception
      */
     public static function user_has_completed_on_quiz(int $adaptivequizid, int $userid): bool {
@@ -576,7 +607,9 @@ class attempt {
         $record->uniqueid = 0;
         $record->attemptstate = attempt_state::IN_PROGRESS;
         $record->questionsattempted = 0;
+        $record->difficultysum = 0.0000000;
         $record->standarderror = 999;
+        $record->measure = 0.00000;
         $record->timecreated = $time;
         $record->timemodified = $time;
 

@@ -28,8 +28,10 @@ global $CFG;
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
+use coding_exception;
 use context_module;
 use mod_adaptivequiz\local\attempt\attempt_state;
+use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use stdClass;
 
 /**
@@ -656,10 +658,7 @@ class attempt_test extends advanced_testcase {
         $this->assertEquals(array('1' => 1, '2' => 2), $questids);
     }
 
-    /**
-     * @test
-     */
-    public function it_can_check_if_a_user_has_a_completed_attempt_on_a_quiz(): void {
+    public function test_it_can_check_if_a_user_has_a_completed_attempt_on_a_quiz(): void {
         global $DB;
 
         $this->resetAfterTest();
@@ -730,5 +729,63 @@ class attempt_test extends advanced_testcase {
         $expectedfields->id = $attemptfields->id;
 
         $this->assertEquals($expectedfields, $attemptfields);
+    }
+
+    public function test_it_updates_an_attempt_after_question_is_answered(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+
+        $attempt = attempt::create($adaptivequiz, $user->id);
+
+        $calcresults = cat_calculation_steps_result::from_floats(-10.7435883, 0.73030, -0.83212);
+        $attempt->update_after_question_answered($calcresults, 1658759115);
+
+        $expectedfields = new stdClass();
+        $expectedfields->difficultysum = '-10.7435883';
+        $expectedfields->questionsattempted = '1';
+        $expectedfields->standarderror = '0.73030';
+        $expectedfields->measure = '-0.83212';
+        $expectedfields->timemodified = '1658759115';
+
+        $attemptfields = $DB->get_record('adaptivequiz_attempt',
+            ['instance' => $adaptivequiz->id, 'userid' => $user->id, 'attemptstate' => attempt_state::IN_PROGRESS],
+            'id, questionsattempted, difficultysum, standarderror, measure, timemodified', MUST_EXIST
+        );
+
+        $attemptid = $attemptfields->id;
+        $expectedfields->id = $attemptid;
+
+        $this->assertEquals($expectedfields, $attemptfields);
+
+        $calcresults = cat_calculation_steps_result::from_floats(1.1422792, 0.70711, 1.79982);
+        $attempt->update_after_question_answered($calcresults, 1658759315);
+
+        $expectedfields = new stdClass();
+        $expectedfields->id = $attemptid;
+        $expectedfields->difficultysum = '-9.6013091';
+        $expectedfields->questionsattempted = '2';
+        $expectedfields->standarderror = '0.70711';
+        $expectedfields->measure = '1.79982';
+        $expectedfields->timemodified = '1658759315';
+
+        $attemptfields = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid],
+            'id, questionsattempted, difficultysum, standarderror, measure, timemodified', MUST_EXIST
+        );
+
+        $this->assertEquals($expectedfields, $attemptfields);
+    }
+
+    public function test_it_fails_to_update_an_attempt_when_question_is_answered_if_attempt_record_is_not_set(): void {
+        $attempt = new attempt(new stdClass(), 333);
+
+        $this->expectException(coding_exception::class);
+        $attempt->update_after_question_answered(cat_calculation_steps_result::from_floats(0, 0, 0), time());
     }
 }

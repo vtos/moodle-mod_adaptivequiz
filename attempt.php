@@ -27,6 +27,7 @@ require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 
 use mod_adaptivequiz\local\attempt;
+use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use mod_adaptivequiz\local\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
 
@@ -147,13 +148,14 @@ if (!empty($uniqueid) && confirm_sesskey()) {
             }
 
             $standarderror = $algo->get_standarderror();
+
             adaptivequiz_update_attempt_data($uniqueid, $cm->instance, $USER->id, $difflogit, $standarderror, $algo->get_measure());
 
             // Check whether the status property is empty.
             $message = $algo->get_status();
 
             if (!empty($message)) {
-                adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $USER->id, $standarderror, $message);;
+                adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $USER->id, $standarderror, $message);
                 redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
                     ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]));
             }

@@ -253,26 +253,6 @@ class locallib_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the updating of the attempt data.
-     *
-     * @covers ::adaptivequiz_update_attempt_data
-     */
-    public function test_adaptivequiz_update_attempt_data() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setup_test_data_xml();
-
-        adaptivequiz_update_attempt_data(3, 13, 3, 50, 0.002, 0.99);
-        $record = $DB->get_record('adaptivequiz_attempt', ['id' => 2]);
-
-        $this->assertEquals(51, $record->difficultysum);
-        $this->assertEquals(1, $record->questionsattempted);
-        $this->assertEquals(0.002, $record->standarderror);
-        $this->assertEquals(0.99, $record->measure);
-    }
-
-    /**
      * This function tests completing an attempt.
      *
      * @covers ::adaptivequiz_complete_attempt

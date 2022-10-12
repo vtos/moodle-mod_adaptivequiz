@@ -103,8 +103,11 @@ if (!empty($adaptivequiz->password)) {
     }
 }
 
-// Create an instance of the adaptiveattempt class.
-$adaptiveattempt = new attempt($adaptivequiz, $USER->id);
+$adaptiveattempt = attempt::find_in_progress_for_user($adaptivequiz, $USER->id);
+if ($adaptiveattempt === null) {
+    $adaptiveattempt = attempt::create($adaptivequiz, $USER->id);
+}
+
 $algo = new stdClass();
 $nextdiff = null;
 $standarderror = 0.0;
@@ -113,7 +116,7 @@ $message = '';
 // If uniqueid is not empty the process respones.
 if (!empty($uniqueid) && confirm_sesskey()) {
     // Check if the uniqueid belongs to the same attempt record the user is currently using.
-    $attemptrec = $adaptiveattempt->get_attempt();
+    $attemptrec = $adaptiveattempt->record();
 
     if (!adaptivequiz_uniqueid_part_of_attempt($uniqueid, $cm->instance, $USER->id)) {
         throw new moodle_exception('uniquenotpartofattempt', 'adaptivequiz');
@@ -149,7 +152,13 @@ if (!empty($uniqueid) && confirm_sesskey()) {
 
             $standarderror = $algo->get_standarderror();
 
-            adaptivequiz_update_attempt_data($uniqueid, $cm->instance, $USER->id, $difflogit, $standarderror, $algo->get_measure());
+            try {
+                $catcalculationresult = cat_calculation_steps_result::from_floats($difflogit, $standarderror, $algo->get_measure());
+                $adaptiveattempt->update_after_question_answered($catcalculationresult, time());
+            } catch (Exception $exception) {
+                throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
+                    new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $id]));
+            }
 
             // Check whether the status property is empty.
             $message = $algo->get_status();
@@ -201,7 +210,7 @@ if (isset($difflevel) && !is_null($difflevel)) {
     $adaptiveattempt->set_last_difficulty_level($difflevel);
 }
 
-$attemptstatus = $adaptiveattempt->start_attempt();
+$attemptstatus = $adaptiveattempt->start_attempt($context);
 
 // Check if attempt status is set to ready.
 if (empty($attemptstatus)) {

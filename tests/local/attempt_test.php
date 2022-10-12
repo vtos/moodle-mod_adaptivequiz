@@ -96,136 +96,6 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * This function tests retrieving an adaptivequiz attempt record
-     */
-    public function test_get_attempt() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
-
-        $dummy = new stdClass();
-        $dummy->id = 220;
-        $userid = 2;
-
-        $attempt = new attempt($dummy, $userid);
-        $data = $attempt->get_attempt();
-
-        $expected = new stdClass();
-        $expected->id = '1';
-        $expected->instance = '220';
-        $expected->userid = '2';
-        $expected->uniqueid = '1110';
-        $expected->attemptstate = attempt_state::IN_PROGRESS;
-        $expected->questionsattempted = '0';
-        $expected->attemptstopcriteria = '';
-        $expected->standarderror = '1.00000';
-        $expected->difficultysum = '0.0000000';
-        $expected->measure = '0.00000';
-        $expected->timemodified = '0';
-        $expected->timecreated = '0';
-
-        $this->assertEquals($expected, $data);
-    }
-
-    public function test_it_fails_to_set_quba_for_an_attempt_with_an_invalid_argument(): void {
-        $this->resetAfterTest(true);
-        $this->setup_generator_data();
-
-        $this->activityinstance->context = context_module::instance($this->cm->id);
-
-        $adaptiveattempt = new attempt($this->activityinstance, $this->user->id);
-
-        $this->expectException('coding_exception');
-        $adaptiveattempt->set_quba(new stdClass());
-    }
-
-    /**
-     * This function tests the accessor methods for question_usage_by_activity ($quba) property
-     */
-    public function test_set_get_quba() {
-        $this->resetAfterTest(true);
-        $this->setup_generator_data();
-
-        $this->activityinstance->context = context_module::instance($this->cm->id);
-
-        $adaptiveattempt = new attempt($this->activityinstance, $this->user->id);
-
-        // Test a non initialized quba.
-        $this->assertNull($adaptiveattempt->get_quba());
-
-        // Test a property initializes quba.
-        $mockquba = $this->getMockBuilder('question_usage_by_activity')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $adaptiveattempt->set_quba($mockquba);
-        $this->assertInstanceOf('question_usage_by_activity', $adaptiveattempt->get_quba());
-    }
-
-    /**
-     * This function tests whether the user's attempt has exceeded the maximum number of questions attempted
-     */
-    public function test_max_questions_answered() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
-
-        $dummy = new stdClass();
-        $dummy->id = 220;
-        $dummy->maximumquestions = 20;
-        $userid = 2;
-
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(false, $attempt->max_questions_answered());
-
-        $dummy->id = 221;
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(false, $attempt->max_questions_answered());
-
-        $dummy->id = 222;
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(true, $attempt->max_questions_answered());
-
-        $dummy->id = 223;
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(true, $attempt->max_questions_answered());
-    }
-
-    /**
-     * This function tests whether the user's attempt has met the minimum number of questions attempted
-     */
-    public function test_min_questions_answered() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
-
-        $dummy = new stdClass();
-        $dummy->id = 220;
-        $dummy->minimumquestions = 21;
-        $userid = 2;
-
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(false, $attempt->min_questions_answered());
-
-        $dummy->id = 221;
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(false, $attempt->min_questions_answered());
-
-        $dummy->id = 222;
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(false, $attempt->min_questions_answered());
-
-        $dummy->id = 223;
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(true, $attempt->min_questions_answered());
-    }
-
-    /**
      * This function test that one value is returned or an empty array is returned
      */
     public function test_return_random_question() {
@@ -248,36 +118,37 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the creation of a question_usage_by_activity object for an attempt
+     * This function tests the creation of a question_usage_by_activity object for an attempt.
      */
     public function test_initialize_quba() {
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
         $this->setup_generator_data();
 
-        $this->activityinstance->context = context_module::instance($this->cm->id);
+        $context = context_module::instance($this->cm->id);
 
-        $adaptiveattempt = new attempt($this->activityinstance, $this->user->id);
-        $adaptiveattempt->get_attempt();
-        $quba = $adaptiveattempt->initialize_quba();
+        $adaptiveattempt = attempt::create($this->activityinstance, $this->user->id);
+        $quba = $adaptiveattempt->initialize_quba($context);
 
         $this->assertInstanceOf('question_usage_by_activity', $quba);
     }
 
     /**
-     * This function tests the re-using of the question_usage_by_activity object, due to an incomplete attempt
+     * This function tests the re-using of the question_usage_by_activity object, due to an incomplete attempt.
      */
     public function test_initialize_quba_with_existing_attempt_uniqueid() {
         global $DB;
 
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
         $this->setup_test_data_xml();
 
-        $param = array('id' => 330);
-        $activityinstance = $DB->get_record('adaptivequiz', $param);
+        $cmid = 5;
 
-        $adaptiveattempt = new attempt($activityinstance, 2);
-        $adaptiveattempt->get_attempt();
-        $quba = $adaptiveattempt->initialize_quba();
+        $activityinstance = $DB->get_record('adaptivequiz', ['id' => 330]);
+
+        $context = context_module::instance($cmid);
+
+        $adaptiveattempt = attempt::find_in_progress_for_user($activityinstance, 2);
+        $quba = $adaptiveattempt->initialize_quba($context);
 
         $this->assertInstanceOf('question_usage_by_activity', $quba);
 
@@ -286,20 +157,22 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * This function tests retrieving the last question viewed by the student for a given attempt
+     * This function tests retrieving the last question viewed by the student for a given attempt.
      */
     public function test_find_last_quest_used_by_attempt() {
         global $DB;
 
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
         $this->setup_test_data_xml();
 
-        $param = array('id' => 330);
-        $activityinstance = $DB->get_record('adaptivequiz', $param);
+        $cmid = 5;
 
-        $adaptiveattempt = new attempt($activityinstance, 2);
-        $adaptiveattempt->get_attempt();
-        $quba = $adaptiveattempt->initialize_quba();
+        $activityinstance = $DB->get_record('adaptivequiz', ['id' => 330]);
+
+        $context = context_module::instance($cmid);
+
+        $adaptiveattempt = attempt::find_in_progress_for_user($activityinstance, 2);
+        $quba = $adaptiveattempt->initialize_quba($context);
 
         $result = $adaptiveattempt->find_last_quest_used_by_attempt($quba);
 
@@ -307,7 +180,7 @@ class attempt_test extends advanced_testcase {
     }
 
     public function test_it_fails_to_find_the_last_question_used_by_attempt_with_an_invalid_argument() {
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
 
         $dummy = new stdClass();
 
@@ -567,18 +440,23 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * This function tests what happens when the maximum number of questions have been answered
+     * This function tests what happens when the maximum number of questions have been answered.
      */
     public function test_start_attempt_max_num_of_quest_answered() {
-        $this->resetAfterTest(true);
+        global $DB;
 
-        $attempt = $this->createPartialMock(attempt::class,
-            ['get_attempt', 'level_in_bounds', 'max_questions_answered']);
-        $attempt->method('get_attempt')->willReturn(new stdClass());
-        $attempt->method('level_in_bounds')->willReturn(true);
-        $attempt->method('max_questions_answered')->willReturn(true);
+        $this->resetAfterTest();
+        $this->setup_test_data_xml();
 
-        $this->assertFalse($attempt->start_attempt());
+        $adaptivequizid = 330;
+        $userid = 3;
+        $cmid = 5;
+
+        $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
+        $attempt = attempt::create($adaptivequiz, $userid);
+
+        $context = context_module::instance($cmid);
+        $this->assertFalse($attempt->start_attempt($context));
     }
 
     /**
@@ -586,15 +464,17 @@ class attempt_test extends advanced_testcase {
      * than zero.
      */
     public function test_start_attempt_quest_slot_empty_quest_submit_greater_than_one() {
+        $this->markTestSkipped('skipped unless managing quba is extracted from the attempt class');
+
         $dummyadaptivequiz = new stdClass();
         $dummyadaptivequiz->lowestlevel = 1;
         $dummyadaptivequiz->highestlevel = 100;
 
+        $cmid = 5;
+
         $mockattemptthree = $this
             ->getMockBuilder(attempt::class)
-            ->onlyMethods(
-                ['get_attempt', 'max_questions_answered', 'initialize_quba', 'find_last_quest_used_by_attempt',
-                    'level_in_bounds']
+            ->onlyMethods(['record', 'initialize_quba', 'find_last_quest_used_by_attempt', 'level_in_bounds']
             )
             ->setConstructorArgs(
                 [$dummyadaptivequiz, 1]
@@ -605,21 +485,20 @@ class attempt_test extends advanced_testcase {
         $dummyattempt->questionsattempted = 1;
 
         $mockattemptthree->expects($this->once())
-            ->method('get_attempt')
+            ->method('record')
             ->will($this->returnValue($dummyattempt));
         $mockattemptthree->expects($this->once())
             ->method('level_in_bounds')
             ->will($this->returnValue(true));
-        $mockattemptthree->expects($this->once())
-            ->method('max_questions_answered')
-            ->will($this->returnValue(false));
         $mockattemptthree->expects($this->once())
             ->method('initialize_quba');
         $mockattemptthree->expects($this->once())
             ->method('find_last_quest_used_by_attempt')
             ->will($this->returnValue(0));
 
-        $this->assertFalse($mockattemptthree->start_attempt());
+        $context = context_module::instance($cmid);
+
+        $this->assertFalse($mockattemptthree->start_attempt($context));
     }
 
     /**
@@ -689,13 +568,7 @@ class attempt_test extends advanced_testcase {
         // No attempt exists for the user at the moment.
         $this->assertNull(attempt::find_in_progress_for_user($adaptivequiz, $user->id));
 
-        $attempt = new attempt($adaptivequiz, $user->id);
-        // This call should create an in-progress attempt record for the user and assign it to the relevant property.
-        $attempt->get_attempt();
-        // This call will fetch the record created above and assign it to the relevant record property.
-        // We make this second call to ensure the record's fields will have the types which a common Moodle's record has
-        // after having been fetched from the database. The record property after the previous call has different types set.
-        $attempt->get_attempt();
+        $attempt = attempt::create($adaptivequiz, $user->id);
 
         $this->assertEquals($attempt, attempt::find_in_progress_for_user($adaptivequiz, $user->id));
     }

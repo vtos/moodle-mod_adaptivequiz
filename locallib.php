@@ -179,31 +179,6 @@ function adaptivequiz_uniqueid_part_of_attempt($uniqueid, $instance, $userid) {
 }
 
 /**
- * This function increments the difficultysum value and the number of questions attempted for the {adaptivequiz_attempt} record.
- *
- * @param int $uniqueid uniqueid value of the adaptivequiz_attempt record
- * @param int $instance instance value of the adaptivequiz_attempt record
- * @param int $userid unerid value of the adaptivequiz_attempt record
- * @param float $level the logit of the difficulty level
- * @param float $standarderror the standard error of the user's attempt
- * @param float $measure the measure of ability for the attempt
- */
-function adaptivequiz_update_attempt_data($uniqueid, $instance, $userid, $level, $standarderror, $measure): void {
-    global $DB;
-
-    $attempt = $DB->get_record('adaptivequiz_attempt', ['uniqueid' => $uniqueid, 'instance' => $instance, 'userid' => $userid],
-        'id, difficultysum, questionsattempted, timemodified, standarderror, measure', MUST_EXIST);
-
-    $attempt->difficultysum = (float) $attempt->difficultysum + (float) $level;
-    $attempt->questionsattempted = (int) $attempt->questionsattempted + 1;
-    $attempt->standarderror = (float) $standarderror;
-    $attempt->measure = (float) $measure;
-    $attempt->timemodified = time();
-
-    $DB->update_record('adaptivequiz_attempt', $attempt);
-}
-
-/**
  * This function sets the complete status for an attempt.
  *
  * @throws dml_exception

@@ -25,6 +25,7 @@
 namespace mod_adaptivequiz\local;
 
 use coding_exception;
+use context_module;
 use dml_exception;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
@@ -53,11 +54,6 @@ class attempt {
     const ATTEMPTBEHAVIOUR = 'deferredfeedback';
 
     /**
-     * @var attempt_state $attemptstate
-     */
-    private $attemptstate;
-
-    /**
      * Flag to denote developer debugging is enabled and this class should write message to the debug
      * wrap on multiple lines
      * @var bool
@@ -66,12 +62,6 @@ class attempt {
 
     /** @var array $debug debugging array of messages */
     protected $debug = array();
-
-    /**
-     * @var stdClass $adaptivequiz object, properties come from the adaptivequiz table.
-     * This property also contains the context and cm objects
-     */
-    protected $adaptivequiz;
 
     /** @var stdClass $adpqattempt object, properties come from the adaptivequiz_attempt table */
     protected $adpqattempt;
@@ -105,6 +95,16 @@ class attempt {
 
     /** @var int $lastdifficultylevel the last difficulty level used in the attempt if any */
     protected $lastdifficultylevel = null;
+
+    /**
+     * @var stdClass $adaptivequiz Record from the {adaptivequiz} table.
+     */
+    private $adaptivequiz;
+
+    /**
+     * @var attempt_state $attemptstate
+     */
+    private $attemptstate;
 
     /**
      * Constructor initializes required data to process the attempt
@@ -200,20 +200,6 @@ class attempt {
     }
 
     /**
-     * This function sets the current question usage by activity object.
-     * @throws coding_exception - exception is thrown argument is not an instance of question_usage_by_activity class
-     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
-     */
-    public function set_quba($quba) {
-        if (!$quba instanceof question_usage_by_activity) {
-            throw new coding_exception('adaptiveattempt: Argument 1 is not a question_usage_by_activity object',
-                    'Question usage by activity must be an  instance of question_usage_by_activity');
-        }
-
-        $this->quba = $quba;
-    }
-
-    /**
      * This function checks to see if the difficulty level is out of the boundries set for the attempt
      * @param int $level the difficulty level requested
      * @param stdClass $adaptivequiz an adaptivequiz record
@@ -241,9 +227,8 @@ class attempt {
      *
      * @return bool True if attempt started okay otherwise false.
      */
-    public function start_attempt() {
-        // Get most recent attempt or start a new one.
-        $adpqattempt = $this->get_attempt();
+    public function start_attempt(context_module $context) {
+        $adpqattempt = $this->record();
 
         // Check if the level requested is out of the minimum/maximum boundries for the attempt.
         if (!$this->level_in_bounds($this->level, $this->adaptivequiz)) {
@@ -254,13 +239,15 @@ class attempt {
         }
 
         // Check if the attempt has reached the maximum number of questions attempted.
-        if ($this->max_questions_answered()) {
+        if ($this->max_number_of_questions_is_answered()) {
             $this->status = get_string('maxquestattempted', 'adaptivequiz');
+
             return false;
         }
 
         // Initialize the question usage by activity property.
-        $this->initialize_quba();
+        $this->initialize_quba($context);
+
         // Find the last question viewed/answered by the user.
         $this->slot = $this->find_last_quest_used_by_attempt($this->quba);
         // Create a an instance of the fetchquestion class.
@@ -360,32 +347,6 @@ class attempt {
     }
 
     /**
-     * This function checks to see if the student answered the maximum number of questions
-     * @return bool true if the attempt is starting for the first time. Otherwise false
-     */
-    public function max_questions_answered() {
-        if ($this->adpqattempt->questionsattempted >= $this->adaptivequiz->maximumquestions) {
-            $this->print_debug('max_questions_answered() - maximum number of questions answered');
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * This function checks to see if the student answered the minimum number of questions
-     * @return bool true if the attempt is starting for the first time. Otherwise false
-     */
-    public function min_questions_answered() {
-        if ($this->adpqattempt->questionsattempted > $this->adaptivequiz->minimumquestions) {
-            $this->print_debug('min_questions_answered() - minimum number of questions answered');
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * This function retrieves the last question that was used in the attempt
      * @throws moodle_exception - exception is thrown function parameter is not an instance of question_usage_by_activity class
      * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
@@ -439,14 +400,13 @@ class attempt {
     }
 
     /**
-     * This function initializes the question_usage_by_activity object.  If an attempt unfinished attempt
-     * has a usage id, a question_usage_by_activity object will be loaded using the usage id.  Otherwise a new
-     * question_usage_by_activity object is created.
+     * The method initializes the question_usage_by_activity object. If an unfinished attempt has a usage id,
+     * a question_usage_by_activity object will be loaded using the usage id. Otherwise, a new question_usage_by_activity object
+     * is created.
      *
      * @throws moodle_exception Exception is thrown when required behaviour could not be found.
-     * @return question_usage_by_activity|null Returns a question usage by activity object or null.
      */
-    public function initialize_quba() {
+    public function initialize_quba(context_module $context): ?question_usage_by_activity {
         if (!$this->behaviour_exists()) {
             throw new moodle_exception('Missing '.self::ATTEMPTBEHAVIOUR.' behaviour', 'Behaviour: '.self::ATTEMPTBEHAVIOUR.
                 ' must exist in order to use this activity');
@@ -454,7 +414,7 @@ class attempt {
 
         if (0 == $this->adpqattempt->uniqueid) {
             // Init question usage and set default behaviour of usage.
-            $quba = question_engine::make_questions_usage_by_activity(self::MODULENAME, $this->adaptivequiz->context);
+            $quba = question_engine::make_questions_usage_by_activity(self::MODULENAME, $context);
             $quba->set_preferred_behaviour(self::ATTEMPTBEHAVIOUR);
 
             $this->quba = $quba;
@@ -469,42 +429,6 @@ class attempt {
         $this->quba = $quba;
 
         return $quba;
-    }
-
-    /**
-     * This function retrieves the most recent attempt, whose state is 'inprogress'. If no attempt is found
-     * it creates a new attempt.  Lastly $adpqattempt instance property gets set.
-     *
-     * @return stdClass adaptivequiz_attempt data object
-     */
-    public function get_attempt() {
-        global $DB;
-
-        $param = ['instance' => $this->adaptivequiz->id, 'userid' => $this->userid, 'attemptstate' => attempt_state::IN_PROGRESS];
-        $attempt = $DB->get_records(self::TABLE, $param, 'timemodified DESC', '*', 0, 1);
-
-        if (empty($attempt)) {
-            $time = time();
-            $attempt = new stdClass();
-            $attempt->instance = $this->adaptivequiz->id;
-            $attempt->userid = $this->userid;
-            $attempt->uniqueid = 0;
-            $attempt->attemptstate = attempt_state::IN_PROGRESS;
-            $attempt->questionsattempted = 0;
-            $attempt->standarderror = 999;
-            $attempt->timecreated = $time;
-            $attempt->timemodified = $time;
-
-            $id = $DB->insert_record(self::TABLE, $attempt);
-
-            $attempt->id = $id;
-        } else {
-            $attempt = current($attempt);
-        }
-
-        $this->adpqattempt = $attempt;
-
-        return $attempt;
     }
 
     /**
@@ -539,6 +463,10 @@ class attempt {
         return $questions;
     }
 
+    public function record(): stdClass {
+        return $this->adpqattempt;
+    }
+
     /**
      * @param cat_calculation_steps_result $calcstepsresult
      * @param int $time Timestamp to save the time of attempt modification.
@@ -559,14 +487,6 @@ class attempt {
         $this->adpqattempt = $record;
 
         $this->save($time);
-    }
-
-    private function save(int $time): void {
-        global $DB;
-
-        $this->adpqattempt->timemodified = $time;
-
-        $DB->update_record(self::TABLE, $this->adpqattempt);
     }
 
     /**
@@ -606,10 +526,11 @@ class attempt {
         $record->userid = $userid;
         $record->uniqueid = 0;
         $record->attemptstate = attempt_state::IN_PROGRESS;
+        $record->attemptstopcriteria = '';
         $record->questionsattempted = 0;
-        $record->difficultysum = 0.0000000;
+        $record->difficultysum = 0;
         $record->standarderror = 999;
-        $record->measure = 0.00000;
+        $record->measure = 0;
         $record->timecreated = $time;
         $record->timemodified = $time;
 
@@ -726,5 +647,17 @@ class attempt {
         }
 
         return $exists;
+    }
+
+    private function save(int $time): void {
+        global $DB;
+
+        $this->adpqattempt->timemodified = $time;
+
+        $DB->update_record(self::TABLE, $this->adpqattempt);
+    }
+
+    private function max_number_of_questions_is_answered(): bool {
+        return $this->adpqattempt->questionsattempted >= $this->adaptivequiz->maximumquestions;
     }
 }

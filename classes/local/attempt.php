@@ -227,9 +227,7 @@ class attempt {
      *
      * @return bool True if attempt started okay otherwise false.
      */
-    public function start_attempt(context_module $context) {
-        $adpqattempt = $this->record();
-
+    public function start_attempt(context_module $context, int $questionsattempted) {
         // Check if the level requested is out of the minimum/maximum boundries for the attempt.
         if (!$this->level_in_bounds($this->level, $this->adaptivequiz)) {
             $var = new stdClass();
@@ -255,7 +253,7 @@ class attempt {
                 $this->adaptivequiz->highestlevel);
 
         // Check if this is the beginning of an attempt (and pass the starting level) or the continuation of an attempt.
-        if (empty($this->slot) && 0 == $adpqattempt->questionsattempted) {
+        if (empty($this->slot) && 0 == $questionsattempted) {
             // Set the starting difficulty level.
             $fetchquestion->set_level((int) $this->adaptivequiz->startinglevel);
             // Sets the level class property.
@@ -303,7 +301,7 @@ class attempt {
 
             $this->print_debug("start_attempt() - Continuing attempt.  Set level: {$this->level}.");
 
-        } else if (empty($this->slot) && 0 < $adpqattempt->questionsattempted) {
+        } else if (empty($this->slot) && 0 < $questionsattempted) {
             // If this condition is met, then something went wrong because the slot id is empty BUT the questions attempted is
             // Greater than zero.  Stop attempt.
             $this->print_debug('start_attempt() - something went horribly wrong since the quba has no slot number AND the number '.
@@ -463,8 +461,12 @@ class attempt {
         return $questions;
     }
 
-    public function record(): stdClass {
-        return $this->adpqattempt;
+    public function id(): string {
+        return $this->adpqattempt->id;
+    }
+
+    public function number_of_questions_attempted(): int {
+        return $this->adpqattempt->questionsattempted;
     }
 
     /**

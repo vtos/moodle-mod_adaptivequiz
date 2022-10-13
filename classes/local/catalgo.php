@@ -39,9 +39,6 @@ class catalgo {
     /** @var $quba a question_usage_by_activity object */
     protected $quba = null;
 
-    /** @var $attemptid an adaptivequiz_attempt attempt id */
-    protected $attemptid = 0;
-
     /**
      * @var bool $debugenabled flag to denote developer debugging is enabled and this class should write message to the debug array
      */
@@ -87,25 +84,16 @@ class catalgo {
     protected $status = '';
 
     /**
-     * Constructor to initialize the parameters needed by the adaptive alrogithm
-     * @throws moodle_exception - exception is thrown if first argument is not an instance of question_usage_by_activity class or
-     *      second argument is not a positive integer.
-     * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
-     * @param int $attemptid the adaptivequiz_attempt attempt id
-     * @param bool $readytostop true of the algo should assume the user has answered the minimum number of question and should
-     *      compare the results againts the standard error
-     * @param int $level the level of difficulty for the most recently attempted question
-     * @return void
+     * @param question_usage_by_activity $quba
+     * @param bool $readytostop True of the algo should assume the user has answered the minimum number of question and should
+     *                          compare the results against the standard error.
+     * @param int $level The level of difficulty for the most recently attempted question.
+     * @throws moodle_exception
      */
-    public function __construct($quba, $attemptid, $readytostop = true, $level = 0) {
+    public function __construct($quba, $readytostop = true, $level = 0) {
         if (!$quba instanceof question_usage_by_activity) {
             throw new coding_exception('catalgo: Argument 1 is not a question_usage_by_activity object',
                     'Question usage by activity must be a question_usage_by_activity object');
-        }
-
-        if (!is_int($attemptid) || 0 >= $attemptid) {
-            throw new coding_exception('catalgo: Argument 2 not a positive integer',
-                'Attempt id argument must be a positive integer');
         }
 
         if (!is_int($level) || 0 >= $level) {
@@ -113,7 +101,6 @@ class catalgo {
         }
 
         $this->quba = $quba;
-        $this->attemptid = $attemptid;
         $this->readytostop = $readytostop;
         $this->level = $level;
 
@@ -184,22 +171,17 @@ class catalgo {
     }
 
     /**
-     * This functions retrieves the attempt record, the highest and lowest difficulty level set for the attempt
-     * @throws dml_missing_record_exception
-     * @param int $attemptid the attempt id record
-     * @return stdClass adaptivequiz_attempt record
+     * This functions retrieves the attempt record, the highest and lowest difficulty level set for the attempt.
      */
-    public function retrieve_attempt_record($attemptid) {
+    public function retrieve_attempt_record(string $attemptid): stdClass {
         global $DB;
 
-        $param = array('id' => $attemptid);
         $sql = "SELECT aa.id, aa.questionsattempted, aa.difficultysum, aa.standarderror, a.highestlevel, a.lowestlevel, aa.measure
                   FROM {adaptivequiz_attempt} aa
                   JOIN {adaptivequiz} a ON a.id = aa.instance
-                 WHERE aa.id = :id
-              ORDER BY id DESC";
-        $record = $DB->get_record_sql($sql, $param, MUST_EXIST);
-        return $record;
+                 WHERE aa.id = :id";
+
+        return $DB->get_record_sql($sql, ['id' => $attemptid], MUST_EXIST);
     }
 
     /**
@@ -334,12 +316,14 @@ class catalgo {
     }
 
     /**
-     * This function performs the different steps in the CAT simple algorithm
-     * @return int returns the next difficulty level or 0 if there was an error
+     * This function performs the different steps in the CAT simple algorithm.
+     *
+     * @return int Returns the next difficulty level or 0 if there was an error.
      */
-    public function perform_calculation_steps() {
+    public function perform_calculation_steps(string $attemptid) {
+
         // Retrieve attempt record.
-        $record = $this->retrieve_attempt_record($this->attemptid);
+        $record = $this->retrieve_attempt_record($attemptid);
 
         $this->difficultysum = $record->difficultysum;
         $this->questattempted = $record->questionsattempted;
@@ -399,7 +383,7 @@ class catalgo {
 
         // Retrieve the standard error (as a percent) set for the attempt, convert it into a decimal percent then
         // convert to a logit.
-        $quizdefinederror = $this->retrieve_standard_error($this->attemptid);
+        $quizdefinederror = $this->retrieve_standard_error($attemptid);
         $quizdefinederror = $quizdefinederror / 100;
         $quizdefinederror = self::convert_percent_to_logit($quizdefinederror);
 

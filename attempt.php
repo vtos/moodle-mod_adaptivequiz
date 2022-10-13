@@ -116,8 +116,6 @@ $message = '';
 // If uniqueid is not empty the process respones.
 if (!empty($uniqueid) && confirm_sesskey()) {
     // Check if the uniqueid belongs to the same attempt record the user is currently using.
-    $attemptrec = $adaptiveattempt->record();
-
     if (!adaptivequiz_uniqueid_part_of_attempt($uniqueid, $cm->instance, $USER->id)) {
         throw new moodle_exception('uniquenotpartofattempt', 'adaptivequiz');
     }
@@ -139,9 +137,9 @@ if (!empty($uniqueid) && confirm_sesskey()) {
             // Check if the minimum number of attempts have been reached.
             $minattemptreached = adaptivequiz_min_attempts_reached($uniqueid, $cm->instance, $USER->id);
             // Create an instance of the CAT algo class.
-            $algo = new catalgo($quba, (int) $attemptrec->id, $minattemptreached, (int) $difflevel);
+            $algo = new catalgo($quba, $minattemptreached, (int) $difflevel);
             // Calculate the next difficulty level.
-            $nextdiff = $algo->perform_calculation_steps();
+            $nextdiff = $algo->perform_calculation_steps($adaptiveattempt->id());
 
             // Increment difficulty level for attempt.
             $difflogit = $algo->get_levellogit();
@@ -210,7 +208,7 @@ if (isset($difflevel) && !is_null($difflevel)) {
     $adaptiveattempt->set_last_difficulty_level($difflevel);
 }
 
-$attemptstatus = $adaptiveattempt->start_attempt($context);
+$attemptstatus = $adaptiveattempt->start_attempt($context, $adaptiveattempt->number_of_questions_attempted());
 
 // Check if attempt status is set to ready.
 if (empty($attemptstatus)) {
@@ -250,7 +248,7 @@ if (is_null($nextdiff)) {
     $adaptivequiz->highestlevel = (int) $adaptivequiz->highestlevel;
     $adaptivequiz->startinglevel = (int) $adaptivequiz->startinglevel;
     // Create an instance of the catalgo class, however constructor arguments are not important.
-    $algo = new catalgo($quba, 1, false, 1);
+    $algo = new catalgo($quba, false, 1);
     $level = $algo->get_current_diff_level($quba, $adaptivequiz->startinglevel, $adaptivequiz);
 } else {
     // Retrieve the currently set difficulty level.

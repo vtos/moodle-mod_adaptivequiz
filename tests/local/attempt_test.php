@@ -456,7 +456,7 @@ class attempt_test extends advanced_testcase {
         $attempt = attempt::create($adaptivequiz, $userid);
 
         $context = context_module::instance($cmid);
-        $this->assertFalse($attempt->start_attempt($context));
+        $this->assertFalse($attempt->start_attempt($context, $attempt->number_of_questions_attempted()));
     }
 
     /**
@@ -498,7 +498,7 @@ class attempt_test extends advanced_testcase {
 
         $context = context_module::instance($cmid);
 
-        $this->assertFalse($mockattemptthree->start_attempt($context));
+        $this->assertFalse($mockattemptthree->start_attempt($context, $dummyattempt->questionsattempted));
     }
 
     /**

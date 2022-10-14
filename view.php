@@ -26,7 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
-use mod_adaptivequiz\local\report\questions_difficulty_range;
+use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;

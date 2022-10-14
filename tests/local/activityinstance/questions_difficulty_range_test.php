@@ -19,13 +19,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz\local\report;
+namespace mod_adaptivequiz\local\activityinstance;
 
 use basic_testcase;
 use stdClass;
 
 /**
- * @covers \mod_adaptivequiz\local\report\questions_difficulty_range
+ * @covers \mod_adaptivequiz\local\activityinstance\questions_difficulty_range
  */
 class questions_difficulty_range_test extends basic_testcase {
 

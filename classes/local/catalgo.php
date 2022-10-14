@@ -27,6 +27,7 @@ namespace mod_adaptivequiz\local;
 
 use coding_exception;
 use dml_missing_record_exception;
+use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
 use moodle_exception;
 use question_state_gradedpartial;
 use question_state_gradedright;
@@ -171,20 +172,6 @@ class catalgo {
     }
 
     /**
-     * This functions retrieves the attempt record, the highest and lowest difficulty level set for the attempt.
-     */
-    public function retrieve_attempt_record(string $attemptid): stdClass {
-        global $DB;
-
-        $sql = "SELECT aa.id, aa.questionsattempted, aa.difficultysum, aa.standarderror, a.highestlevel, a.lowestlevel, aa.measure
-                  FROM {adaptivequiz_attempt} aa
-                  JOIN {adaptivequiz} a ON a.id = aa.instance
-                 WHERE aa.id = :id";
-
-        return $DB->get_record_sql($sql, ['id' => $attemptid], MUST_EXIST);
-    }
-
-    /**
      * Refactored code from adaptiveattempt.class.php @see find_last_quest_used_by_attempt()
      * This function retrieves the last question that was used in the attempt
      * @return int question slot or 0 if no unmarked question could be found
@@ -297,55 +284,47 @@ class catalgo {
     }
 
     /**
-     * This function retrieves the allowed standard error (as a percent) for the attempt
-     * @throws dml_missing_record_exception
-     * @param int $attemptid adaptivequiz_attempt id
-     * @return float the standard error allowed
-     */
-    public function retrieve_standard_error($attemptid) {
-        global $DB;
-
-        $param = array('aaid' => $attemptid);
-        $sql = "SELECT a.standarderror
-                  FROM {adaptivequiz} a
-                  JOIN {adaptivequiz_attempt} aa ON a.id = aa.instance
-                 WHERE aa.id = :aaid
-              ORDER BY a.standarderror ASC";
-
-        return (float) $DB->get_field_sql($sql, $param, MUST_EXIST);
-    }
-
-    /**
      * This function performs the different steps in the CAT simple algorithm.
      *
      * @return int Returns the next difficulty level or 0 if there was an error.
      */
-    public function perform_calculation_steps(string $attemptid) {
-
-        // Retrieve attempt record.
-        $record = $this->retrieve_attempt_record($attemptid);
-
-        $this->difficultysum = $record->difficultysum;
-        $this->questattempted = $record->questionsattempted;
+    public function perform_calculation_steps(
+        float $attemptdifficultysum,
+        int $questionsattemptednum,
+        questions_difficulty_range $questionsdifficultyrange,
+        float $standarderrortostop
+    ) {
+        $this->difficultysum = $attemptdifficultysum;
+        $this->questattempted = $questionsattemptednum;
 
         // If the user answered the previous question correctly, calculate the sum of correct answers.
         $correct = $this->question_was_marked_correct();
 
         if (true === $correct) {
             // Compute the next difficulty level for the next question.
-            $this->nextdifficulty = $this->compute_next_difficulty($this->level, $this->questattempted, true, $record);
+            $this->nextdifficulty = $this->compute_next_difficulty(
+                $this->level,
+                $this->questattempted,
+                true,
+                $questionsdifficultyrange
+            );
         } else if (false === $correct) {
             // Compute the next difficulty level for the next question.
-            $this->nextdifficulty = $this->compute_next_difficulty($this->level, $this->questattempted, false, $record);
+            $this->nextdifficulty = $this->compute_next_difficulty(
+                $this->level,
+                $this->questattempted,
+                false,
+                $questionsdifficultyrange
+            );
         } else {
             $this->status = get_string('errorlastattpquest', 'adaptivequiz');
-            $this->print_debug('perform_calculation_steps() - Last question attempted returned a null as an answer');
+
             return 0;
         }
 
         // If he user hasn't met the minimum requirements to end the attempt, then return with the next difficulty level.
         if (empty($this->readytostop)) {
-            $this->print_debug('perform_calculation_steps() - Not ready to stop the attempt, returning next difficulty number');
+
             return $this->nextdifficulty;
         }
 
@@ -355,7 +334,7 @@ class catalgo {
 
         if (0 == $this->questattempted) {
             $this->status = get_string('errornumattpzero', 'adaptivequiz');
-            $this->print_debug('perform_calculation_steps() - number of questions attempted equals zero');
+
             return 0;
         }
 
@@ -364,8 +343,7 @@ class catalgo {
 
         if ($validatenumbers != $this->questattempted) {
             $this->status = get_string('errorsumrightwrong', 'adaptivequiz');
-            $this->print_debug('perform_calculation_steps() - Sum of correct and incorrect answers ('.$validatenumbers.') '.
-                    'doesn\'t equals the total number of questions attempted ('.$this->questattempted.')');
+
             return 0;
         }
 
@@ -377,14 +355,9 @@ class catalgo {
         $this->standarderror = self::estimate_standard_error($this->questattempted, $this->sumofcorrectanswers,
             $this->sumofincorrectanswers);
 
-        $this->print_debug('perform_calculation_steps() - difficultysum: '.$this->difficultysum.', questattempted: '.
-                $this->questattempted.', sumofcorrectanswers: '.$this->sumofcorrectanswers.', sumofincorrectanswers: '.
-                $this->sumofincorrectanswers.' =&gt; measure: '.$this->measure.', standard error: '.$this->standarderror);
-
-        // Retrieve the standard error (as a percent) set for the attempt, convert it into a decimal percent then
-        // convert to a logit.
-        $quizdefinederror = $this->retrieve_standard_error($attemptid);
-        $quizdefinederror = $quizdefinederror / 100;
+        // Convert the standard error (as a percent) set for the activity into a decimal percent, then
+        // convert it to a logit.
+        $quizdefinederror = $standarderrortostop / 100;
         $quizdefinederror = self::convert_percent_to_logit($quizdefinederror);
 
         // If the calculated standard error is within the parameters of the attempt then populate the status message.
@@ -397,8 +370,6 @@ class catalgo {
             $val->definederror = 100 * round($val->definederror, 2);
             $this->status = get_string('calcerrorwithinlimits', 'adaptivequiz', $val);
         }
-
-        $this->print_debug('perform_calculation_steps() - measure: '.$this->measure.' standard error: '.$this->standarderror);
 
         return $this->nextdifficulty;
     }
@@ -561,50 +532,20 @@ class catalgo {
     }
 
     /**
-     * This function is a helper method to compute the current difficult level the attempt is at
-     * @throws coding_exception if any of the parameters contain invalid data
-     * @param question_usage_by_activity $quba a question usage by activity set to an attempt id
-     * @param int $startinglevel the starting level of difficulty for the attempt
-     * @param stdClass $attemptobj an object with the following properties: lowestlevel and highestlevel
-     * @return int the current level of difficulty
+     * This function calculates the current difficulty level of the attempt.
+     *
+     * @param question_usage_by_activity $quba
+     * @param int $level The starting level of difficulty for the attempt.
+     * @param questions_difficulty_range $questionsdifficultyrange
+     * @return int The current level of difficulty.
      */
-    public function get_current_diff_level($quba, $level, $attemptobj) {
-        // Check if level is a positive integer.
-        if (!is_int($level) || 0 >= $level) {
-            throw new coding_exception('get_current_diff_level: Arg 2 needs to be a positive integer',
-                'Invalid level of :'.$level.' was passed');
-        }
-        // Check if quba is a valid instance of question_usage_by_activity.
-        if (!$quba instanceof question_usage_by_activity) {
-            throw new coding_exception('get_current_diff_level: Arg 1 needs to be an instance of question_usage_by_activity',
-                'Invalid quba of :'.get_class($quba));
-        }
-        // Check if attempt object has required properties defined.
-        if (!isset($attemptobj->lowestlevel) || !isset($attemptobj->highestlevel)) {
-            throw new coding_exception('get_current_diff_level: Arg 3 needs to have lowestlevel and highestlevel properties',
-                'Invalid attemptobj of :'.$this->vardump($attemptobj));
-        }
-        // Check if attempt object has required property value types.
-        $conditions = !is_int($attemptobj->lowestlevel) || 0 >= $attemptobj->lowestlevel || !is_int($attemptobj->highestlevel)
-                || 0 >= $attemptobj->highestlevel || $attemptobj->lowestlevel >= $attemptobj->highestlevel;
-        if ($conditions) {
-            throw new coding_exception('get_current_diff_level: Arg 3 lowestlevel and highestlevel properties must be positive '.
-                'integers', 'Invalid attemptobj of :'.$this->vardump($attemptobj));
-        }
-
-        return $this->return_current_diff_level($quba, $level, $attemptobj);
-    }
-
-    /**
-     * This function calculates the currently difficulty level of the attempt.
-     * @param question_usage_by_activity $quba a question usage by activity set to an attempt id
-     * @param int $level the starting level of difficulty for the attempt
-     * @param stdClass $attemptobj an object with the following properties: lowestlevel and highestlevel
-     * @return int the current level of difficulty
-     */
-    protected function return_current_diff_level($quba, $level, $attemptobj) {
+    public function get_current_diff_level(
+        question_usage_by_activity $quba,
+        int $level,
+        questions_difficulty_range $questionsdifficultyrange
+    ) {
         $questattempted = 0;
-        $correct = false;
+
         // Set current difficulty to the starting level.
         $currdiff = $level;
 
@@ -637,25 +578,33 @@ class catalgo {
             }
 
             $questattempted++;
-            $currdiff = $this->compute_next_difficulty($currdiff, $questattempted, $correct, $attemptobj);
+            $currdiff = $this->compute_next_difficulty($currdiff, $questattempted, $correct, $questionsdifficultyrange);
         }
 
         return $currdiff;
     }
 
     /**
-     * This function does the work to determine the next difficulty level
-     * @param int $level the difficulty level of the last question attempted
-     * @param int $questattempted the sum of questions attempted
-     * @param bool $correct true of the user got the previous question correct, otherwise false
-     * @param stdClass $attempt a data record returned from @see retrieve_attempt_record()
-     * @return int the next difficult level
+     * This function does the work to determine the next difficulty level.
+     *
+     * @param int $level The difficulty level of the last question attempted.
+     * @param int $questattempted The sum of questions attempted.
+     * @param bool $correct True if the user got the previous question correct, otherwise false.
+     * @param questions_difficulty_range $questionsdifficultyrange
+     * @return int The next difficulty level.
      */
-    public function compute_next_difficulty($level, $questattempted, $correct, $attempt) {
-        $nextdifficulty = 0;
-
-        // Map the linear scale to a logrithmic logit scale.
-        $ls = self::convert_linear_to_logit($level, $attempt->lowestlevel, $attempt->highestlevel);
+    public function compute_next_difficulty(
+        $level,
+        $questattempted,
+        $correct,
+        questions_difficulty_range $questionsdifficultyrange
+    ): int {
+        // Map the linear scale to a logarithmic logit scale.
+        $ls = self::convert_linear_to_logit(
+            $level,
+            $questionsdifficultyrange->lowest_level(),
+            $questionsdifficultyrange->highest_level()
+        );
 
         // Set the logit value of the previously attempted question's difficulty level.
         $this->levellogit = $ls;
@@ -671,10 +620,10 @@ class catalgo {
         // Calculate the inverse to translate the value into a difficulty level.
         $invps = 1 / ( 1 + exp( (-1 * $nextdifficulty) ) );
         $invps = round($invps, 2);
-        $difflevel = $attempt->lowestlevel + ( $invps * ($attempt->highestlevel - $attempt->lowestlevel) );
+        $difflevel = $questionsdifficultyrange->lowest_level() +
+            ( $invps * ($questionsdifficultyrange->highest_level() - $questionsdifficultyrange->lowest_level()) );
         $difflevel = round($difflevel);
 
-        $this->print_debug('compute_next_difficulty() - Next difficulty level is: '.$difflevel);
         return (int) $difflevel;
     }
 

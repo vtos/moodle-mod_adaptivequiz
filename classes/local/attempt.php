@@ -466,7 +466,11 @@ class attempt {
     }
 
     public function number_of_questions_attempted(): int {
-        return $this->adpqattempt->questionsattempted;
+        return (int) $this->adpqattempt->questionsattempted;
+    }
+
+    public function difficulty_sum(): float {
+        return (float) $this->adpqattempt->difficultysum;
     }
 
     /**

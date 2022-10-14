@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 
+use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
 use mod_adaptivequiz\local\attempt;
 use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use mod_adaptivequiz\local\catalgo;
@@ -136,10 +137,17 @@ if (!empty($uniqueid) && confirm_sesskey()) {
         if (!empty($difflevel)) {
             // Check if the minimum number of attempts have been reached.
             $minattemptreached = adaptivequiz_min_attempts_reached($uniqueid, $cm->instance, $USER->id);
+
             // Create an instance of the CAT algo class.
             $algo = new catalgo($quba, $minattemptreached, (int) $difflevel);
+
             // Calculate the next difficulty level.
-            $nextdiff = $algo->perform_calculation_steps($adaptiveattempt->id());
+            $nextdiff = $algo->perform_calculation_steps(
+                $adaptiveattempt->difficulty_sum(),
+                $adaptiveattempt->number_of_questions_attempted(),
+                questions_difficulty_range::from_activity_instance($adaptivequiz),
+                (float) $adaptivequiz->standarderror
+            );
 
             // Increment difficulty level for attempt.
             $difflogit = $algo->get_levellogit();
@@ -244,12 +252,13 @@ $quba = $adaptiveattempt->get_quba();
 // difficulty level the attempt should be at.
 if (is_null($nextdiff)) {
     // Calculate the current difficulty level.
-    $adaptivequiz->lowestlevel = (int) $adaptivequiz->lowestlevel;
-    $adaptivequiz->highestlevel = (int) $adaptivequiz->highestlevel;
-    $adaptivequiz->startinglevel = (int) $adaptivequiz->startinglevel;
     // Create an instance of the catalgo class, however constructor arguments are not important.
     $algo = new catalgo($quba, false, 1);
-    $level = $algo->get_current_diff_level($quba, $adaptivequiz->startinglevel, $adaptivequiz);
+    $level = $algo->get_current_diff_level(
+        $quba,
+        (int) $adaptivequiz->startinglevel,
+        questions_difficulty_range::from_activity_instance($adaptivequiz)
+    );
 } else {
     // Retrieve the currently set difficulty level.
     $level = $adaptiveattempt->get_level();

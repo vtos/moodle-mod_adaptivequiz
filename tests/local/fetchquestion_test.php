@@ -248,31 +248,22 @@ class fetchquestion_test extends advanced_testcase {
         $fetchquestion->set_level(-22);
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_when_instantiated_with_a_zero_difficulty_level(): void {
-        $this->resetAfterTest(true);
+    public function test_it_fails_when_instantiated_with_a_zero_difficulty_level(): void {
+        $this->resetAfterTest();
 
         $this->expectException('coding_exception');
         (new fetchquestion(new stdClass(), 0, 1, 100, ['phpunittag_']));
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_when_instantiated_with_a_negative_difficulty_level(): void {
-        $this->resetAfterTest(true);
+    public function test_it_fails_when_instantiated_with_a_negative_difficulty_level(): void {
+        $this->resetAfterTest();
 
         $this->expectException('coding_exception');
         (new fetchquestion(new stdClass(), -11, 1, 100, ['phpunittag_']));
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_when_instantiated_with_a_difficulty_level_as_a_string(): void {
-        $this->resetAfterTest(true);
+    public function test_it_fails_when_instantiated_with_a_difficulty_level_as_a_string(): void {
+        $this->resetAfterTest();
 
         $this->expectException('coding_exception');
         (new fetchquestion(new stdClass(), 'asdf', 1, 100, ['phpunittag_']));
@@ -511,10 +502,7 @@ class fetchquestion_test extends advanced_testcase {
         $this->assertEquals([], $result);
     }
 
-    /**
-     * @test
-     */
-    public function it_retrieves_all_tag_ids(): void {
+    public function test_it_retrieves_all_tag_ids(): void {
         $this->resetAfterTest();
         $this->setup_test_data_xml();
 
@@ -527,10 +515,7 @@ class fetchquestion_test extends advanced_testcase {
         );
     }
 
-    /**
-     * @test
-     */
-    public function it_throws_an_exception_when_retrieves_all_tag_ids_for_an_empty_tag_prefix(): void {
+    public function test_it_throws_an_exception_when_retrieves_all_tag_ids_for_an_empty_tag_prefix(): void {
         $fetchquestion = new fetchquestion(new stdClass(), 5, 1, 100);
 
         $this->expectException('invalid_parameter_exception');

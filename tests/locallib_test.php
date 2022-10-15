@@ -279,10 +279,9 @@ class locallib_test extends advanced_testcase {
     }
 
     /**
-     * @test
      * @covers ::adaptivequiz_complete_attempt
      */
-    public function event_is_triggered_on_attempt_completion(): void {
+    public function test_event_is_triggered_on_attempt_completion(): void {
         global $DB;
 
         $this->resetAfterTest();

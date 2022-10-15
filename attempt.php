@@ -216,7 +216,9 @@ if (isset($difflevel) && !is_null($difflevel)) {
     $adaptiveattempt->set_last_difficulty_level($difflevel);
 }
 
-$attemptstatus = $adaptiveattempt->start_attempt($context, $adaptiveattempt->number_of_questions_attempted());
+$quba = $adaptiveattempt->initialize_quba($context);
+
+$attemptstatus = $adaptiveattempt->start_attempt($quba, $adaptiveattempt->number_of_questions_attempted());
 
 // Check if attempt status is set to ready.
 if (empty($attemptstatus)) {
@@ -246,8 +248,7 @@ if (empty($attemptstatus)) {
 
 // Retrieve the question slot id.
 $slot = $adaptiveattempt->get_question_slot_number();
-// Retrieve the question_usage_by_activity object.
-$quba = $adaptiveattempt->get_quba();
+
 // If $nextdiff is null then this is either a new attempt or a continuation of an previous attempt.  Calculate the current
 // difficulty level the attempt should be at.
 if (is_null($nextdiff)) {

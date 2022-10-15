@@ -30,6 +30,7 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 use advanced_testcase;
 use coding_exception;
 use context_module;
+use question_usage_by_activity;
 use stdClass;
 
 /**
@@ -453,8 +454,11 @@ class attempt_test extends advanced_testcase {
         $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
         $attempt = attempt::create($adaptivequiz, $userid);
 
-        $context = context_module::instance($cmid);
-        $this->assertFalse($attempt->start_attempt($context, $attempt->number_of_questions_attempted()));
+        $startattemptresult = $attempt->start_attempt(
+            $this->createMock(question_usage_by_activity::class),
+            $attempt->number_of_questions_attempted()
+        );
+        $this->assertFalse($startattemptresult);
     }
 
     /**
@@ -462,7 +466,7 @@ class attempt_test extends advanced_testcase {
      * than zero.
      */
     public function test_start_attempt_quest_slot_empty_quest_submit_greater_than_one() {
-        $this->markTestSkipped('skipped unless managing quba is extracted from the attempt class');
+        $this->markTestSkipped('skipped unless the stoppage reason (status) is identifiable');
 
         $dummyadaptivequiz = new stdClass();
         $dummyadaptivequiz->lowestlevel = 1;

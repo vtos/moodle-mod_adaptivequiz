@@ -20,7 +20,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz\local;
+namespace mod_adaptivequiz\local\attempt;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -30,8 +30,6 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 use advanced_testcase;
 use coding_exception;
 use context_module;
-use mod_adaptivequiz\local\attempt\attempt_state;
-use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use stdClass;
 
 /**
@@ -53,7 +51,7 @@ class attempt_test extends advanced_testcase {
      */
     protected function setup_test_data_xml() {
         $this->dataset_from_files(
-            [__DIR__.'/../fixtures/mod_adaptivequiz_adaptiveattempt.xml']
+            [__DIR__.'/../../fixtures/mod_adaptivequiz_adaptiveattempt.xml']
         )->to_database();
     }
 

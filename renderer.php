@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use mod_adaptivequiz\form\requiredpassword;
 use mod_adaptivequiz\local\attempt\attempt_state;
-use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\output\ability_measure;
 use mod_adaptivequiz\output\attempt_progress;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_action;

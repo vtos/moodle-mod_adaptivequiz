@@ -23,10 +23,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz\local;
+namespace mod_adaptivequiz\local\catalgorithm;
 
 use coding_exception;
-use dml_missing_record_exception;
 use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
 use moodle_exception;
 use question_state_gradedpartial;

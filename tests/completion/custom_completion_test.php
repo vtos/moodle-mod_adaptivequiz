@@ -28,14 +28,14 @@ require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use cm_info;
-use mod_adaptivequiz\completion\custom_completion;
+use context_module;
 
 /**
  * @covers \mod_adaptivequiz\completion\custom_completion
  */
 class custom_completion_test extends advanced_testcase {
 
-    public function test_it_defines_completion_state_based_on_attempt_completion():void {
+    public function test_it_defines_completion_state_based_on_attempt_completion(): void {
         global $DB;
 
         $this->resetAfterTest();
@@ -47,7 +47,7 @@ class custom_completion_test extends advanced_testcase {
         $userid = 2;
 
         $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
-        $context = \context_module::instance($cmid);
+        $context = context_module::instance($cmid);
         $cm = get_coursemodule_from_id('adaptivequiz', $cmid);
 
         $cminfo = cm_info::create($cm);

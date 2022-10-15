@@ -22,12 +22,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz\local;
+namespace mod_adaptivequiz\local\catalgorithm;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
+require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use coding_exception;

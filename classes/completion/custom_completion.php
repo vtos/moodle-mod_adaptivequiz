@@ -24,7 +24,7 @@
 namespace mod_adaptivequiz\completion;
 
 use core_completion\activity_custom_completion;
-use mod_adaptivequiz\local\attempt;
+use mod_adaptivequiz\local\attempt\attempt;
 
 class custom_completion extends activity_custom_completion {
 

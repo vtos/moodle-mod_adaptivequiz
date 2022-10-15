@@ -27,9 +27,9 @@ require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 
 use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
-use mod_adaptivequiz\local\attempt;
+use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
-use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
 
 $id = required_param('cmid', PARAM_INT); // Course module id.

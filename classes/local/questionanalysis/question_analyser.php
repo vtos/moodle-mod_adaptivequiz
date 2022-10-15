@@ -27,7 +27,7 @@ namespace mod_adaptivequiz\local\questionanalysis;
 
 use context;
 use InvalidArgumentException;
-use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\questionanalysis\statistics\question_statistic;
 use mod_adaptivequiz\local\questionanalysis\statistics\question_statistic_result;
 use question_definition;

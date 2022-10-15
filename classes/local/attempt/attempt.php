@@ -22,13 +22,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz\local;
+namespace mod_adaptivequiz\local\attempt;
 
 use coding_exception;
 use context_module;
 use dml_exception;
-use mod_adaptivequiz\local\attempt\attempt_state;
-use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
+use mod_adaptivequiz\local\fetchquestion;
 use moodle_exception;
 use question_bank;
 use question_engine;

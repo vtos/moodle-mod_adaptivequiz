@@ -32,7 +32,7 @@ require_once($CFG->dirroot . '/question/engine/lib.php');
 use core_question\local\bank\question_edit_contexts;
 use mod_adaptivequiz\event\attempt_completed;
 use mod_adaptivequiz\local\attempt\attempt_state;
-use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\local\catalgorithm\catalgo;
 use qbank_managecategories\helper as qbank_managecategories_helper;
 
 // Default tagging used.

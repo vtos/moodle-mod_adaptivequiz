@@ -24,7 +24,7 @@
 
 namespace mod_adaptivequiz\local\questionanalysis;
 
-use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\local\catalgorithm\catalgo;
 
 class attempt_score {
 

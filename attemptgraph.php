@@ -23,7 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\local\catalgorithm\catalgo;
 
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/tag/lib.php');

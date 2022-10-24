@@ -27,6 +27,7 @@ namespace mod_adaptivequiz\local\attempt;
 use coding_exception;
 use context_module;
 use dml_exception;
+use mod_adaptivequiz\event\attempt_completed;
 use mod_adaptivequiz\local\fetchquestion;
 use moodle_exception;
 use question_bank;
@@ -469,6 +470,28 @@ class attempt {
         $this->adpqattempt = $record;
 
         $this->save($time);
+    }
+
+    public function complete(context_module $context, float $standarderror, string $statusmessage, int $time): void {
+        // Need to keep the record as it is before triggering the event below.
+        $attemptrecordsnapshot = clone $this->adpqattempt;
+
+        $this->adpqattempt->attemptstate = attempt_state::COMPLETED;
+        $this->adpqattempt->attemptstopcriteria = $statusmessage;
+        $this->adpqattempt->standarderror = $standarderror;
+
+        $this->save($time);
+
+        adaptivequiz_update_grades($this->adaptivequiz, $this->userid);
+
+        $event = attempt_completed::create([
+            'objectid' => $this->adpqattempt->id,
+            'context' => $context,
+            'userid' => $this->adpqattempt->userid
+        ]);
+        $event->add_record_snapshot('adaptivequiz_attempt', $attemptrecordsnapshot);
+        $event->add_record_snapshot('adaptivequiz', $this->adaptivequiz);
+        $event->trigger();
     }
 
     /**

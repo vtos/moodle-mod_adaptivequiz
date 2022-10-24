@@ -21,14 +21,10 @@
 
 namespace mod_adaptivequiz\completion;
 
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
-
 use advanced_testcase;
 use cm_info;
 use context_module;
+use mod_adaptivequiz\local\attempt\attempt;
 
 /**
  * @covers \mod_adaptivequiz\completion\custom_completion
@@ -36,36 +32,28 @@ use context_module;
 class custom_completion_test extends advanced_testcase {
 
     public function test_it_defines_completion_state_based_on_attempt_completion(): void {
-        global $DB;
-
         $this->resetAfterTest();
-        $this->setup_test_data_xml();
 
-        $attemptuniqueid = 330;
-        $adaptivequizid = 330;
-        $cmid = 5;
-        $userid = 2;
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
 
-        $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
-        $context = context_module::instance($cmid);
-        $cm = get_coursemodule_from_id('adaptivequiz', $cmid);
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id, 'completionattemptcompleted' => 1]);
+
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
+
+        $attempt = attempt::create($adaptivequiz, $user->id);
 
         $cminfo = cm_info::create($cm);
         $cminfo->override_customdata('customcompletionrules',
             ['completionattemptcompleted' => $adaptivequiz->completionattemptcompleted]);
 
-        $completion = new custom_completion($cminfo, $userid);
+        $completion = new custom_completion($cminfo, $user->id);
 
         $this->assertEquals(COMPLETION_INCOMPLETE, $completion->get_state('completionattemptcompleted'));
 
-        adaptivequiz_complete_attempt($attemptuniqueid, $adaptivequiz, $context, $userid, '1', 'php unit test');
+        $attempt->complete(context_module::instance($cm->id), 1, 'php unit test', time());
 
         $this->assertEquals(COMPLETION_COMPLETE, $completion->get_state('completionattemptcompleted'));
-    }
-
-    private function setup_test_data_xml() {
-        $this->dataset_from_files(
-            [__DIR__.'/../fixtures/mod_adaptivequiz_adaptiveattempt.xml']
-        )->to_database();
     }
 }

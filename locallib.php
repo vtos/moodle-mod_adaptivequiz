@@ -179,46 +179,6 @@ function adaptivequiz_uniqueid_part_of_attempt($uniqueid, $instance, $userid) {
 }
 
 /**
- * This function sets the complete status for an attempt.
- *
- * @throws dml_exception
- * @throws coding_exception
- */
-function adaptivequiz_complete_attempt(
-    int $uniqueid,
-    stdClass $adaptivequiz,
-    context_module $context,
-    int $userid,
-    string $standarderror,
-    string $statusmessage
-): void {
-    global $DB;
-
-    $attempt = $DB->get_record('adaptivequiz_attempt',
-        ['uniqueid' => $uniqueid, 'instance' => $adaptivequiz->id, 'userid' => $userid], '*', MUST_EXIST);
-
-    // Need to keep the record as it is before triggering the event below.
-    $attemptrecordsnapshot = clone $attempt;
-
-    $attempt->attemptstate = attempt_state::COMPLETED;
-    $attempt->attemptstopcriteria = $statusmessage;
-    $attempt->timemodified = time();
-    $attempt->standarderror = $standarderror;
-    $DB->update_record('adaptivequiz_attempt', $attempt);
-
-    adaptivequiz_update_grades($adaptivequiz, $userid);
-
-    $event = attempt_completed::create([
-        'objectid' => $attempt->id,
-        'context' => $context,
-        'userid' => $userid
-    ]);
-    $event->add_record_snapshot('adaptivequiz_attempt', $attemptrecordsnapshot);
-    $event->add_record_snapshot('adaptivequiz', $adaptivequiz);
-    $event->trigger();
-}
-
-/**
  * This function checks whether the minimum number of attmepts have been achieved for an attempt
  * @param int $uniqueid uniqueid value of the adaptivequiz_attempt record
  * @param int $instance instance value of the adaptivequiz_attempt record

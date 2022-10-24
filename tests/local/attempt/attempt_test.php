@@ -30,6 +30,7 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 use advanced_testcase;
 use coding_exception;
 use context_module;
+use mod_adaptivequiz\event\attempt_completed;
 use question_usage_by_activity;
 use stdClass;
 
@@ -540,22 +541,20 @@ class attempt_test extends advanced_testcase {
     }
 
     public function test_it_can_check_if_a_user_has_a_completed_attempt_on_a_quiz(): void {
-        global $DB;
-
         $this->resetAfterTest();
-        $this->setup_test_data_xml();
 
-        $uniqueid = 330;
-        $adaptivequizid = 330;
-        $cmid = 5;
-        $userid = 2;
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
 
-        $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
-        $context = context_module::instance($cmid);
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
 
-        adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $userid, '', '');
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
 
-        $this->assertTrue(attempt::user_has_completed_on_quiz($adaptivequizid, $userid));
+        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt->complete(context_module::instance($cm->id), 0.70711, '_some_reason_to_stop_the_attempt', time());
+
+        $this->assertTrue(attempt::user_has_completed_on_quiz($adaptivequiz->id, $user->id));
     }
 
     public function test_it_finds_an_in_progress_attempt_for_a_user(): void {
@@ -662,5 +661,74 @@ class attempt_test extends advanced_testcase {
 
         $this->expectException(coding_exception::class);
         $attempt->update_after_question_answered(cat_calculation_steps_result::from_floats(0, 0, 0), time());
+    }
+
+    public function test_attempt_can_be_completed(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
+
+        $attempt = attempt::create($adaptivequiz, $user->id);
+
+        $standarderror = 0.70711;
+        $message = '_some_reason_to_stop_the_attempt';
+
+        $attempt->complete(context_module::instance($cm->id), $standarderror, $message, time());
+
+        $expectedfields = new stdClass();
+        $expectedfields->attemptstate = attempt_state::COMPLETED;
+        $expectedfields->attemptstopcriteria = $message;
+        $expectedfields->standarderror = (string) $standarderror;
+
+        $attemptfields = $DB->get_record('adaptivequiz_attempt',
+            ['instance' => $adaptivequiz->id, 'userid' => $user->id, 'attemptstate' => attempt_state::COMPLETED],
+            'id, attemptstate, attemptstopcriteria, standarderror', MUST_EXIST
+        );
+
+        $expectedfields->id = $attemptfields->id;
+
+        $this->assertEquals($expectedfields, $attemptfields);
+    }
+
+    public function test_event_is_triggered_on_attempt_completion(): void {
+        $this->resetAfterTest();
+        $eventsink = $this->redirectEvents();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
+
+        $context = context_module::instance($cm->id);
+
+        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt->complete($context, 0.70711, '_some_reason_to_stop_the_attempt', time());
+
+        $events = $eventsink->get_events();
+
+        $attemptcompletedevent = null;
+        foreach ($events as $event) {
+            if ($event instanceof attempt_completed) {
+                $attemptcompletedevent = $event;
+                break;
+            }
+        }
+
+        $this->assertNotNull($attemptcompletedevent,
+            sprintf('Failed asserting that event %s was triggered.', attempt_completed::class));
+        $this->assertEquals($attempt->id(), $attemptcompletedevent->objectid);
+        $this->assertEquals($context, $attemptcompletedevent->get_context());
+        $this->assertEquals($user->id, $attemptcompletedevent->userid);
     }
 }

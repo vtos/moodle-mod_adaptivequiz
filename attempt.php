@@ -170,7 +170,8 @@ if (!empty($uniqueid) && confirm_sesskey()) {
             $message = $algo->get_status();
 
             if (!empty($message)) {
-                adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $USER->id, $standarderror, $message);
+                $adaptiveattempt->complete($context, $standarderror, $message, time());
+
                 redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
                     ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]));
             }
@@ -239,11 +240,10 @@ if (empty($attemptstatus)) {
             (new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]))->out());
     }
 
-    adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $USER->id, $standarderror, $message);
-    // Redirect the user to the attemptfeedback page.
-    $param = array('cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid);
-    $url = new moodle_url('/mod/adaptivequiz/attemptfinished.php', $param);
-    redirect($url);
+    $adaptiveattempt->complete($context, $standarderror, $message, time());
+
+    redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
+        ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]));
 }
 
 // Retrieve the question slot id.

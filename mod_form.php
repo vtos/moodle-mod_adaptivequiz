@@ -125,6 +125,11 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addHelpButton('showabilitymeasure', 'showabilitymeasure', 'adaptivequiz');
         $mform->setDefault('showabilitymeasure', 0);
 
+        $mform->addElement('select', 'showattemptprogress', get_string('modformshowattemptprogress', 'adaptivequiz'),
+            [get_string('no'), get_string('yes')]);
+        $mform->addHelpButton('showattemptprogress', 'modformshowattemptprogress', 'adaptivequiz');
+        $mform->setDefault('showattemptprogress', 0);
+
         $mform->addElement('header', 'stopingconditionshdr', get_string('stopingconditionshdr', 'adaptivequiz'));
 
         $mform->addElement('text', 'minimumquestions', get_string('minimumquestions', 'adaptivequiz'),

@@ -53,3 +53,24 @@ table.adpq_answers_table thead:first-child th.section {
 .attempt-controls-or-notification-container {
     padding-top: 10px;
 }
+
+#page-mod-adaptivequiz-view .attempt-progress-container {
+    margin-bottom: 25px;
+    padding-top: 10px;
+}
+
+#page-mod-adaptivequiz-view .attempt-progress .progress-bar-wrapper {
+    width: 60%;
+    border-radius: 0.5rem;
+    background-color: #dee2e6;
+}
+
+#page-mod-adaptivequiz-view .attempt-progress .progress-bar-inner {
+    height: 0.8rem;
+    border-radius: 0.5rem 0 0 0.5rem;
+}
+
+#page-mod-adaptivequiz-view .attempt-progress .no-out-of {
+    font-weight: 700;
+    font-size: 1.25rem;
+}

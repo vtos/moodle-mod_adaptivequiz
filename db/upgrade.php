@@ -15,13 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive quiz upgrade steps.
+ * Contains function with the definition of upgrade steps for the plugin.
  *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_adaptivequiz
+ * @copyright 2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright 2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Defines upgrade steps for the plugin.
+ *
+ * @param mixed $oldversion
+ */
 function xmldb_adaptivequiz_upgrade($oldversion) {
     global $CFG, $DB;
 
@@ -62,6 +68,18 @@ function xmldb_adaptivequiz_upgrade($oldversion) {
         }
 
         upgrade_mod_savepoint(true, 2022092400, 'adaptivequiz');
+    }
+
+    if ($oldversion < 2022103100) {
+        $table = new xmldb_table('adaptivequiz');
+        $field = new xmldb_field('showattemptprogress', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, 0,
+            'showabilitymeasure');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2022103100, 'adaptivequiz');
     }
 
     return true;

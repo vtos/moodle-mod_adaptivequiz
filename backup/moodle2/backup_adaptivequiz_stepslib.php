@@ -17,11 +17,11 @@
 /**
  * Define all the backup steps that will be used by the backup_adaptivequiz_activity_task.
  *
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_adaptivequiz
+ * @copyright 2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright 2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class backup_adaptivequiz_activity_structure_step extends backup_questions_activity_structure_step {
 
     /**
@@ -35,8 +35,8 @@ class backup_adaptivequiz_activity_structure_step extends backup_questions_activ
 
         // Define each element separated.
         $nodes = ['name', 'intro', 'introformat', 'attempts', 'password', 'browsersecurity', 'attemptfeedback',
-            'attemptfeedbackformat', 'showabilitymeasure', 'highestlevel', 'lowestlevel', 'minimumquestions', 'maximumquestions',
-            'standarderror', 'startinglevel', 'timecreated', 'timemodified', 'completionattemptcompleted'];
+            'attemptfeedbackformat', 'showabilitymeasure', 'showattemptprogress', 'highestlevel', 'lowestlevel', 'minimumquestions',
+            'maximumquestions', 'standarderror', 'startinglevel', 'timecreated', 'timemodified', 'completionattemptcompleted'];
         $adaptivequiz = new backup_nested_element('adaptivequiz', ['id'], $nodes);
 
         // Attempts.

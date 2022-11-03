@@ -29,6 +29,7 @@ use mod_adaptivequiz\form\requiredpassword;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgo;
 use mod_adaptivequiz\output\ability_measure;
+use mod_adaptivequiz\output\attempt_progress;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_action;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_actions;
 use mod_adaptivequiz\output\user_attempt_summary;
@@ -93,14 +94,15 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * This function generates the HTML markup to render the submission form
-     * @param int $cmid: course module id
-     * @param question_usage_by_activity $quba: a question usage by activity object
-     * @param int $slot: slot number of the question to be displayed
-     * @param int $level: difficulty level of question
-     * @return string - HTML markup
+     * This function generates the HTML markup to render the submission form.
+     *
+     * @param int $cmid
+     * @param question_usage_by_activity $quba
+     * @param int $slot Slot number of the question to be displayed.
+     * @param int $level Difficulty level of question.
+     * @param int $questionnumber The order number of question in the quiz.
      */
-    public function create_submit_form($cmid, $quba, $slot, $level) {
+    public function question_submit_form($cmid, $quba, $slot, $level, int $questionnumber): string {
         $output = '';
 
         $processurl = new moodle_url('/mod/adaptivequiz/attempt.php');
@@ -115,9 +117,9 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $options = new question_display_options();
         $options->hide_all_feedback();
         $options->flags = question_display_options::HIDDEN;
-        $options->marks = question_display_options::MAX_ONLY;
+        $options->marks = question_display_options::HIDDEN;
 
-        $output .= $quba->render_question($slot, $options);
+        $output .= $quba->render_question($slot, $options, $questionnumber);
 
         $output .= html_writer::start_tag('div', ['class' => 'submitbtns adaptivequizbtn mdl-align']);
         $output .= html_writer::empty_tag('input', ['type' => 'submit', 'name' => 'submitanswer',
@@ -162,22 +164,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
 
         $meta .= question_engine::initialise_js();
         return $meta;
-    }
-
-    /**
-     * This function prints the question
-     * @param int $cmid: course module id
-     * @param question_usage_by_activity $quba: a question usage by activity object
-     * @param int $slot: slot number of the question to be displayed
-     * @param int $level: difficulty level of question
-     * @return string - HTML markup
-     */
-    public function print_question($cmid, $quba, $slot, $level) {
-        $output = '';
-        $output .= $this->header();
-        $output .= $this->create_submit_form($cmid, $quba, $slot, $level);
-        $output .= $this->footer();
-        return $output;
     }
 
     /**
@@ -707,6 +693,22 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
 
     public function reset_users_attempts_filter_action(moodle_url $url): string {
         return html_writer::link($url, get_string('reportattemptsresetfilter', 'adaptivequiz'));
+    }
+
+    /**
+     * A wrapper method to call rendering of attempt progress, accepts minimum parameters to base rendering on.
+     */
+    public function attempt_progress(string $questionsanswered, string $maximumquestions): string {
+        return $this->render_attempt_progress(attempt_progress::with_defaults($questionsanswered, $maximumquestions));
+    }
+
+    /**
+     * Renders an attempt progress object, to be overridden by a theme if required.
+     */
+    protected function render_attempt_progress(attempt_progress $progress): string {
+        $progress = $progress->with_help_icon_content($this->help_icon('attemptquestionsprogress', 'adaptivequiz'));
+
+        return $this->render_from_template('mod_adaptivequiz/attempt_progress', $progress->export_for_template($this));
     }
 
     /**

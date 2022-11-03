@@ -267,19 +267,27 @@ if (!empty($adaptivequiz->browsersecurity)) {
     $PAGE->set_heading(format_string($course->fullname));
 }
 
+echo $output->header();
+
 // Check if the user entered a password.
 $condition = adaptivequiz_user_entered_password($adaptivequiz->id);
 
 if (!empty($adaptivequiz->password) && empty($condition)) {
-    echo $output->print_header();
-
     if ($passwordattempt) {
         $mform->set_data(array('message' => get_string('wrongpassword', 'adaptivequiz')));
     }
 
     $mform->display();
-    echo $output->print_footer();
 } else {
-    // Render the question to the page.
-    echo $output->print_question($id, $quba, $slot, $level);
+    $attemptrecord = $adaptiveattempt->get_attempt();
+
+    if ($adaptivequiz->showattemptprogress) {
+        echo $output->container_start('attempt-progress-container');
+        echo $output->attempt_progress($attemptrecord->questionsattempted, $adaptivequiz->maximumquestions);
+        echo $output->container_end();
+    }
+
+    echo $output->question_submit_form($id, $quba, $slot, $level, $attemptrecord->questionsattempted + 1);
 }
+
+echo $output->print_footer();

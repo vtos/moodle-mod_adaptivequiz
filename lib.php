@@ -689,58 +689,43 @@ function adaptivequiz_reset_gradebook($courseid) {
 }
 
 /**
- * Called via pluginfile.php -> question_pluginfile to serve files belonging to
- * a question in a question_attempt when that attempt is a quiz attempt.
+ * Called via pluginfile.php -> question_pluginfile to serve files belonging to a question in a question_attempt when that attempt
+ * is a quiz attempt.
  *
- * @package  mod_adaptivequiz
- * @category files
- * @param stdClass $course course settings object
- * @param stdClass $context context object
- * @param string $component the name of the component we are serving files for.
- * @param string $filearea the name of the file area.
- * @param int $qubaid the attempt usage id.
- * @param int $slot the id of a question in this quiz attempt.
- * @param array $args the remaining bits of the file path.
- * @param bool $forcedownload whether the user must be forced to download the file.
- * @param array $options additional options affecting the file serving
- * @return bool false if file not found, does not return if found - justsend the file
+ * @param stdClass $course Course settings object.
+ * @param context $context
+ * @param string $component The name of the component we are serving files for.
+ * @param string $filearea The name of the file area.
+ * @param int $qubaid The attempt usage id.
+ * @param int $slot The id of a question in this quiz attempt.
+ * @param array $args The remaining bits of the file path.
+ * @param bool $forcedownload Whether the user must be forced to download the file.
+ * @param array $options Additional options affecting the file serving.
+ * @return bool False if file not found, does not return if found - just send the file.
  */
-function mod_adaptivequiz_question_pluginfile($course, $context, $component,
-        $filearea, $qubaid, $slot, $args, $forcedownload, array $options=array()) {
+function mod_adaptivequiz_question_pluginfile($course, context $context, $component, $filearea, $qubaid, $slot, $args,
+    $forcedownload, array $options=[]) {
     global $CFG, $DB, $USER;
 
-    if (!$cm = get_coursemodule_from_id('adaptivequiz', $course->id)) {
-        throw new moodle_exception('invalidcoursemodule');
-    }
+    $attemptrec = $DB->get_record('adaptivequiz_attempt', ['uniqueid' => $qubaid], '*', MUST_EXIST);
+    $adaptivequiz  = $DB->get_record('adaptivequiz', ['id' => $attemptrec->instance], '*', MUST_EXIST);
+    $course = $DB->get_record('course', ['id' => $adaptivequiz->course], '*', MUST_EXIST);
+    $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $adaptivequiz->course, false, MUST_EXIST);
+
     require_login($course, true, $cm);
 
+    $modcontext = context_module::instance($cm->id);
+
     // Check if the user has the attempt capability.
-    if (!has_capability('mod/adaptivequiz:attempt', $context) && !has_capability('mod/adaptivequiz:viewreport', $context)) {
+    if (!has_capability('mod/adaptivequiz:attempt', $modcontext) && !has_capability('mod/adaptivequiz:viewreport', $modcontext)) {
         throw new moodle_exception('nopermission', 'adaptivequiz');
-    }
-
-    $quizcontext = $context->get_parent_context();
-    // Load the quiz data.
-    try {
-        $adaptivequiz  = $DB->get_record('adaptivequiz', array('id' => $quizcontext->instanceid), '*', MUST_EXIST);
-        $attemptrec = $DB->get_record('adaptivequiz_attempt', ['uniqueid' => $qubaid, 'instance' => $quizcontext->instanceid], '*',
-            MUST_EXIST);
-    } catch (dml_exception $e) {
-
-        $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $id));
-        $debuginfo = '';
-
-        if (!empty($e->debuginfo)) {
-            $debuginfo = $e->debuginfo;
-        }
-        throw new moodle_exception('invalidmodule', 'error', $url, $e->getMessage(), $debuginfo);
     }
 
     // If we are reviewing an attempt, require the viewreport capability.
     if ($attemptrec->userid != $USER->id) {
-        require_capability('mod/adaptivequiz:viewreport', $context);
-    } else { // Otherwise, check that the attempt is active.
-        require_once($CFG->dirroot.'/mod/adaptivequiz/adaptiveattempt.class.php');
+        require_capability('mod/adaptivequiz:viewreport', $modcontext);
+    } else {
+        // Otherwise, check that the attempt is active.
         require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
         // Check if the user has any previous attempts at this activity.
@@ -748,7 +733,6 @@ function mod_adaptivequiz_question_pluginfile($course, $context, $component,
         if (!adaptivequiz_allowed_attempt($adaptivequiz->attempts, $count)) {
             throw new moodle_exception('noattemptsallowed', 'adaptivequiz');
         }
-
         // Check if the uniqueid belongs to the same attempt record the user is currently using.
         if (!adaptivequiz_uniqueid_part_of_attempt($qubaid, $cm->instance, $USER->id)) {
             throw new moodle_exception('uniquenotpartofattempt', 'adaptivequiz');
@@ -767,7 +751,7 @@ function mod_adaptivequiz_question_pluginfile($course, $context, $component,
     if (!$file) {
         send_file_not_found();
     }
-    if (!$file->is_directory()) {
+    if ($file->is_directory()) {
         send_file_not_found();
     }
 

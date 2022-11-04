@@ -732,7 +732,7 @@ function mod_adaptivequiz_question_pluginfile($course, context $context, $compon
     if (!$file) {
         send_file_not_found();
     }
-    if (!$file->is_directory()) {
+    if ($file->is_directory()) {
         send_file_not_found();
     }
 

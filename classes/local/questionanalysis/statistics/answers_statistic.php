@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * This interface defines the methods required for pluggable statistics that may be added to the question analysis.
@@ -22,8 +23,6 @@
  */
 
 namespace mod_adaptivequiz\local\questionanalysis\statistics;
-
-defined('MOODLE_INTERNAL') || die();
 
 use html_writer;
 use mod_adaptivequiz\local\questionanalysis\question_analyser;

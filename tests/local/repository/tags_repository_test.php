@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -27,16 +28,14 @@ use core_question_generator;
 use core_tag_tag;
 
 class tags_repository_test extends advanced_testcase {
-    /**
-     * @test
-     */
-    public function it_gets_question_level_to_tag_id_mapping_by_tag_names(): void {
+
+    public function test_it_gets_question_level_to_tag_id_mapping_by_tag_names(): void {
         $this->resetAfterTest();
 
         $this->assertEquals(
             [],
             tags_repository::get_question_level_to_tag_id_mapping_by_tag_names(
-                ['adpq_5', 'adpq_6',]
+                ['adpq_5', 'adpq_6']
             )
         );
 
@@ -65,7 +64,7 @@ class tags_repository_test extends advanced_testcase {
         core_tag_tag::add_item_tag('core', 'course', $course->id, context_course::instance($course->id), 'adpq_5');
 
         $map = tags_repository::get_question_level_to_tag_id_mapping_by_tag_names(
-            ['adpq_5', 'adpq_6',]
+            ['adpq_5', 'adpq_6']
         );
 
         $questionstags = core_tag_tag::get_items_tags('core_question', 'question', [$question1->id, $question2->id]);
@@ -81,24 +80,18 @@ class tags_repository_test extends advanced_testcase {
         );
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_to_get_question_level_to_tag_id_mapping_for_an_empty_array_of_tag_names(): void {
+    public function test_it_fails_to_get_question_level_to_tag_id_mapping_for_an_empty_array_of_tag_names(): void {
         $this->expectException(coding_exception::class);
         tags_repository::get_question_level_to_tag_id_mapping_by_tag_names([]);
     }
 
-    /**
-     * @test
-     */
-    public function it_gets_tag_id_list_by_tag_names(): void {
+    public function test_it_gets_tag_id_list_by_tag_names(): void {
         $this->resetAfterTest();
 
         $this->assertEquals(
             [],
             tags_repository::get_tag_id_list_by_tag_names(
-                ['adpq_10', 'adpq_11',]
+                ['adpq_10', 'adpq_11']
             )
         );
 
@@ -127,7 +120,7 @@ class tags_repository_test extends advanced_testcase {
         core_tag_tag::add_item_tag('core', 'course', $course->id, context_course::instance($course->id), 'adpq_10');
 
         $tagidlist = tags_repository::get_tag_id_list_by_tag_names(
-            ['adpq_10','adpq_11']
+            ['adpq_10', 'adpq_11']
         );
 
         $questionstags = core_tag_tag::get_items_tags('core_question', 'question', [$question1->id, $question2->id]);
@@ -143,10 +136,7 @@ class tags_repository_test extends advanced_testcase {
         );
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_to_get_a_list_of_tag_id_for_an_empty_array_of_tag_names(): void {
+    public function test_it_fails_to_get_a_list_of_tag_id_for_an_empty_array_of_tag_names(): void {
         $this->expectException(coding_exception::class);
         tags_repository::get_tag_id_list_by_tag_names([]);
     }

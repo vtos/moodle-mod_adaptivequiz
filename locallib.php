@@ -24,10 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-use core_question\local\bank\question_edit_contexts;
-use mod_adaptivequiz\local\catalgo;
-use qbank_managecategories\helper as qbank_managecategories_helper;
-
 // Default tagging used.
 define('ADAPTIVEQUIZ_QUESTION_TAG', 'adpq_');
 
@@ -56,6 +52,8 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/lib.php');
 require_once($CFG->dirroot.'/question/editlib.php');
 require_once($CFG->dirroot.'/lib/questionlib.php');
 require_once($CFG->dirroot.'/question/engine/lib.php');
+
+use mod_adaptivequiz\local\catalgo;
 
 /**
  * This function returns an array of question bank categories accessible to the

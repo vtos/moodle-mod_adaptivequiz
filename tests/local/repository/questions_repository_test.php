@@ -22,15 +22,8 @@
 namespace mod_adaptivequiz\local\repository;
 
 use advanced_testcase;
-use coding_exception;
-use context;
 use context_course;
-use core_question\local\bank\question_version_status;
 use core_question_generator;
-use core_tag_tag;
-use dml_missing_record_exception;
-use question_bank;
-use stdClass;
 
 class questions_repository_test extends advanced_testcase {
 

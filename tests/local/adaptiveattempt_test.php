@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
@@ -47,7 +48,7 @@ class adaptiveattempt_test extends advanced_testcase {
      * This function loads data into the PHPUnit tables for testing
      */
     protected function setup_test_data_xml() {
-        $this->loadDataSet($this->createXMLDataSet(__DIR__.'/fixtures/mod_adaptivequiz_adaptiveattempt.xml'));
+        $this->loadDataSet($this->createXMLDataSet(__DIR__.'/../fixtures/mod_adaptivequiz_adaptiveattempt.xml'));
     }
 
     /**
@@ -240,7 +241,7 @@ class adaptiveattempt_test extends advanced_testcase {
         $result = (string) $adaptiveattempt->return_random_question(
             [1 => 'quest 1', 2 => 'quest 2', 3 => 'quest 3', 4 => 'quest 4']
         );
-        $this->assertMatchesRegularExpression('/[1-4]/', $result);
+        $this->assertRegExp('/[1-4]/', $result);
     }
 
     /**

@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Adaptive lib.php PHPUnit tests
@@ -35,7 +36,7 @@ use stdClass;
 /**
  * @group mod_adaptivequiz
  */
-class lib_testcase extends advanced_testcase {
+class lib_test extends advanced_testcase {
     /**
      * This functions loads data via the tests/fixtures/mod_adaptivequiz.xml file
      * @return void

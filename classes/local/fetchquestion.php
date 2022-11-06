@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * This class does the work of fetching a questions associated with a level of difficulty and within
@@ -28,8 +29,6 @@ use coding_exception;
 use dml_exception;
 use dml_read_exception;
 use invalid_parameter_exception;
-use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
-use mod_adaptivequiz\local\repository\questions_repository;
 use mod_adaptivequiz\local\repository\tags_repository;
 use moodle_exception;
 use stdClass;

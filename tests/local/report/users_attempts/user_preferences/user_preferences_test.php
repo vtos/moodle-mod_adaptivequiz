@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -26,10 +27,7 @@ use stdClass;
 
 class user_preferences_test extends basic_testcase {
 
-    /**
-     * @test
-     */
-    public function it_acquires_correct_default_values_when_provided_values_are_not_in_valid_range(): void {
+    public function test_it_acquires_correct_default_values_when_provided_values_are_not_in_valid_range(): void {
         $preferences = user_preferences::from_array(
             ['perpage' => 100, 'showinitialsbar' => 22, 'persistentfilter' => -1]
         );
@@ -46,11 +44,11 @@ class user_preferences_test extends basic_testcase {
         $this->assertFalse($preferences->persistent_filter());
         $this->assertNull($preferences->filter());
 
-        $preferencesAsObject = new stdClass();
-        $preferencesAsObject->perpage = -25;
-        $preferencesAsObject->showinitialsbar = 100;
-        $preferencesAsObject->persistentfilter = "12";
-        $preferences = user_preferences::from_plain_object($preferencesAsObject);
+        $preferencesasobject = new stdClass();
+        $preferencesasobject->perpage = -25;
+        $preferencesasobject->showinitialsbar = 100;
+        $preferencesasobject->persistentfilter = "12";
+        $preferences = user_preferences::from_plain_object($preferencesasobject);
 
         $this->assertEquals(15, $preferences->rows_per_page());
         $this->assertTrue($preferences->show_initials_bar());
@@ -58,10 +56,7 @@ class user_preferences_test extends basic_testcase {
         $this->assertNull($preferences->filter());
     }
 
-    /**
-     * @test
-     */
-    public function it_can_acquire_and_loose_filter_preferences_while_preserving_previously_set_preferences(): void {
+    public function test_it_can_acquire_and_loose_filter_preferences_while_preserving_previously_set_preferences(): void {
         $preferences = user_preferences::from_array(['perpage' => 10, 'showinitialsbar' => 0, 'persistentfilter' => 1]);
 
         $pfilterpreferencesarray = ['users' => filter_options::users_option_default(),
@@ -80,10 +75,7 @@ class user_preferences_test extends basic_testcase {
         $this->assertEquals(null, $preferences->filter());
     }
 
-    /**
-     * @test
-     */
-    public function it_can_be_converted_to_array(): void {
+    public function test_it_can_be_converted_to_array(): void {
         $preferences = user_preferences::defaults();
         $this->assertEquals(['perpage' => 15, 'showinitialsbar' => 1, 'persistentfilter' => 0, 'filter' => null],
             $preferences->as_array());

@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * fetch question PHPUnit tests
@@ -27,12 +28,9 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
-require_once($CFG->dirroot.'/mod/adaptivequiz/tests/dummyfetchquestion.class.php');
 
 use advanced_testcase;
 use coding_exception;
-use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
-use mod_adaptivequiz\mock_fetchquestion;
 use stdClass;
 
 /**
@@ -55,7 +53,7 @@ class fetchquestion_test extends advanced_testcase {
      * @throws coding_exception
      */
     protected function setup_test_data_xml() {
-        $this->loadDataSet($this->createXMLDataSet(__DIR__.'/fixtures/mod_adaptivequiz_findquestion.xml'));
+        $this->loadDataSet($this->createXMLDataSet(__DIR__.'/../fixtures/mod_adaptivequiz_findquestion.xml'));
     }
 
     /**
@@ -72,12 +70,12 @@ class fetchquestion_test extends advanced_testcase {
      * @return void
      */
     protected function setup_generator_data() {
-        // Create test user
+        // Create test user.
         $this->user = $this->getDataGenerator()->create_user();
         $this->setUser($this->user);
         $this->setAdminUser();
 
-        // Create activity
+        // Create activity.
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
         $options = array(
                 'highestlevel' => 10,
@@ -109,12 +107,12 @@ class fetchquestion_test extends advanced_testcase {
      * @return void
      */
     protected function setup_generator_data_two() {
-        // Create test user
+        // Create test user.
         $this->user = $this->getDataGenerator()->create_user();
         $this->setUser($this->user);
         $this->setAdminUser();
 
-        // Create activity
+        // Create activity.
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
         $options = array(
                 'highestlevel' => 10,
@@ -292,7 +290,7 @@ class fetchquestion_test extends advanced_testcase {
         $this->assertEquals(2, count($data));
         $this->assertEquals([0 => 1, 1 => 2], $data);
 
-        $fetchquestion2 = new fetchquestion($dummyclass, 888, 1, 100,['phpunittag_']);
+        $fetchquestion2 = new fetchquestion($dummyclass, 888, 1, 100, ['phpunittag_']);
         $data = $fetchquestion2->retrieve_tag(888);
 
         $this->assertEquals(0, count($data));
@@ -520,7 +518,7 @@ class fetchquestion_test extends advanced_testcase {
         $result = $fetchquestion->retrieve_all_tag_ids(1, 100, ADAPTIVEQUIZ_QUESTION_TAG);
 
         $this->assertEquals(
-            [5 => '1', 6 => '4', 7 => '5', 8 => '6', 9 => '7', 10 => '8',],
+            [5 => '1', 6 => '4', 7 => '5', 8 => '6', 9 => '7', 10 => '8'],
             $result
         );
     }
@@ -602,7 +600,8 @@ class fetchquestion_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the output from initalize_tags_with_quest_count(), passing an already built difficulty question sum structure, forcing a rebuild
+     * This function tests the output from initalize_tags_with_quest_count(), passing an already built difficulty question sum
+     * structure, forcing a rebuild.
      */
     public function test_initalize_tags_with_quest_count_pre_built_quest_sum_struct_rebuild_true() {
         $this->resetAfterTest();
@@ -666,22 +665,5 @@ class fetchquestion_test extends advanced_testcase {
         $fetchquestion = new fetchquestion($dummyclass, 1, 1, 2);
         $result = $fetchquestion->decrement_question_sum_from_difficulty($result, 2);
         $this->assertEquals($expected, $result);
-    }
-
-    /**
-     * This function tests the return value of retrieve_question_categories()
-     */
-    public function test_retrieve_question_categories() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
-
-        $dummy = new stdClass();
-        $dummy->id = 1;
-
-        $fetchquestion = new mock_fetchquestion($dummy, 1, 1, 100);
-        $data = $fetchquestion->return_retrieve_question_categories();
-        $this->assertEquals(2, count($data));
-        $expected = array(1 => '11', 2 => '22');
-        $this->assertEquals($expected, $data);
     }
 }

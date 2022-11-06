@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Adaptive locallib.php PHPUnit tests
@@ -26,7 +27,6 @@ namespace mod_adaptivequiz;
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
@@ -35,7 +35,7 @@ use context_module;
 /**
  * @group mod_adaptivequiz
  */
-class locallib_testcase extends advanced_testcase {
+class locallib_test extends advanced_testcase {
 
     private $activitycontext;
 
@@ -43,16 +43,16 @@ class locallib_testcase extends advanced_testcase {
      * This function calls the data generator classes required by these tests
      */
     protected function setup_test_data_generator() {
-        // Create course
+        // Create course.
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
         $this->setAdminUser();
 
-        // Create course category and course
+        // Create course category and course.
         $category = $this->getDataGenerator()->create_category();
         $course = $this->getDataGenerator()->create_course(array('name' => 'Some course', 'category' => $category->id));
 
-        // Create activity
+        // Create activity.
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
         $adaptivequiz = $generator->create_instance(array('course' => $course->id));
 
@@ -114,14 +114,14 @@ class locallib_testcase extends advanced_testcase {
      */
     public function view_reports_data() {
         $data = array(
-                array('firstname', 'ASC'),
-                array('firstname', 'DESC'),
-                array('lastname', 'ASC'),
-                array('lastname', 'DESC'),
-                array('attempts', 'ASC'),
-                array('attempts', 'DESC'),
-                array('stderror', 'ASC'),
-                array('stderror', 'DESC'),
+            array('firstname', 'ASC'),
+            array('firstname', 'DESC'),
+            array('lastname', 'ASC'),
+            array('lastname', 'DESC'),
+            array('attempts', 'ASC'),
+            array('attempts', 'DESC'),
+            array('stderror', 'ASC'),
+            array('stderror', 'DESC'),
         );
 
         return $data;
@@ -142,14 +142,13 @@ class locallib_testcase extends advanced_testcase {
     }
 
     /**
-     * Test retrieving an array of question categories
+     * Test retrieving an array of question categories.
      */
     public function test_get_question_categories() {
-        $this->resetAfterTest(true);
+        $this->resetAfterTest();
         $this->setup_test_data_generator();
 
-        $data = adaptivequiz_make_default_categories($this->activitycontext);
-
+        adaptivequiz_make_default_categories($this->activitycontext);
         $data = adaptivequiz_get_question_categories($this->activitycontext);
 
         $this->assertEquals(1, count($data));
@@ -227,7 +226,7 @@ class locallib_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
         $this->setup_test_data_xml();
 
-        // Assert that there exists a record where the uniqueid, activity instance and userid all match up
+        // Assert that there exists a record where the uniqueid, activity instance and userid all match up.
         $result = adaptivequiz_uniqueid_part_of_attempt(3, 1, 2);
         $this->assertTrue($result);
 

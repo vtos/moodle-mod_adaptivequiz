@@ -24,8 +24,6 @@
 
 namespace mod_adaptivequiz;
 
-defined('MOODLE_INTERNAL') || die();
-
 use advanced_testcase;
 use context_module;
 use mod_quiz_generator;
@@ -33,7 +31,7 @@ use mod_quiz_generator;
 /**
  * @group mod_adaptivequiz
  */
-class generator_testcase extends advanced_testcase {
+class generator_test extends advanced_testcase {
 
     /**
      * Unit test for adaptivequiz generator

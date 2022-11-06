@@ -3,7 +3,8 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
@@ -25,10 +26,7 @@ use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
 
 class filter_user_preferences_test extends basic_testcase {
 
-    /**
-     * @test
-     */
-    public function it_acquires_correct_default_values_when_unexpected_parameters_provided(): void {
+    public function test_it_acquires_correct_default_values_when_unexpected_parameters_provided(): void {
         $filter = filter_user_preferences::from_array([]);
 
         $this->assertEquals(filter_options::users_option_default(), $filter->users());
@@ -42,10 +40,7 @@ class filter_user_preferences_test extends basic_testcase {
             $filter->include_inactive_enrolments());
     }
 
-    /**
-     * @test
-     */
-    public function it_can_be_converted_to_array(): void {
+    public function test_it_can_be_converted_to_array(): void {
         $filterasarray = ['users' => filter_options::users_option_default(), 'includeinactiveenrolments' => 1];
         $filter = filter_user_preferences::from_array($filterasarray);
 

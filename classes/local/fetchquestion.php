@@ -28,8 +28,6 @@ use coding_exception;
 use dml_exception;
 use dml_read_exception;
 use invalid_parameter_exception;
-use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
-use mod_adaptivequiz\local\repository\questions_repository;
 use mod_adaptivequiz\local\repository\tags_repository;
 use moodle_exception;
 use stdClass;
@@ -262,14 +260,9 @@ class fetchquestion {
                 // Retrieve all of id for the configured tag.
                 $tagids = $this->retrieve_all_tag_ids($min, $max, $tag);
                 // Retrieve a count of all of the questions associated with each tag.
-                $difficultiesquestionsnumber = $this->retrieve_tags_with_question_count($tagids, $questcat);
-
-                // Traverse the $difficultiesquestionsnumber array and add the values with the values current in the
-                // $tagquestsum argument.
-                foreach ($difficultiesquestionsnumber as $questionsnumberperdifficulty) {
-                    $difflevel = $questionsnumberperdifficulty->difficulty();
-                    $totalquestindiff = $questionsnumberperdifficulty->questions_number();
-
+                $tagidquestsum = $this->retrieve_tags_with_question_count($tagids, $questcat, $tag);
+                // Traverse the tagidquestsum array and add the values with the values current in the tagquestsum argument.
+                foreach ($tagidquestsum as $difflevel => $totalquestindiff) {
                     // If the array key exists, then add the sum to what is already in the array.
                     if (array_key_exists($difflevel, $tagquestsum)) {
                         $tagquestsum[$difflevel] += $totalquestindiff;
@@ -393,18 +386,50 @@ class fetchquestion {
     }
 
     /**
-     * This function determines how many questions are associated with a tag, for questions contained in the category
-     * used by the activity.
-     *
+     * This function determines how many questions are associated with a tag, for questions contained in the category used by the
+     * activity.
+     * @throws coding_exception|dml_read_exception if the $tagprefix argument is empty
      * @param array $tagids an array whose key is the difficulty level and value is the tag id representing the difficulty level
      * @param array $categories an array whose key and value is the question category id
-     * @return questions_number_per_difficulty[]
-     * @throws coding_exception
-     * @throws dml_read_exception
-     * @throws dml_exception
+     * @param string $tagprefix the tag prefix used by the activity
+     * @return array key is the difficulty level and the value the sum of questions associated with the difficulty level
      */
-    public function retrieve_tags_with_question_count($tagids, $categories): array {
-        return questions_repository::count_questions_number_per_difficulty($tagids, $categories);
+    public function retrieve_tags_with_question_count($tagids, $categories, $tagprefix) {
+        global $DB;
+
+        $params = array();
+        $tempparam = array();
+        $sql = '';
+        $includetags = '';
+        $includeqcats = '';
+        $length = strlen($tagprefix) + 1;
+        $substr = '';
+
+        try {
+            $substr = $DB->sql_substr('t.name', $length);
+
+            // Create IN() clause for tag ids.
+            list($includetags, $tempparam) = $DB->get_in_or_equal($tagids, SQL_PARAMS_NAMED, 'tagids');
+            $params += $tempparam;
+            // Create IN() clause for question category ids.
+            list($includeqcats, $tempparam) = $DB->get_in_or_equal($categories, SQL_PARAMS_NAMED, 'qcatids');
+            $params += array('itemtype' => 'question') + $tempparam;
+
+            $sql = "SELECT $substr AS difflevel, count(*) AS numofquest
+                      FROM {tag} t
+                      JOIN {tag_instance} ti ON t.id = ti.tagid
+                      JOIN {question} q ON q.id = ti.itemid
+                     WHERE ti.itemtype = :itemtype
+                           AND ti.tagid $includetags
+                           AND q.category $includeqcats
+                  GROUP BY t.name
+                  ORDER BY t.name ASC";
+            $records = $DB->get_records_sql_menu($sql, $params);
+            return $records;
+        } catch (coding_exception $e) {
+            $this->print_debug('retrieve_tags_with_question_count() - Missing tag prefix '.$this->vardump($tagprefix));
+            print_error('missingtagprefix', 'adaptivequiz');
+        }
     }
 
     /**
@@ -436,9 +461,54 @@ class fetchquestion {
      * @return array an array whose keys are qustion ids and values are the question names
      */
     public function find_questions_with_tags($tagids = [], $exclude = []) {
+        global $DB;
+
+        $clause = '';
+        $params = array();
+        $tempparam = array();
+        $exclquestids = '';
+        $includetags = '';
+        $includeqcats = '';
+
+        // Retrieve question categories used by this activity.
         $questcat = $this->retrieve_question_categories();
 
-        return questions_repository::find_questions_with_tags($tagids, $questcat, $exclude);
+        if (empty($questcat) || empty($tagids)) {
+            $this->print_debug('find_questions() - No question categories or tagids used by activity');
+            return array();
+        }
+
+        // Create IN() clause for tag ids.
+        list($includetags, $tempparam) = $DB->get_in_or_equal($tagids, SQL_PARAMS_NAMED, 'tagids');
+        $params += $tempparam;
+        // Create IN() clause for question ids.
+        list($includeqcats, $tempparam) = $DB->get_in_or_equal($questcat, SQL_PARAMS_NAMED, 'qcatids');
+        $params += $tempparam;
+
+        // Create IN() clause for question ids to exclude.
+        if (!empty($exclude)) {
+            list($exclquestids, $tempparam) = $DB->get_in_or_equal($exclude, SQL_PARAMS_NAMED, 'excqids', false);
+            $params += $tempparam;
+            $clause = "AND q.id $exclquestids";
+        }
+
+        $params += array('itemtype' => 'question');
+
+        // Query the question table for questions associated with a tag instance and within a question category.
+        $query = "SELECT q.id, q.name
+                    FROM {question} q
+              INNER JOIN {tag_instance} ti ON q.id = ti.itemid
+                   WHERE ti.itemtype = :itemtype
+                         AND ti.tagid $includetags
+                         AND q.category $includeqcats
+                         $clause
+                ORDER BY q.id ASC";
+
+        $records = $DB->get_records_sql($query, $params);
+
+        $this->print_debug('find_questions() - question ids returned: '.$this->vardump($records));
+
+        return $records;
     }
 
     /**

@@ -570,7 +570,7 @@ class fetchquestion_test extends advanced_testcase {
      * This function tests the output from initalize_tags_with_quest_count()
      */
     public function test_initalize_tags_with_quest_count() {
-        $this->resetAfterTest();
+        $this->resetAfterTest(true);
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
@@ -596,11 +596,7 @@ class fetchquestion_test extends advanced_testcase {
             ->method('retrieve_tags_with_question_count')
             ->withAnyParameters()
             ->willReturn(
-                [
-                    new questions_number_per_difficulty(1, 8),
-                    new questions_number_per_difficulty(2, 3),
-                    new questions_number_per_difficulty(5, 10),
-                ]
+                [1 => 8, 2 => 3, 5 => 10]
             );
 
         $result = $mockclass->initalize_tags_with_quest_count([], ['test1_', 'test2_'], 1, 100);
@@ -611,7 +607,7 @@ class fetchquestion_test extends advanced_testcase {
      * This function tests the output from initalize_tags_with_quest_count(), passing an already built difficulty question sum structure, forcing a rebuild
      */
     public function test_initalize_tags_with_quest_count_pre_built_quest_sum_struct_rebuild_true() {
-        $this->resetAfterTest();
+        $this->resetAfterTest(true);
 
         $mockclass = $this
             ->getMockBuilder(fetchquestion::class)
@@ -637,11 +633,7 @@ class fetchquestion_test extends advanced_testcase {
             ->method('retrieve_tags_with_question_count')
             ->withAnyParameters()
             ->willReturn(
-                [
-                    new questions_number_per_difficulty(1, 8),
-                    new questions_number_per_difficulty(2, 3),
-                    new questions_number_per_difficulty(5, 10),
-                ]
+                [1 => 8, 2 => 3, 5 => 10]
             );
 
         $result = $mockclass->initalize_tags_with_quest_count([1, 2, 3, 4], ['test1_', 'test2_'], 1, 100, true);

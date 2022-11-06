@@ -23,12 +23,8 @@
 
 namespace mod_adaptivequiz\local\repository;
 
-use coding_exception;
-use core_question\local\bank\question_version_status;
 use core_tag_tag;
-use dml_exception;
 use question_finder;
-use stdClass;
 
 final class questions_repository {
     /**

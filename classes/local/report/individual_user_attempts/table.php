@@ -15,8 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Contains definition of the table class for the user attempts report.
+ *
+ * @package   mod_adaptivequiz
+ * @copyright 2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace mod_adaptivequiz\local\report\individual_user_attempts;
@@ -25,7 +28,6 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/tablelib.php');
 
-use html_writer;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz_renderer;
@@ -33,6 +35,11 @@ use moodle_url;
 use stdClass;
 use table_sql;
 
+/**
+ * Definition of the table class for the user attempts report.
+ *
+ * @package mod_adaptivequiz
+ */
 final class table extends table_sql {
 
     /**
@@ -106,27 +113,13 @@ final class table extends table_sql {
         return userdate($row->timemodified);
     }
 
+    /**
+     * A hook to format the output of actions column for an attempt row.
+     *
+     * @param stdClass $row A row from the {adaptivequiz_attempt}.
+     */
     protected function col_actions(stdClass $row): string {
-        $return = html_writer::link(
-            new moodle_url('/mod/adaptivequiz/reviewattempt.php', ['attempt' => $row->id]),
-            get_string('reviewattempt', 'adaptivequiz')
-        );
-        $return .= '&nbsp;&nbsp;';
-
-        if ($row->attemptstate != attempt_state::COMPLETED) {
-            $return .= html_writer::link(
-                new moodle_url('/mod/adaptivequiz/closeattempt.php', ['attempt' => $row->id]),
-                get_string('closeattempt', 'adaptivequiz')
-            );
-            $return .= '&nbsp;&nbsp;';
-        }
-
-        $return .= html_writer::link(
-            new moodle_url('/mod/adaptivequiz/delattempt.php', ['attempt' => $row->id]),
-            get_string('deleteattemp', 'adaptivequiz')
-        );
-
-        return $return;
+        return $this->renderer->individual_user_attempt_actions($row);
     }
 
     private function init(moodle_url $baseurl): void {

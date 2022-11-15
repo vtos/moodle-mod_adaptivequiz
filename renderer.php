@@ -15,11 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive quiz renderer class.
+ * Contains definition of the renderer class for the plugin.
  *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_adaptivequiz
+ * @copyright 2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright 2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -28,8 +29,15 @@ use mod_adaptivequiz\form\requiredpassword;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgo;
 use mod_adaptivequiz\output\ability_measure;
+use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_action;
+use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_actions;
 use mod_adaptivequiz\output\user_attempt_summary;
 
+/**
+ * The renderer class for the plugin.
+ *
+ * @package mod_adaptivequiz
+ */
 class mod_adaptivequiz_renderer extends plugin_renderer_base {
     /** @var string $sortdir the sorting direction being used */
     protected $sortdir = '';
@@ -699,6 +707,55 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
 
     public function reset_users_attempts_filter_action(moodle_url $url): string {
         return html_writer::link($url, get_string('reportattemptsresetfilter', 'adaptivequiz'));
+    }
+
+    /**
+     * Outputs available action links for an attempt in the user's attempts report.
+     *
+     * @param stdClass $attempt A record from {adaptivequiz_attempt}.
+     */
+    public function individual_user_attempt_actions(stdClass $attempt): string {
+        $actions = new individual_user_attempt_actions();
+
+        $actions->add(
+            new individual_user_attempt_action(
+                new moodle_url('/mod/adaptivequiz/reviewattempt.php', ['attempt' => $attempt->id]),
+                new pix_icon('i/search', ''),
+                get_string('reviewattempt', 'adaptivequiz')
+            )
+        );
+
+        if ($attempt->attemptstate !== attempt_state::COMPLETED) {
+            $actions->add(
+                new individual_user_attempt_action(
+                    new moodle_url('/mod/adaptivequiz/closeattempt.php', ['attempt' => $attempt->id]),
+                    new pix_icon('t/stop', ''),
+                    get_string('closeattempt', 'adaptivequiz')
+                )
+            );
+        }
+
+        $actions->add(
+            new individual_user_attempt_action(
+                new moodle_url('/mod/adaptivequiz/delattempt.php', ['attempt' => $attempt->id]),
+                new pix_icon('t/delete', ''),
+                get_string('deleteattemp', 'adaptivequiz')
+            )
+        );
+
+        return $this->render($actions);
+    }
+
+    /**
+     * Renders the renderable actions object, intended to be overridden by the theme if needed.
+     *
+     * @param individual_user_attempt_actions $actions
+     */
+    protected function render_individual_user_attempt_actions(individual_user_attempt_actions $actions): string {
+        return $this->render_from_template(
+            'mod_adaptivequiz/report/individual_user_attempt_actions',
+            $actions->export_for_template($this)
+        );
     }
 
     /**

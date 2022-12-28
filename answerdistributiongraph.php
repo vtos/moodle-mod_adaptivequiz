@@ -103,7 +103,8 @@ foreach ($quba->get_slots() as $i => $slot) {
     $question = $quba->get_question($slot);
     $tags = core_tag_tag::get_item_tags_array('core_question', 'question', $question->id);
     $difficulty = adaptivequiz_get_difficulty_from_tags($tags);
-    $correct = ($quba->get_question_mark($slot) > 0);
+    // Questions are correct if they have at least 50% of possible points
+    $correct = ($quba->get_question_fraction($slot) >= 0.5);
 
     $position = array_search($difficulty, $difficulties);
     if ($correct) {

@@ -110,8 +110,9 @@ foreach ($quba->get_slots() as $i => $slot) {
     $qdifficulty = adaptivequiz_get_difficulty_from_tags($tags);
     $qdifficultylogits = catalgo::convert_linear_to_logit($qdifficulty, $adaptivequiz->lowestlevel,
         $adaptivequiz->highestlevel);
-    $questioncorrect = ($quba->get_question_mark($slot) > 0);
-
+    // Questions are correct if they have at least 50% of possible points
+    $questioncorrect = ($quba->get_question_fraction($slot) >= 0.5);
+    
     $numattempted++;
     $difficultysum = $difficultysum + $qdifficultylogits;
     if ($questioncorrect) {

@@ -257,13 +257,13 @@ class catalgo {
         return false;
     }
 
-    /**
-     * This function determins whether the user answered the question correctly or incorrectly.
-     * If the answer is partially correct it is seen as correct.
+     /**
+     * This function retrieves the mark received from the student's submission to the question
      * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
      * @param int $slotid the slot id of the question
      * @return float|null a float representing the user's mark.  Or null if there was no mark
      */
+ 
     public function get_question_mark($quba, $slotid) {
         $mark = $quba->get_question_mark($slotid);
 
@@ -274,43 +274,125 @@ class catalgo {
         $this->print_debug('get_question_mark() - Question mark was not a float slot id: '.$slotid);
         return null;
     }
+    
 
     /**
-     * This function retreives the mark received from the student's submission to the question
-     * @return bool|null true if the question was marked correct. False if the question was marked incorrect or null if there is an
-     *      error determining mark
+     * This function retrieves the point fraction received from the student's submission to the question 
+     * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
+     * @param int $slotid the slot id of the question
+     * @return float|null a float representing the user's point fraction.  Or null if there was no point fraction
      */
+
+    public function get_question_fraction($quba, $slotid) {
+        $fraction = $quba->get_question_fraction($slotid);
+        
+        if (is_float($fraction)) {
+            return $fraction;
+        }
+        
+        $this->print_debug('get_question_fraction() - Question fraction was not a float - slot id: '.$slotid);
+        return null;
+    }
+    
+    /**
+     * This function retrieves the maximum mark that can be achieved by answering the question (in case a fraction is missing and has to be
+     * inferred from mark and maximum mark).  
+     * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
+     * @param int $slotid the slot id of the question
+     * @return float|null a float representing the maximum mark.  Or null if there was no maximum mark
+     */
+
+    public function get_question_max_mark($quba, $slotid) {
+        $maxmark = $quba->get_question_max_mark($slotid);
+        
+        if (is_float($maxmark)) {
+            return $maxmark;
+        }
+        
+        $this->print_debug('get_question_max_mark() - Maximum question mark was not a float - slot id: '.$slotid);
+        return null;
+    }
+    
+
+/**
+     * This function determins whether the user answered the question correctly or incorrectly.
+     * Count a question as correct if its fraction is >= 0.5.
+     * This function determines the current slot id and then calls 
+     * question_was_marked_correct_by_id($slotid)
+     * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
+     * @param int $slotid the slot id of the question
+     * @return bool|null a boolean representing question correctness or null if there is no valid slot
+     */
+
+
     public function question_was_marked_correct() {
         // Find the last question attempted by the user.
         $slotid = $this->find_last_quest_used_by_attempt();
-
+        // if there is no valid slot, end here
+        if (empty($slotid)) {
+            return null;
+        }
+        // increment the number of attempted questions
+        $this->questattempted++;
+        $this->print_debug('question_was_marked_correct() - '.$this->questattempted.' questions attempted');
+        
+        // pass on to parametrized version
+        return $this->question_was_marked_correct_by_id($slotid);
+    }
+    
+    
+    /**
+     * This function determines whether the question was answered correctly or incorrectly given a slot id.
+     * Count a question as correct if its fraction is >= 0.5.
+     * @param int $slotid question slot id
+     * @return boolean the correctness of the answer
+     */
+    
+    
+    public function question_was_marked_correct_by_id($slotid) {
+        
+        // always needs checking in case the method is called directly
+        // (not from question_was_marked_correct())
         if (empty($slotid)) {
             return null;
         }
 
-        // Check if the question was marked.
+        // Check if the question was answered. If not, it counts as answered wrong
         if (!$this->was_answer_submitted_to_question($slotid)) {
-            // If no answer was submitted then the question muast be marked as incorrect.  Increment questions attempted.
-            $this->questattempted++;
             return false;
         }
 
-        // Retrieve the mark received.
-        $mark = $this->get_question_mark($this->quba, $slotid);
+        // Retrieve the fraction of points received.
+        $fraction = $this->get_question_fraction($this->quba, $slotid);
+        
+        // get $mark and scale it by maximum mark if $fraction is null
+        if (is_null($fraction)) {
+            $this->print_debug('question_was_marked_correct_by_id - fraction is null. Getting mark.');
+            $mark = $this->get_question_mark($this->quba, $slotid);
+            
+             // fraction and mark are both null    
+             if (is_null($mark)) {
+                return null;
+             }
 
-        if (is_null($mark)) {
-            return null;
+            //Also retrieve maximum mark for scaling of mark
+            $maxmark = $this->get_question_max_mark($this->quba, $slotid);
+
+            // compute the value that $fraction should have
+            $fraction = $mark/$maxmark;
         }
-
-        // Return true if the question was marked correct.
-        if ((float) 0 < $mark) {
-            // Increment questions attempted.
-            $this->questattempted++;
+        
+        // $fraction is now set
+        $this->print_debug('question_was_marked_correct_by_id - Fraction is '.$fraction);
+        
+        // The question is assumed to be answered correctly if its fraction is 
+        // 0.5 or higher
+        if ( $fraction >= 0.5) {
+            $this->print_debug('question_was_marked_correct_by_id - mark is indeed correct');
             return true;
         }
-
-        // Increment questions attempted.
-        $this->questattempted++;
+        
+        $this->print_debug('question_was_marked_correct_by_id - mark is indeed incorrect');
         return false;
     }
 
@@ -530,6 +612,9 @@ class catalgo {
 
     /**
      * This function counts the total number of correct answers for the attempt
+     * Changed by Ulrike Pado at Hochschule fuer Technik Stuttgart:
+     * Use a question's fraction, not mark, and accept questions with a fraction
+     * of 0.5 or higher as correct
      * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
      * @return int the number of correct answer submission
      */
@@ -541,9 +626,7 @@ class catalgo {
 
         // Iterate over slots and count correct answers.
         foreach ($slots as $slot) {
-            $mark = $this->get_question_mark($quba, $slot);
-
-            if (!is_null($mark) && 0.0 < $mark) {
+            if ($this->question_was_marked_correct_by_id($slot)) {
                 $correctanswers++;
             }
         }
@@ -554,6 +637,9 @@ class catalgo {
 
     /**
      * This function counts the total number of incorrect answers for the attempt
+     * Changed by Ulrike Pado at Hochschule fuer Technik Stuttgart:
+     * Use a question's fraction, not mark, and accept questions with a fraction
+     * of 0.5 or higher as correct
      * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
      * @return int the number of correct answer submission
      */
@@ -565,9 +651,7 @@ class catalgo {
 
         // Iterate over slots and count correct answers.
         foreach ($slots as $slot) {
-            $mark = $this->get_question_mark($quba, $slot);
-
-            if (is_null($mark) || 0.0 >= $mark) {
+            if (!$this->question_was_marked_correct_by_id($slot)) {
                 $incorrectanswers++;
             }
         }
@@ -614,6 +698,9 @@ class catalgo {
     /**
      * This function calculates the currently difficulty level of the attempt.
      * @param question_usage_by_activity $quba a question usage by activity set to an attempt id
+     * Changed by Ulrike Pado at Hochschule fuer Technik Stuttgart:
+     * Use a question's fraction, not mark, and accept questions with a fraction
+     * of 0.5 or higher as correct
      * @param int $level the starting level of difficulty for the attempt
      * @param stdClass $attemptobj an object with the following properties: lowestlevel and highestlevel
      * @return int the current level of difficulty
@@ -644,9 +731,8 @@ class catalgo {
 
         // Iterate over slots and count correct answers.
         foreach ($slots as $slot) {
-            $mark = $this->get_question_mark($quba, $slot);
-
-            if (is_null($mark) || 0.0 >= $mark) {
+            $corr = $this->question_was_marked_correct_by_id($slot);
+            if (is_null($corr)||!$corr) {
                 $correct = false;
             } else {
                 $correct = true;

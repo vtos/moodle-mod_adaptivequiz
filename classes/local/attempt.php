@@ -282,8 +282,12 @@ class attempt {
             // If so fetch a new question.
 
             // Provide the question-fetching process with limits based on our last question.
+            
+            // Deal gracefully with partially correct questions: Only questions with a fraction of at least 50% count as correct (analogously to catalgo)
+            
             // If the last question was correct...
-            if ($this->quba->get_question_mark($this->slot) > 0) {
+            if ($this->is_question_marked_correct($this->quba, $this->slot)) {
+                $this->print_debug("start_attempt() - Last question was correct");
                 // Only ask questions harder than the last question unless we are already at the top of the ability scale.
                 if (!is_null($this->lastdifficultylevel) && $this->lastdifficultylevel < $this->adaptivequiz->highestlevel) {
                     $fetchquestion->set_minimum_level($this->lastdifficultylevel + 1);
@@ -295,6 +299,7 @@ class attempt {
                     }
                 }
             } else {
+                $this->print_debug("start_attempt() - Last question was wrong ");
                 // If the last question was wrong...
                 // Only ask questions easier than the last question unless we are already at the bottom of the ability scale.
                 if (!is_null($this->lastdifficultylevel) && $this->lastdifficultylevel > $this->adaptivequiz->lowestlevel) {
@@ -529,6 +534,61 @@ class attempt {
         return 0;
     }
 
+    /**
+     * This function returns a boolean to indicate whether the user answered the question correctly or incorrectly.
+     * If the answer is partially correct (50% or more of the available points) it is seen as correct.
+     * This method is parallel to question_was_marked_correct_by_id in catalgo.class
+     *
+     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
+     * @param int $slotid the slot id of the question
+     * @return boolean true if the question was answered at least 50% correct, false otherwise (incorrect or no answer), or null if there is no mark and fraction
+     */
+    public function is_question_marked_correct($quba, $slotid) {
+        // Check if there was an answer at all
+        if (!$this->was_answer_submitted_to_question($quba, $slotid)) {
+            // If no answer was submitted then the question must be marked as incorrect.
+            return false;
+        }
+        
+        // Retrieve the fraction (of correct answers) received.
+        $fraction = $quba->get_question_fraction($slotid);
+        
+        // get $mark and scale it by maximum mark if $fraction is null
+        if (is_null($fraction)) {
+            $this->print_debug('question_was_marked_correct_by_id - fraction is null. Getting mark.');
+            $mark = $quba->get_question_mark($slotid);
+            
+             // fraction and mark are both null    
+             if (is_null($mark)) {
+                return null;
+             }
+
+            //Also retrieve maximum mark for scaling of mark
+            $maxmark = $quba->get_question_max_mark($slotid);
+            if (is_null($maxmark)) {
+                return null;
+            }
+
+            // compute the missing value for $fraction
+            $fraction = $mark/$maxmark;
+        
+        }
+        
+        // $fraction is now definitely set
+
+        $this->print_debug('question_was_marked_correct_by_id - Fraction returned is '.$fraction);
+
+        // The question is assumed to be answered correctly if its fraction is 
+        // 0.5 or higher
+        if ( $fraction >= 0.5) {
+            $this->print_debug('question_was_marked_correct_by_id - mark is indeed correct');
+            return true;
+        }
+        
+        $this->print_debug('question_was_marked_correct_by_id - mark is indeed incorrect');
+        return false;
+    }
+    
     /**
      * This functions returns an array of all question ids that have been used in this attempt
      *

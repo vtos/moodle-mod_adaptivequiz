@@ -23,12 +23,6 @@ College][3] and [Remote Learner][4]. The current repository was forked from
 [https://github.com/middlebury/moodle-mod_adaptivequiz][5].
 
 The [MOODLE_38][6] branch of the repository is compatible with both Moodle 3.8 and 3.9.
-All unit tests in the module are currently fixed and are passing. Behat tests coverage is about 70%
-and is still in progress. The automated tests coverage is crucial for the forked codebase to ensure future changes
-will not break what's working already. 
-
-A new feature was added - students may view ability estimation for their attempts, but only in case the activity
-setting allows for it.
 
 Further support and development of the plugin to be expected.
 

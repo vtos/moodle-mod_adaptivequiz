@@ -26,6 +26,8 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
+use core\activity_dates;
+use core_completion\cm_completion_details;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
@@ -144,6 +146,11 @@ if ($adaptivequiz->intro) { // Conditions to show the intro can change to look f
 }
 
 if (has_capability('mod/adaptivequiz:attempt', $context)) {
+    $cminfo = cm_info::create($cm);
+    $completiondetails = cm_completion_details::get_instance($cminfo, $USER->id);
+    $activitydates = activity_dates::get_dates_for_module($cminfo, $USER->id);
+    echo $OUTPUT->activity_information($cminfo, $completiondetails, $activitydates);
+
     $completedattemptscount = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
 
     echo $renderer->container_start('attempt-controls-or-notification-container pb-3');

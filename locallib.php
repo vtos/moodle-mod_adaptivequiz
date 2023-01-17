@@ -49,6 +49,8 @@ require_once($CFG->dirroot.'/question/editlib.php');
 require_once($CFG->dirroot.'/lib/questionlib.php');
 require_once($CFG->dirroot.'/question/engine/lib.php');
 
+use mod_adaptivequiz\event\attempt_completed;
+use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgo;
 
 /**

@@ -26,7 +26,7 @@
 namespace mod_adaptivequiz\local\catalgorithm;
 
 use coding_exception;
-use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use moodle_exception;
 use question_state_gradedpartial;
 use question_state_gradedright;

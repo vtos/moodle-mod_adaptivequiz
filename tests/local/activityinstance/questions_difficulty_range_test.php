@@ -22,10 +22,11 @@
 namespace mod_adaptivequiz\local\activityinstance;
 
 use basic_testcase;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use stdClass;
 
 /**
- * @covers \mod_adaptivequiz\local\activityinstance\questions_difficulty_range
+ * @covers \mod_adaptivequiz\local\report\questions_difficulty_range
  */
 class questions_difficulty_range_test extends basic_testcase {
 

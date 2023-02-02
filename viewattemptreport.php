@@ -25,9 +25,9 @@
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
-use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
 use mod_adaptivequiz\local\report\individual_user_attempts\filter as user_attempts_table;
 use mod_adaptivequiz\local\report\individual_user_attempts\table as individual_user_attempts_table;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 
 $id = required_param('cmid', PARAM_INT);
 $userid = required_param('userid', PARAM_INT);
@@ -67,7 +67,8 @@ $attemptstable = new individual_user_attempts_table(
     $renderer,
     user_attempts_table::from_vars($cm->instance, $user->id),
     $PAGE->url,
-    questions_difficulty_range::from_activity_instance($adaptivequiz)
+    questions_difficulty_range::from_activity_instance($adaptivequiz),
+    $cm->id
 );
 $attemptstable->out(20, false);
 

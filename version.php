@@ -23,7 +23,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->version = 2024011400;
-$plugin->release = '2.3.2dev';
+$plugin->release = '3.0.0dev';
 $plugin->maturity = MATURITY_ALPHA;
 $plugin->requires = 2023042400;
 $plugin->cron = 0;

@@ -31,7 +31,7 @@ require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use coding_exception;
-use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use question_usage_by_activity;
 use stdClass;
 

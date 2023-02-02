@@ -26,11 +26,11 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 
-use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
 use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
 $uniqueid  = optional_param('uniqueid', 0, PARAM_INT);  // Unique id of the attempt.
@@ -289,15 +289,15 @@ if (!empty($adaptivequiz->password) && empty($condition)) {
 
     $mform->display();
 } else {
-    $attemptrecord = $adaptiveattempt->get_attempt();
+    $attemptdata = $adaptiveattempt->read_attempt_data();
 
     if ($adaptivequiz->showattemptprogress) {
         echo $output->container_start('attempt-progress-container');
-        echo $output->attempt_progress($attemptrecord->questionsattempted, $adaptivequiz->maximumquestions);
+        echo $output->attempt_progress($attemptdata->questionsattempted, $adaptivequiz->maximumquestions);
         echo $output->container_end();
     }
 
-    echo $output->question_submit_form($id, $quba, $slot, $level, $attemptrecord->questionsattempted + 1);
+    echo $output->question_submit_form($id, $quba, $slot, $level, $attemptdata->questionsattempted + 1);
 }
 
 echo $output->print_footer();

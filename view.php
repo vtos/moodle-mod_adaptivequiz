@@ -26,16 +26,16 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
-use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\filter_user_preferences;
-use mod_adaptivequiz\local\user_attempts_table;
-use mod_adaptivequiz\local\report\users_attempts\users_attempts_table;
+use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_form;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_repository;
-use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences;
+use mod_adaptivequiz\local\report\users_attempts\users_attempts_table;
+use mod_adaptivequiz\local\user_attempts_table;
 use mod_adaptivequiz\output\user_attempt_summary;
 
 $id = optional_param('id', 0, PARAM_INT);

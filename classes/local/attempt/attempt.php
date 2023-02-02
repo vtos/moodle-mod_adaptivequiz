@@ -104,12 +104,13 @@ class attempt {
     private $attemptstate;
 
     /**
-     * Constructor initializes required data to process the attempt
-     * @param stdClass $adaptivequiz adaptivequiz record object from adaptivequiz table
-     * @param int $userid user id
-     * @param array $tags an array of acceptible tags
+     * The constructor.
+     *
+     * @param stdClass $adaptivequiz A record from the {adaptivequiz} table.
+     * @param int $userid
+     * @param string[] $tags An array of acceptable tags.
      */
-    public function __construct($adaptivequiz, $userid, $tags = array()) {
+    private function __construct(stdClass $adaptivequiz, int $userid, array $tags = array()) {
         $this->adaptivequiz = $adaptivequiz;
         $this->userid = $userid;
         $this->tags = $tags;
@@ -492,6 +493,13 @@ class attempt {
         $event->add_record_snapshot('adaptivequiz_attempt', $attemptrecordsnapshot);
         $event->add_record_snapshot('adaptivequiz', $this->adaptivequiz);
         $event->trigger();
+    }
+
+    /**
+     * @return stdClass {@see self::$adpqattempt}.
+     */
+    public function read_attempt_data(): stdClass {
+        return $this->adpqattempt;
     }
 
     /**

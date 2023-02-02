@@ -27,7 +27,7 @@ use coding_exception;
 use context;
 use dml_exception;
 use html_writer;
-use mod_adaptivequiz\local\activityinstance\questions_difficulty_range;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\sql\sql_resolver;
 use mod_adaptivequiz_renderer;

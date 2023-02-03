@@ -158,69 +158,6 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * This function tests retrieving the last question viewed by the student for a given attempt.
-     */
-    public function test_find_last_quest_used_by_attempt() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setup_test_data_xml();
-
-        $cmid = 5;
-
-        $activityinstance = $DB->get_record('adaptivequiz', ['id' => 330]);
-
-        $context = context_module::instance($cmid);
-
-        $adaptiveattempt = attempt::find_in_progress_for_user($activityinstance, 2);
-        $quba = $adaptiveattempt->initialize_quba($context);
-
-        $result = $adaptiveattempt->find_last_quest_used_by_attempt($quba);
-
-        $this->assertEquals(2, $result);
-    }
-
-    public function test_it_fails_to_find_the_last_question_used_by_attempt_with_an_invalid_argument() {
-        $this->resetAfterTest();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-
-        $userid = 2;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $this->expectException('coding_exception');
-        $attempt->find_last_quest_used_by_attempt(new stdClass());
-    }
-
-    /**
-     * This function tests retrieving the last question viewed by the student for a given attempt, but using failing data
-     */
-    public function test_find_last_umarked_question_using_bad_data() {
-        $this->resetAfterTest(true);
-
-        $dummy = new stdClass();
-
-        $adaptiveattempt = $this->getMockBuilder(attempt::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        // Test passing an invalid object instance.
-        $result = $adaptiveattempt->find_last_quest_used_by_attempt($dummy);
-        $this->assertEquals(0, $result);
-
-        // Test getting an empty slot value.
-        $mockquba = $this->getMockBuilder('question_usage_by_activity')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $result = $adaptiveattempt->find_last_quest_used_by_attempt($mockquba);
-
-        $this->assertEquals(0, $result);
-    }
-
-    /**
      * This function tests whether the user submitted an answer to the question.
      */
     public function test_was_answer_submitted_to_question_with_graded_right() {
@@ -524,7 +461,7 @@ class attempt_test extends advanced_testcase {
 
         $mockattemptthree = $this
             ->getMockBuilder(attempt::class)
-            ->onlyMethods(['record', 'initialize_quba', 'find_last_quest_used_by_attempt', 'level_in_bounds']
+            ->onlyMethods(['record', 'initialize_quba', 'level_in_bounds']
             )
             ->setConstructorArgs(
                 [$dummyadaptivequiz, 1]
@@ -542,9 +479,6 @@ class attempt_test extends advanced_testcase {
             ->will($this->returnValue(true));
         $mockattemptthree->expects($this->once())
             ->method('initialize_quba');
-        $mockattemptthree->expects($this->once())
-            ->method('find_last_quest_used_by_attempt')
-            ->will($this->returnValue(0));
 
         $context = context_module::instance($cmid);
 

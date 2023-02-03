@@ -235,7 +235,11 @@ class attempt {
         }
 
         // Find the last question viewed/answered by the user.
-        $this->slot = $this->find_last_quest_used_by_attempt($quba);
+        // The last slot in the array should be the last question that was attempted (meaning it was either shown to the user
+        // or the user submitted an answer to it).
+        $questionslots = $quba->get_slots();
+        $this->slot = !empty($questionslots) ? end($questionslots) : 0;
+
         // Create an instance of the fetchquestion class.
         $fetchquestion = new fetchquestion($this->adaptivequiz, 1, $this->adaptivequiz->lowestlevel,
             $this->adaptivequiz->highestlevel);
@@ -327,34 +331,6 @@ class attempt {
         $this->print_debug('return_random_question() - random question chosen questionid: '.$questionid);
 
         return (int) $questionid;
-    }
-
-    /**
-     * This function retrieves the last question that was used in the attempt
-     * @throws moodle_exception - exception is thrown function parameter is not an instance of question_usage_by_activity class
-     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
-     * @return int question slot or 0 if no unmarked question could be found
-     */
-    public function find_last_quest_used_by_attempt($quba) {
-        if (!$quba instanceof question_usage_by_activity) {
-            throw new coding_exception('find_last_quest_used_by_attempt() - Argument was not a question_usage_by_activity object',
-                $this->vardump($quba));
-        }
-
-        // The last slot in the array should be the last question that was attempted (meaning it was either shown to the user
-        // or the user submitted an answer to it).
-        $questslots = $quba->get_slots();
-
-        if (empty($questslots) || !is_array($questslots)) {
-            $this->print_debug('find_last_quest_used_by_attempt() - No question slots found for this '.
-                'question_usage_by_activity object');
-            return 0;
-        }
-
-        $questslot = end($questslots);
-        $this->print_debug('find_last_quest_used_by_attempt() - Found a question slot: '.$questslot);
-
-        return $questslot;
     }
 
     /**

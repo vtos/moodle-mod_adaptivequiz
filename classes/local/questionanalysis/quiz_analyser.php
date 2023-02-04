@@ -14,15 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Questions-analyser class. The class provides a mechanism for loading and analysing question usage,
- * performance, and efficacy.
- *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\questionanalysis;
 
 defined('MOODLE_INTERNAL') || die();
@@ -37,6 +28,14 @@ use mod_adaptivequiz\local\questionanalysis\statistics\question_statistic;
 use question_engine;
 use stdClass;
 
+/**
+ * Questions-analyser class. The class provides a mechanism for loading and analysing question usage, performance, and efficacy.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class quiz_analyser {
 
     /** @var array $questions An array of all questions loaded and their stats */
@@ -102,7 +101,7 @@ class quiz_analyser {
                 // Record the attempt score and the individual question result.
                 $correct = ($quba->get_question_mark($slot) > 0);
                 $answer = $quba->get_response_summary($slot);
-                $this->questions[$question->id]->add_result($attempt->uniqueid, $user, $score, $correct, $answer);
+                $this->questions[$question->id]->add_result($attempt->id, $user, $score, $correct, $answer);
             }
         }
     }

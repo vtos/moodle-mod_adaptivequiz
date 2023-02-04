@@ -14,15 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * This class provides a mechanism for analysing the usage, performance, and efficacy
- * of a single question in an adaptive quiz.
- *
- * @copyright  2013 Middlebury College {@link http://www.middlebury.edu/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\questionanalysis;
 
 use context;
@@ -33,6 +24,14 @@ use mod_adaptivequiz\local\questionanalysis\statistics\question_statistic_result
 use question_definition;
 use stdClass;
 
+/**
+ * This class provides a mechanism for analysing the usage, performance, and efficacy of a single question in an adaptive quiz.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Middlebury College {@link http://www.middlebury.edu/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class question_analyser {
 
     /** @var context the context this usage belongs to. */
@@ -76,20 +75,28 @@ class question_analyser {
     }
 
     /**
-     * Add an usage result for this question.
+     * Add a usage result for this question.
      *
+     * @param int $attemptid Id of a record from {adaptivequiz_attempt}.
+     * @param stdClass $user Normally a record from {users}, or and object with 'firstname' and 'lastname' properties.
      * @param attempt_score $score The user's score on this attempt.
-     * @param boolean $correct True if the user answered correctly.
-     * @param string $answer
-     * @return void
+     * @param bool $correct True if the user answered correctly.
+     * @param null|string $answer
      */
-    public function add_result ($attemptid, $user, attempt_score $score, $correct, $answer) {
+    public function add_result (
+        int $attemptid,
+        stdClass $user,
+        attempt_score $score,
+        bool $correct,
+        ?string $answer
+    ): void {
         $result = new stdClass();
         $result->attemptid = $attemptid;
         $result->user = $user;
         $result->score = $score;
         $result->correct = $correct;
         $result->answer = $answer;
+
         $this->results[] = $result;
     }
 

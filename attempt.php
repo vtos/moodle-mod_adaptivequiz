@@ -230,7 +230,14 @@ if (isset($difflevel) && !is_null($difflevel)) {
     $adaptiveattempt->set_last_difficulty_level($difflevel);
 }
 
-$quba = $adaptiveattempt->initialize_quba($context);
+// Initialize quba.
+$qubaid = $adaptiveattempt->read_attempt_data()->uniqueid;
+$quba = ($qubaid == 0)
+    ? question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context)
+    : question_engine::load_questions_usage_by_activity($qubaid);
+if ($qubaid == 0) {
+    $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
+}
 
 $attemptstatus = $adaptiveattempt->start_attempt($quba, $adaptiveattempt->number_of_questions_attempted());
 

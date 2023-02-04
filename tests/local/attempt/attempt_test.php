@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\attempt;
 
 defined('MOODLE_INTERNAL') || die();
@@ -35,7 +29,12 @@ use question_usage_by_activity;
 use stdClass;
 
 /**
- * @group mod_adaptivequiz
+ * Tests for the attempt class.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \mod_adaptivequiz\local\attempt
  */
 class attempt_test extends advanced_testcase {
@@ -116,45 +115,6 @@ class attempt_test extends advanced_testcase {
             [1 => 'quest 1', 2 => 'quest 2', 3 => 'quest 3', 4 => 'quest 4']
         );
         $this->assertMatchesRegularExpression('/[1-4]/', $result);
-    }
-
-    /**
-     * This function tests the creation of a question_usage_by_activity object for an attempt.
-     */
-    public function test_initialize_quba() {
-        $this->resetAfterTest();
-        $this->setup_generator_data();
-
-        $context = context_module::instance($this->cm->id);
-
-        $adaptiveattempt = attempt::create($this->activityinstance, $this->user->id);
-        $quba = $adaptiveattempt->initialize_quba($context);
-
-        $this->assertInstanceOf('question_usage_by_activity', $quba);
-    }
-
-    /**
-     * This function tests the re-using of the question_usage_by_activity object, due to an incomplete attempt.
-     */
-    public function test_initialize_quba_with_existing_attempt_uniqueid() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setup_test_data_xml();
-
-        $cmid = 5;
-
-        $activityinstance = $DB->get_record('adaptivequiz', ['id' => 330]);
-
-        $context = context_module::instance($cmid);
-
-        $adaptiveattempt = attempt::find_in_progress_for_user($activityinstance, 2);
-        $quba = $adaptiveattempt->initialize_quba($context);
-
-        $this->assertInstanceOf('question_usage_by_activity', $quba);
-
-        // Check if the uniqueid of the adaptive attempt equals the id of the object loaded by quba class.
-        $this->assertEquals(330, $quba->get_id());
     }
 
     /**
@@ -461,7 +421,7 @@ class attempt_test extends advanced_testcase {
 
         $mockattemptthree = $this
             ->getMockBuilder(attempt::class)
-            ->onlyMethods(['record', 'initialize_quba', 'level_in_bounds']
+            ->onlyMethods(['record', 'level_in_bounds']
             )
             ->setConstructorArgs(
                 [$dummyadaptivequiz, 1]
@@ -477,8 +437,6 @@ class attempt_test extends advanced_testcase {
         $mockattemptthree->expects($this->once())
             ->method('level_in_bounds')
             ->will($this->returnValue(true));
-        $mockattemptthree->expects($this->once())
-            ->method('initialize_quba');
 
         $context = context_module::instance($cmid);
 

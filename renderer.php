@@ -25,6 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core\output\notification;
 use mod_adaptivequiz\form\requiredpassword;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgorithm\catalgo;

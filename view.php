@@ -26,6 +26,8 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
+use core\output\notification;
+use mod_adaptivequiz\local\adaptive_quiz_requires;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
@@ -126,6 +128,16 @@ if ($canviewattemptsreport) {
     }
 }
 
+$activityisnotavailablenotification = '';
+try {
+    (new adaptive_quiz_requires())
+        ->deferred_feedback_question_behaviour_is_enabled();
+} catch (moodle_exception $activityavailabilityexception) {
+    $activityisnotavailablenotification = $canviewattemptsreport
+        ? get_string('activityavailabilitymanagernotification', 'adaptivequiz', $activityavailabilityexception->getMessage())
+        : get_string('activityavailabilitystudentnotification', 'adaptivequiz');
+}
+
 $event = \mod_adaptivequiz\event\course_module_viewed::create([
     'objectid' => $PAGE->cm->instance,
     'context' => $PAGE->context,
@@ -139,6 +151,10 @@ $PAGE->set_heading(format_string($course->fullname));
 
 echo $OUTPUT->header();
 
+if ($canviewattemptsreport && $activityisnotavailablenotification) {
+    echo $OUTPUT->notification($activityisnotavailablenotification, notification::NOTIFY_WARNING, false);
+}
+
 if ($adaptivequiz->intro) { // Conditions to show the intro can change to look for own settings or whatever.
     echo $OUTPUT->box(format_module_intro('adaptivequiz', $adaptivequiz, $cm->id), 'generalbox mod_introbox', 'newmoduleintro');
 }
@@ -147,8 +163,14 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
     $completedattemptscount = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
 
     echo $renderer->container_start('attempt-controls-or-notification-container pb-3');
-    echo $renderer->attempt_controls_or_notification($cm->id,
-        adaptivequiz_allowed_attempt($adaptivequiz->attempts, $completedattemptscount), $adaptivequiz->browsersecurity);
+    if (!($canviewattemptsreport && $activityisnotavailablenotification)) {
+        echo $renderer->attempt_controls_or_notification(
+            $cm->id,
+            adaptivequiz_allowed_attempt($adaptivequiz->attempts, $completedattemptscount),
+            $activityisnotavailablenotification,
+            $adaptivequiz->browsersecurity
+        );
+    }
     echo $renderer->container_end();
 
     $allattemptscount = $DB->count_records('adaptivequiz_attempt',

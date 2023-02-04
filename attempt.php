@@ -26,6 +26,8 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 
+use core\output\notification;
+use mod_adaptivequiz\local\adaptive_quiz_requires;
 use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
@@ -72,6 +74,17 @@ $PAGE->add_body_class('limitedwidth');
 
 // Check if the user has the attempt capability.
 require_capability('mod/adaptivequiz:attempt', $context);
+
+try {
+    (new adaptive_quiz_requires())
+        ->deferred_feedback_question_behaviour_is_enabled();
+} catch (moodle_exception $activityavailabilityexception) {
+    throw new moodle_exception(
+        'activityavailabilitystudentnotification',
+        'adaptivequiz',
+        new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id])
+    );
+}
 
 // Check if the user has any previous attempts at this activity.
 $count = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);

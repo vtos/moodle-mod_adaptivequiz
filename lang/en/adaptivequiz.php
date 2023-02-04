@@ -26,6 +26,10 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['abilityestimated'] = 'Estimated ability';
 $string['abilityestimated_help'] = 'The estimated ability of a test-taker aligns with the question difficulty at which the test-taker has a 50% probability of answering the question correctly. To identify the performance level, match the ability value with the questions level range (see the range after the \'/\' symbol).';
+$string['activityavailabilitymissingquestionbehaviour'] = 'the required question behaviour \'{$a}\' was not found in the installed behaviours';
+$string['activityavailabilitymanagernotification'] = 'WARNING: the site config is not compatible with the activity requirements: {$a}. The activity will not be available to students unless the site config is updated.';
+$string['activityavailabilityquestionbehaviourdisabled'] = 'the required question behaviour \'{$a}\' is disabled in the site questions config';
+$string['activityavailabilitystudentnotification'] = 'The site isn\'t configured properly to run the quiz. Please, advice the course manager to visit the activity view page to check for warnings displayed.';
 $string['attemptfeedbackdefaulttext'] = 'You\'ve finished the attempt, thank you for taking the quiz!';
 $string['attemptquestion_ability'] = 'Ability Measure';
 $string['attemptquestionsprogress'] = 'Questions progress: {$a}';

@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * This class contains information about the attempt parameters
- *
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\attempt;
 
 use coding_exception;
@@ -29,7 +21,6 @@ use context_module;
 use dml_exception;
 use mod_adaptivequiz\event\attempt_completed;
 use mod_adaptivequiz\local\fetchquestion;
-use moodle_exception;
 use question_bank;
 use question_engine;
 use question_state_gaveup;
@@ -39,14 +30,17 @@ use question_state_gradedwrong;
 use question_usage_by_activity;
 use stdClass;
 
+/**
+ * This class contains information about the attempt parameters
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class attempt {
 
     private const TABLE = 'adaptivequiz_attempt';
-
-    /**
-     * The name of the module
-     */
-    const MODULENAME = 'mod_adaptivequiz';
 
     /**
      * The behaviour to use be default
@@ -359,31 +353,6 @@ class attempt {
     }
 
     /**
-     * The method initializes the question_usage_by_activity object. If an unfinished attempt has a usage id,
-     * a question_usage_by_activity object will be loaded using the usage id. Otherwise, a new question_usage_by_activity object
-     * is created.
-     *
-     * @throws moodle_exception Exception is thrown when required behaviour could not be found.
-     */
-    public function initialize_quba(context_module $context): ?question_usage_by_activity {
-        if (!$this->behaviour_exists()) {
-            throw new moodle_exception('Missing '.self::ATTEMPTBEHAVIOUR.' behaviour', 'Behaviour: '.self::ATTEMPTBEHAVIOUR.
-                ' must exist in order to use this activity');
-        }
-
-        if (0 == $this->adpqattempt->uniqueid) {
-            // Init question usage and set default behaviour of usage.
-            $quba = question_engine::make_questions_usage_by_activity(self::MODULENAME, $context);
-            $quba->set_preferred_behaviour(self::ATTEMPTBEHAVIOUR);
-        } else {
-            // Load a previously used question by usage object.
-            $quba = question_engine::load_questions_usage_by_activity($this->adpqattempt->uniqueid);
-        }
-
-        return $quba;
-    }
-
-    /**
      * This function determins whether the user answered the question correctly or incorrectly.
      * If the answer is partially correct it is seen as correct.
      * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
@@ -617,27 +586,6 @@ class attempt {
         $this->timemodified = time();
 
         $DB->update_record(self::TABLE, $this->adpqattempt);
-    }
-
-    /**
-     * This function retrives archetypal behaviours and sets the attempt behavour to to manual grade
-     * @return bool true if the behaviour exists, else false
-     */
-    protected function behaviour_exists() {
-        $exists = false;
-        $behaviours = question_engine::get_archetypal_behaviours();
-
-        if (!empty($behaviours)) {
-            foreach ($behaviours as $key => $behaviour) {
-                if (0 == strcmp(self::ATTEMPTBEHAVIOUR, $key)) {
-                    // Behaviour found, exit the loop.
-                    $exists = true;
-                    break;
-                }
-            }
-        }
-
-        return $exists;
     }
 
     private function save(int $time): void {

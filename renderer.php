@@ -25,6 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core\output\notification;
 use mod_adaptivequiz\form\requiredpassword;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
@@ -61,7 +62,19 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         'menubar' => false
     );
 
-    public function attempt_controls_or_notification(int $cmid, bool $attemptallowed, bool $browsersecurityenabled): string {
+    /**
+     * Displays either the button to start the quiz or a notification if an attempt cannot be started/continued.
+     */
+    public function attempt_controls_or_notification(
+        int $cmid,
+        bool $attemptallowed,
+        string $activityavailabilitynotification,
+        bool $browsersecurityenabled
+    ): string {
+        if ($activityavailabilitynotification) {
+            return $this->notification($activityavailabilitynotification, notification::NOTIFY_WARNING);
+        }
+
         if (!$attemptallowed) {
             return html_writer::div(get_string('noattemptsallowed', 'adaptivequiz'), 'alert alert-info text-center');
         }

@@ -224,12 +224,6 @@ if (!is_null($nextdiff)) {
     $adaptiveattempt->set_level((int) $adaptivequiz->startinglevel);
 }
 
-// If we have a previous difficulty level, pass that off to the attempt so that it
-// can modify the next-question search process based on this level.
-if (isset($difflevel) && !is_null($difflevel)) {
-    $adaptiveattempt->set_last_difficulty_level($difflevel);
-}
-
 // Initialize quba.
 $qubaid = $adaptiveattempt->read_attempt_data()->uniqueid;
 $quba = ($qubaid == 0)
@@ -239,7 +233,7 @@ if ($qubaid == 0) {
     $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 }
 
-$attemptstatus = $adaptiveattempt->start_attempt($quba, $adaptiveattempt->number_of_questions_attempted());
+$attemptstatus = $adaptiveattempt->start_attempt($quba, $adaptiveattempt->number_of_questions_attempted(), $difflevel);
 
 // Check if attempt status is set to ready.
 if (empty($attemptstatus)) {

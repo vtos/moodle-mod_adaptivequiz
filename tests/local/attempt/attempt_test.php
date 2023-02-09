@@ -95,185 +95,6 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * Tests that one value is returned or an empty array is returned.
-     */
-    public function test_return_random_question() {
-        $this->resetAfterTest();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-        $adaptivequiz->minimumquestions = 21;
-
-        $userid = 2;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $result = $attempt->return_random_question([]);
-        $this->assertEquals(0, $result);
-
-        $result = (string) $attempt->return_random_question(
-            [1 => 'quest 1', 2 => 'quest 2', 3 => 'quest 3', 4 => 'quest 4']
-        );
-        $this->assertMatchesRegularExpression('/[1-4]/', $result);
-    }
-
-    /**
-     * This function tests whether the user submitted an answer to the question.
-     */
-    public function test_was_answer_submitted_to_question_with_graded_right() {
-        $this->resetAfterTest();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-
-        $userid = 1;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $mockquba = $this->getMockBuilder('question_usage_by_activity')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $mockstate = $this->createMock('question_state_gradedright');
-
-        $mockquba->expects($this->once())
-            ->method('get_question_state')
-            ->with(1)
-            ->will($this->returnValue($mockstate));
-
-        $mockquba->expects($this->never())
-            ->method('get_id');
-
-        $result = $attempt->was_answer_submitted_to_question($mockquba, 1);
-        $this->assertTrue($result);
-    }
-
-    /**
-     * This function tests whether the user submitted an answer to the question.
-     */
-    public function test_was_answer_submitted_to_question_with_graded_wrong() {
-        $this->resetAfterTest();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-
-        $userid = 1;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $mockquba = $this->getMockBuilder('question_usage_by_activity')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $mockstate = $this->createMock('question_state_gradedwrong');
-
-        $mockquba->expects($this->once())
-            ->method('get_question_state')
-            ->with(1)
-            ->will($this->returnValue($mockstate));
-
-        $mockquba->expects($this->never())
-            ->method('get_id');
-
-        $result = $attempt->was_answer_submitted_to_question($mockquba, 1);
-        $this->assertTrue($result);
-    }
-
-    /**
-     * This function tests whether the user submitted an answer to the question
-     */
-    public function test_was_answer_submitted_to_question_with_graded_partial() {
-        $this->resetAfterTest();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-
-        $userid = 1;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $mockquba = $this->getMockBuilder('question_usage_by_activity')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $mockstate = $this->createMock('question_state_gradedpartial');
-
-        $mockquba->expects($this->once())
-            ->method('get_question_state')
-            ->with(1)
-            ->will($this->returnValue($mockstate));
-
-        $mockquba->expects($this->never())
-            ->method('get_id');
-
-        $result = $attempt->was_answer_submitted_to_question($mockquba, 1);
-        $this->assertTrue($result);
-    }
-
-    /**
-     * This function tests whether the user submitted an answer to the question
-     */
-    public function test_was_answer_submitted_to_question_with_graded_gaveup() {
-        $this->resetAfterTest();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-
-        $userid = 1;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $mockquba = $this->getMockBuilder('question_usage_by_activity')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $mockstate = $this->createMock('question_state_gaveup');
-
-        $mockquba->expects($this->once())
-            ->method('get_question_state')
-            ->with(1)
-            ->will($this->returnValue($mockstate));
-
-        $mockquba->expects($this->never())
-            ->method('get_id');
-
-        $result = $attempt->was_answer_submitted_to_question($mockquba, 1);
-        $this->assertTrue($result);
-    }
-
-    /**
-     * This function tests whether the user submitted an answer to the question.
-     */
-    public function test_was_answer_submitted_to_question_with_graded_todo() {
-        $this->resetAfterTest();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-
-        $userid = 1;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $mockquba = $this->getMockBuilder('question_usage_by_activity')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $mockstate = $this->createMock('question_state_todo');
-
-        $mockquba->expects($this->once())
-            ->method('get_question_state')
-            ->with(1)
-            ->will($this->returnValue($mockstate));
-
-        $mockquba->expects($this->once())
-            ->method('get_id')
-            ->will($this->returnValue(1));
-
-        $result = $attempt->was_answer_submitted_to_question($mockquba, 1);
-        $this->assertFalse($result);
-    }
-
-    /**
      * This function tests the accessor method for $slot.
      */
     public function test_set_get_question_slot_number() {
@@ -394,14 +215,16 @@ class attempt_test extends advanced_testcase {
 
         $adaptivequizid = 330;
         $userid = 3;
-        $cmid = 5;
+        $lastdifficultylevel = 1;
 
         $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
         $attempt = attempt::create($adaptivequiz, $userid);
 
         $startattemptresult = $attempt->start_attempt(
             $this->createMock(question_usage_by_activity::class),
-            $attempt->number_of_questions_attempted()
+            $attempt->read_attempt_data()->questionsattempted,
+            $lastdifficultylevel
+
         );
         $this->assertFalse($startattemptresult);
     }
@@ -459,25 +282,6 @@ class attempt_test extends advanced_testcase {
         $attempt = attempt::create($adaptivequiz, $userid);
 
         $this->assertTrue($attempt->level_in_bounds(6, $adaptivequiz));
-    }
-
-    /**
-     * This function tests retrieving of question ids.
-     */
-    public function test_get_all_questions_in_attempt() {
-        $this->resetAfterTest();
-        $this->setup_test_data_xml();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-
-        $userid = 1;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-        $questids = $attempt->get_all_questions_in_attempt(330);
-
-        $this->assertEquals(2, count($questids));
-        $this->assertEquals(['1' => 1, '2' => 2], $questids);
     }
 
     public function test_it_can_check_if_a_user_has_a_completed_attempt_on_a_quiz(): void {
@@ -660,7 +464,7 @@ class attempt_test extends advanced_testcase {
 
         $this->assertNotNull($attemptcompletedevent,
             sprintf('Failed asserting that event %s was triggered.', attempt_completed::class));
-        $this->assertEquals($attempt->id(), $attemptcompletedevent->objectid);
+        $this->assertEquals($attempt->read_attempt_data()->id, $attemptcompletedevent->objectid);
         $this->assertEquals($context, $attemptcompletedevent->get_context());
         $this->assertEquals($user->id, $attemptcompletedevent->userid);
     }

@@ -121,14 +121,6 @@ class attempt {
     }
 
     /**
-     * This function returns the adaptivequiz property
-     * @return stdClass adaptivequiz record
-     */
-    public function get_adaptivequiz() {
-        return $this->adaptivequiz;
-    }
-
-    /**
      * This function returns the $level property
      * @return int level property
      */
@@ -235,7 +227,7 @@ class attempt {
 
             $this->print_debug("start_attempt() - Brand new attempt.  Set starting level: {$this->adaptivequiz->startinglevel}.");
 
-        } else if (!empty($this->slot) && $this->was_answer_submitted_to_question($quba, $this->slot)) {
+        } else if (!empty($this->slot) && $this->was_answer_submitted_to_question($quba)) {
             // If the attempt already has a question attached to it, check if an answer was submitted to the question.
             // If so fetch a new question.
 
@@ -298,47 +290,6 @@ class attempt {
     }
 
     /**
-     * This function returns a random array element
-     * @param array $questions an array of question ids.  Array key values are question ids
-     * @return int a question id
-     */
-    public function return_random_question($questions) {
-        if (empty($questions)) {
-            return 0;
-        }
-
-        $questionid = array_rand($questions);
-        $this->print_debug('return_random_question() - random question chosen questionid: '.$questionid);
-
-        return (int) $questionid;
-    }
-
-    /**
-     * This function determines if the user submitted an answer to the question
-     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
-     * @param int $slot question slot id
-     * @return bool true if an answer to the question was submitted, otherwise false
-     */
-    public function was_answer_submitted_to_question($quba, $slotid) {
-        $state = $quba->get_question_state($slotid);
-
-        // Check if the state of the quesiton attempted was graded right, partially right, wrong or gave up, count the question has
-        // having an answer submitted.
-        $marked = $state instanceof question_state_gradedright || $state instanceof question_state_gradedpartial
-            || $state instanceof question_state_gradedwrong || $state instanceof question_state_gaveup;
-
-        if ($marked) {
-            return true;
-        } else {
-            // Save some debugging information.
-            $this->print_debug('was_answer_submitted_to_question() - question state is unrecognized state: '.get_class($state).'
-                    question slotid: '.$slotid.' quba id: '.$quba->get_id());
-        }
-
-        return false;
-    }
-
-    /**
      * This function determins whether the user answered the question correctly or incorrectly.
      * If the answer is partially correct it is seen as correct.
      * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
@@ -355,31 +306,6 @@ class attempt {
         $this->print_debug('get_question_mark() - Question mark was not a float slot id: '.$slotid.'.  Returning zero');
 
         return 0;
-    }
-
-    /**
-     * This functions returns an array of all question ids that have been used in this attempt
-     *
-     * @return array an array of question ids
-     */
-    public function get_all_questions_in_attempt($uniqueid) {
-        global $DB;
-
-        $questions = $DB->get_records_menu('question_attempts', array('questionusageid' => $uniqueid), 'id ASC', 'id,questionid');
-
-        return $questions;
-    }
-
-    public function id(): string {
-        return $this->adpqattempt->id;
-    }
-
-    public function number_of_questions_attempted(): int {
-        return (int) $this->adpqattempt->questionsattempted;
-    }
-
-    public function difficulty_sum(): float {
-        return (float) $this->adpqattempt->difficultysum;
     }
 
     /**
@@ -514,8 +440,11 @@ class attempt {
      * @return bool True if everything went okay, otherwise false.
      */
     protected function get_question_ready($fetchquestion, question_usage_by_activity $quba) {
+        global $DB;
+
         // Fetch questions already attempted.
-        $exclude = $this->get_all_questions_in_attempt($this->adpqattempt->uniqueid);
+        $exclude = $DB->get_records_menu('question_attempts', ['questionusageid' => $this->adpqattempt->uniqueid], 'id ASC',
+            'id,questionid');
         // Fetch questions for display.
         $questionids = $fetchquestion->fetch_questions($exclude);
 
@@ -525,8 +454,7 @@ class attempt {
             return false;
         }
         // Select one random question.
-        $questiontodisplay = $this->return_random_question($questionids);
-
+        $questiontodisplay = array_rand($questionids);
         if (empty($questiontodisplay)) {
             $this->print_debug('get_question_ready() - Unable to randomly select a question $questionstodisplay:'.
                 $questiontodisplay);
@@ -584,5 +512,23 @@ class attempt {
 
     private function max_number_of_questions_is_answered(): bool {
         return $this->adpqattempt->questionsattempted >= $this->adaptivequiz->maximumquestions;
+    }
+
+    /**
+     * This function determines if the user submitted an answer to the question.
+     */
+    private function was_answer_submitted_to_question(question_usage_by_activity $quba): bool {
+        $state = $quba->get_question_state($this->slot);
+
+        // Check if the state of the quesiton attempted was graded right, partially right, wrong or gave up, count the question has
+        // having an answer submitted.
+        $marked = $state instanceof question_state_gradedright || $state instanceof question_state_gradedpartial
+            || $state instanceof question_state_gradedwrong || $state instanceof question_state_gaveup;
+
+        if ($marked) {
+            return true;
+        }
+
+        return false;
     }
 }

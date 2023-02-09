@@ -156,8 +156,8 @@ if (!empty($uniqueid) && confirm_sesskey()) {
 
             // Calculate the next difficulty level.
             $nextdiff = $algo->perform_calculation_steps(
-                $adaptiveattempt->difficulty_sum(),
-                $adaptiveattempt->number_of_questions_attempted(),
+                (float) $adaptiveattempt->read_attempt_data()->difficultysum,
+                (int) $adaptiveattempt->read_attempt_data()->questionsattempted,
                 questions_difficulty_range::from_activity_instance($adaptivequiz),
                 (float) $adaptivequiz->standarderror
             );
@@ -233,7 +233,7 @@ if ($qubaid == 0) {
     $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 }
 
-$attemptstatus = $adaptiveattempt->start_attempt($quba, $adaptiveattempt->number_of_questions_attempted(), $difflevel);
+$attemptstatus = $adaptiveattempt->start_attempt($quba, $adaptiveattempt->read_attempt_data()->questionsattempted, $difflevel);
 
 // Check if attempt status is set to ready.
 if (empty($attemptstatus)) {

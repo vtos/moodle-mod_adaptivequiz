@@ -184,12 +184,17 @@ class attempt {
      * This function does the work of initializing data required to fetch a new question for the attempt.
      *
      * @param question_usage_by_activity $quba
+     * @param fetchquestion $fetchquestion
      * @param int $questionsattempted
      * @param int $lastdifficultylevel The last difficulty level used in the attempt.
-     *
      * @return bool True if attempt started okay otherwise false.
      */
-    public function start_attempt(question_usage_by_activity $quba, int $questionsattempted, int $lastdifficultylevel): bool {
+    public function start_attempt(
+        question_usage_by_activity $quba,
+        fetchquestion $fetchquestion,
+        int $questionsattempted,
+        int $lastdifficultylevel
+    ): bool {
         // Check if the level requested is out of the minimum/maximum boundries for the attempt.
         if (!$this->level_in_bounds($this->level, $this->adaptivequiz)) {
             $var = new stdClass();
@@ -211,10 +216,6 @@ class attempt {
         // or the user submitted an answer to it).
         $questionslots = $quba->get_slots();
         $this->slot = !empty($questionslots) ? end($questionslots) : 0;
-
-        // Create an instance of the fetchquestion class.
-        $fetchquestion = new fetchquestion($this->adaptivequiz, 1, $this->adaptivequiz->lowestlevel,
-            $this->adaptivequiz->highestlevel);
 
         // Check if this is the beginning of an attempt (and pass the starting level) or the continuation of an attempt.
         if (empty($this->slot) && 0 == $questionsattempted) {
@@ -435,11 +436,11 @@ class attempt {
     /**
      * This function gets the question ready for display to the user.
      *
-     * @param fetchquestion $fetchquestion A {@link fetchquestion} object initialized to the activity instance of the attempt.
+     * @param fetchquestion $fetchquestion
      * @param question_usage_by_activity $quba
      * @return bool True if everything went okay, otherwise false.
      */
-    protected function get_question_ready($fetchquestion, question_usage_by_activity $quba) {
+    protected function get_question_ready($fetchquestion, question_usage_by_activity $quba): bool {
         global $DB;
 
         // Fetch questions already attempted.

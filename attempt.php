@@ -190,13 +190,8 @@ if (!empty($uniqueid) && confirm_sesskey()) {
             }
 
             // Lastly decrement the sum of questions for the attempted difficulty level.
-            $fetchquestion = new fetchquestion($adaptivequiz, $difflevel, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
-            $tagquestcount = $fetchquestion->get_tagquestsum();
-            $tagquestcount = $fetchquestion->decrement_question_sum_from_difficulty($tagquestcount, $difflevel);
-            $fetchquestion->set_tagquestsum($tagquestcount);
-
-            // Force the class to deconstruct the object and save the updated mapping to the session global.
-            unset($fetchquestion);
+            (new fetchquestion($adaptivequiz, $difflevel, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel))
+                ->decrement_question_sum_for_difficulty_level($difflevel);
         }
     } catch (question_out_of_sequence_exception $e) {
         $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $id));
@@ -233,7 +228,10 @@ if ($qubaid == 0) {
     $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 }
 
-$attemptstatus = $adaptiveattempt->start_attempt($quba, $adaptiveattempt->read_attempt_data()->questionsattempted, $difflevel);
+$fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
+
+$attemptstatus = $adaptiveattempt->start_attempt($quba, $fetchquestion, $adaptiveattempt->read_attempt_data()->questionsattempted,
+    $difflevel);
 
 // Check if attempt status is set to ready.
 if (empty($attemptstatus)) {

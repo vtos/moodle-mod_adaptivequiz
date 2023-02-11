@@ -14,15 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * This class does the work of fetching a questions associated with a level of difficulty and within
- * a question category.
- *
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local;
 
 use coding_exception;
@@ -35,6 +26,14 @@ use mod_adaptivequiz\local\repository\tags_repository;
 use moodle_exception;
 use stdClass;
 
+/**
+ * This class does the work of fetching a questions associated with a level of difficulty and within a question category.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class fetchquestion {
     /**
      * The maximum number of attempts at finding a tag containing questions
@@ -82,17 +81,16 @@ class fetchquestion {
     public $rebuild = false;
 
     /**
-     * Constructor initializes data required to retrieve questions associated with tag
-     * and within question categories
-     * @throws coding_exception throws a coding exception if $level is not a positive integer and if $maximumlevEl is greater
-     *      than $minimumlevel
-     * @param stdClass $adaptivequiz: adaptivequiz record object from adaptivequiz table
-     * @param int $level level of difficuty to look for when fetching a question
-     * @param int $minimumlevel the minimum level the student can achieve
-     * @param int $maximumlevel the maximum level the student can achieve
-     * @param array $tags an array of accepted tags
+     * Constructor initializes data required to retrieve questions associated with tag and within question categories.
+     *
+     * @param stdClass $adaptivequiz A record object from the {adaptivequiz} table.
+     * @param int $level Level of difficulty to look for when fetching a question.
+     * @param int $minimumlevel The minimum level the student can achieve.
+     * @param int $maximumlevel The maximum level the student can achieve.
+     * @param array $tags An array of accepted tags.
+     * @throws coding_exception
      */
-    public function __construct($adaptivequiz, $level, $minimumlevel, $maximumlevel, $tags = array()) {
+    public function __construct($adaptivequiz, $level, $minimumlevel, $maximumlevel, $tags = []) {
         global $SESSION;
 
         $this->adaptivequiz = $adaptivequiz;
@@ -204,35 +202,17 @@ class fetchquestion {
     }
 
     /**
-     * This functions returns the $tagquestsum class property
-     * @return array an array whose keys are difficulty levels and values are the sum of questions associated with the difficulty
+     * Decrements the sum of questions for the given difficulty level by 1.
+     *
+     * @param int $level
      */
-    public function get_tagquestsum() {
-        return $this->tagquestsum;
-    }
-
-    /**
-     * This functions sets the $tagquestsum class property
-     * @param array an array whose keys are difficulty levels and values are the sum of questions associated with the difficulty
-     */
-    public function set_tagquestsum($tagquestsum) {
-        $this->tagquestsum = $tagquestsum;
-    }
-
-    /**
-     * This function decrements 1 from the sum of questions in a difficulty level
-     * @param array $tagquestsum an array equal to the $tagquestsum property, where the key is the difficulty level and the value
-     *      is the total number of
-     * questions associated with it.  This parameter will be modified.
-     * @param int $level the difficulty level
-     * @return array an array whose keys are difficulty levels and values are the sum of questions associated with the difficulty
-     */
-    public function decrement_question_sum_from_difficulty($tagquestsum, $level) {
-        if (array_key_exists($level, $tagquestsum)) {
-            $tagquestsum[$level] -= 1;
+    public function decrement_question_sum_for_difficulty_level(int $level): void {
+        if (!array_key_exists($level, $this->tagquestsum)) {
+            return;
         }
 
-        return $tagquestsum;
+        $this->tagquestsum[$level]--;
+        $this->update_global_session();
     }
 
     /**
@@ -298,6 +278,8 @@ class fetchquestion {
         // Initialize the difficulty tag question sum property for searching.
         $this->tagquestsum = $this->initalize_tags_with_quest_count($this->tagquestsum, $this->tags, $this->minimumlevel,
             $this->maximumlevel, $this->rebuild);
+
+        $this->update_global_session();
 
         // If tagquestsum property ie empty then return with nothing.
         if (empty($this->tagquestsum)) {
@@ -468,10 +450,11 @@ class fetchquestion {
     }
 
     /**
-     * The destruct method saves the difficult level and qustion number mapping to the session variable
+     * Stores value of the 'tagquestsum' property in the session.
      */
-    public function __destruct() {
+    private function update_global_session(): void {
         global $SESSION;
+
         $SESSION->adpqtagquestsum = $this->tagquestsum;
     }
 }

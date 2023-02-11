@@ -633,34 +633,4 @@ class fetchquestion_test extends advanced_testcase {
         $result = $mockclass->initalize_tags_with_quest_count([1, 2, 3, 4], ['test1_', 'test2_'], 1, 100, true);
         $this->assertEquals([1 => 16, 2 => 6, 5 => 20], $result);
     }
-
-    /**
-     * This function tests the output from decrement_question_sum_from_difficulty().
-     */
-    public function test_decrement_question_sum_from_difficulty() {
-        $this->resetAfterTest(true);
-
-        $dummyclass = new stdClass();
-        $result = array(1 => 12);
-        $expected = array(1 => 11);
-
-        $fetchquestion = new fetchquestion($dummyclass, 1, 1, 2);
-        $result = $fetchquestion->decrement_question_sum_from_difficulty($result, 1);
-        $this->assertEquals($expected, $result);
-    }
-
-    /**
-     * This function tests the output from decrement_question_sum_from_difficulty(), using a key that doesn't exist.
-     */
-    public function test_decrement_question_sum_from_difficulty_user_missing_key() {
-        $this->resetAfterTest(true);
-
-        $dummyclass = new stdClass();
-        $result = array(1 => 12);
-        $expected = array(1 => 12);
-
-        $fetchquestion = new fetchquestion($dummyclass, 1, 1, 2);
-        $result = $fetchquestion->decrement_question_sum_from_difficulty($result, 2);
-        $this->assertEquals($expected, $result);
-    }
 }

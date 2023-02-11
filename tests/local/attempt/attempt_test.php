@@ -25,6 +25,7 @@ use advanced_testcase;
 use coding_exception;
 use context_module;
 use mod_adaptivequiz\event\attempt_completed;
+use mod_adaptivequiz\local\fetchquestion;
 use question_usage_by_activity;
 use stdClass;
 
@@ -221,10 +222,10 @@ class attempt_test extends advanced_testcase {
         $attempt = attempt::create($adaptivequiz, $userid);
 
         $startattemptresult = $attempt->start_attempt(
-            $this->createMock(question_usage_by_activity::class),
+            $this->createStub(question_usage_by_activity::class),
+            $this->createStub(fetchquestion::class),
             $attempt->read_attempt_data()->questionsattempted,
             $lastdifficultylevel
-
         );
         $this->assertFalse($startattemptresult);
     }

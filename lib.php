@@ -15,6 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * System and utility functions used by the module.
+ *
+ * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -122,13 +125,12 @@ function adaptivequiz_add_instance(stdClass $adaptivequiz, mod_adaptivequiz_mod_
 }
 
 /**
- * This functions creates question category association record(s)
+ * This functions creates question category association record(s).
  *
- * @param int $instance: activity instance id
- * @param object $adaptivequiz: An object from the form in mod_form.php
- * @return void
+ * @param int $instance Activity instance id. May be 0, then processing is skipped.
+ * @param stdClass $adaptivequiz An object from the form in mod_form.
  */
-function adaptivequiz_add_questcat_association($instance = 0, stdClass $adaptivequiz) {
+function adaptivequiz_add_questcat_association(int $instance, stdClass $adaptivequiz): void {
     global $DB;
 
     if (0 != $instance && !empty($adaptivequiz->questionpool)) {
@@ -143,17 +145,17 @@ function adaptivequiz_add_questcat_association($instance = 0, stdClass $adaptive
 }
 
 /**
- * This function updates the question category association records
- * @param int $instance: activity instance
- * @param object $adaptivequiz: An object from the form in mod_form.php
- * @return void;
+ * This function updates the question category association records.
+ *
+ * @param int $instance Activity instance id. May be 0, then processing is skipped.
+ * @param stdClass $adaptivequiz An object from the form in mod_form.
  */
-function adaptivequiz_update_questcat_association($instance = 0, stdClass $adaptivequiz) {
+function adaptivequiz_update_questcat_association(int $instance, stdClass $adaptivequiz): void {
     global $DB;
 
     // Remove old references.
     if (!empty($instance)) {
-        $DB->delete_records('adaptivequiz_question', array('instance' => $instance));
+        $DB->delete_records('adaptivequiz_question', ['instance' => $instance]);
     }
 
     // Insert new references.

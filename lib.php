@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin's system and internal functions.
+ * System and utility functions used by the module.
  *
  * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
@@ -125,10 +125,10 @@ function adaptivequiz_add_instance(stdClass $adaptivequiz, mod_adaptivequiz_mod_
 }
 
 /**
- * This function creates question category association record(s).
+ * This functions creates question category association record(s).
  *
- * @param int $instance Activity instance id.
- * @param stdClass $adaptivequiz An object from the form in mod_form.php.
+ * @param int $instance Activity instance id. May be 0, then processing is skipped.
+ * @param stdClass $adaptivequiz An object from the form in mod_form.
  */
 function adaptivequiz_add_questcat_association(int $instance, stdClass $adaptivequiz): void {
     global $DB;
@@ -147,8 +147,8 @@ function adaptivequiz_add_questcat_association(int $instance, stdClass $adaptive
 /**
  * This function updates the question category association records.
  *
- * @param int $instance Activity instance id.
- * @param stdClass $adaptivequiz An object from the form in mod_form.php.
+ * @param int $instance Activity instance id. May be 0, then processing is skipped.
+ * @param stdClass $adaptivequiz An object from the form in mod_form.
  */
 function adaptivequiz_update_questcat_association(int $instance, stdClass $adaptivequiz): void {
     global $DB;

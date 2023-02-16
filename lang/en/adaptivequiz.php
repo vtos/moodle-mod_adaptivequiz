@@ -75,6 +75,7 @@ $string['reportuserattemptstitleshort'] = '{$a}\'s attempts';
 $string['reportquestionanalysispageheading'] = '{$a} - questions report';
 $string['settingsdefaultsettingsheading'] = 'Default settings of activity instances';
 $string['settingsdefaultsettingsheadinginfo'] = 'If your adaptive quizzes are supposed to be configured identically throughout the courses you may want to set some default settings for them here.';
+$string['subplugintype_adaptivequizcatmodel_plural'] = 'CAT model plugins';
 $string['modulenameplural'] = 'Adaptive Quiz';
 $string['modulename'] = 'Adaptive Quiz';
 $string['modulename_help'] = 'The Adaptive Quiz activity enables a teacher to create quizes that efficiently measure the takers\' abilities. Adaptive quizes are comprised  of questions selected from the question bank that are tagged with a score of their difficulty. The questions are chosen to match the estimated ability level of the  current test-taker. If the test-taker succeeds on a question, a more challenging question is presented next. If the test-taker answers a question incorrectly, a less-challenging question is presented next. This technique will develop into a sequence of questions converging on the test-taker\'s effective ability level. The quiz stops when the test-taker\'s ability is determined to the required accuracy.

@@ -37,6 +37,8 @@ $string['attemptnofirstquestion'] = 'Sorry, but couldn\'t define the first quest
 $string['completionattemptcompletedcminfo'] = 'Complete an attempt';
 $string['completionattemptcompletedform'] = 'Student must have al least one completed attempt on this activity';
 $string['eventattemptcompleted'] = 'Attempt completed';
+$string['modformcatmodel'] = 'CAT model';
+$string['modformcatmodel_help'] = 'Select one of the CAT model sub-plugins installed to use as a CAT model implementation. The form will perform a reload after the selection.';
 $string['modformshowattemptprogress'] = 'Show quiz progress to students';
 $string['modformshowattemptprogress_help'] = 'When selected, during attempt, a student will see a progress bar depicting how many questions are answered out of the maximum number.';
 $string['showabilitymeasure'] = 'Show ability measure to students';
@@ -98,6 +100,7 @@ The Adaptive Quiz can be configured to
 This description and the testing process in this activity are based on <a href="http://www.rasch.org/memo69.pdf">Computer-Adaptive Testing: A Methodology Whose Time Has Come</a> by John Michael Linacre, Ph.D. MESA Psychometric Laboratory - University of Chicago. MESA Memorandum No. 69.';
 $string['pluginadministration'] = 'Adaptive Quiz';
 $string['pluginname'] = 'Adaptive Quiz';
+$string['subplugintype_adaptivequizcatmodel_plural'] = 'CAT model plugins';
 $string['nonewmodules'] = 'No Adaptive Quiz instances found';
 $string['adaptivequizname'] = 'Name';
 $string['adaptivequizname_help'] = 'Enter the name of the Adaptive Quiz instance';

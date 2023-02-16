@@ -168,6 +168,10 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         // Add standard elements, common to all modules.
         $this->standard_coursemodule_elements();
 
+        $mform->addElement('header', 'advancedheading', get_string('advanced'));
+
+        $this->add_cat_model_chooser_when_applicable($mform);
+
         // Add standard buttons, common to all modules.
         $this->add_action_buttons();
     }
@@ -258,5 +262,23 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         return questions_repository::count_adaptive_questions_in_pool_with_level($qcategoryidlist, $startinglevel) > 0
             ? ''
             : get_string('questionspoolerrornovalidstartingquestions', 'adaptivequiz');
+    }
+
+    /**
+     * Checks whether there are CAT model plugins to choose and if that's the case adds related elements to the form.
+     *
+     * @param MoodleQuickForm $form
+     */
+    private function add_cat_model_chooser_when_applicable(MoodleQuickForm $form): void {
+        if (!$catmodelplugins = core_component::get_plugin_list('adaptivequizcatmodel')) {
+            return;
+        }
+
+        $options = ['' => ''];
+        foreach (array_keys($catmodelplugins) as $pluginname) {
+            $options[$pluginname] = get_string('pluginname', "adaptivequizcatmodel_$pluginname");
+        }
+
+        $form->addElement('select', 'catmodel', get_string('modformcatmodel', 'adaptivequiz'), $options);
     }
 }

@@ -92,8 +92,8 @@ class attempt {
     /** @var question_usage_by_activity $quba - A question usage by activity object */
     protected $quba = null;
 
-    /** @var int $slot - a question slot number */
-    protected $slot = 0;
+    /** @var int $slot A question slot number. */
+    protected $slot;
 
     /** @var array $tags an array of tags that used to identify eligible questions for the attempt */
     protected $tags = array();
@@ -162,15 +162,11 @@ class attempt {
     }
 
     /**
-     * This function sets the current slot number set for the attempt
-     * @throws coding_exception - exception is thrown the argument is not a positive integer
-     * @param int $slot slot number
+     * This function sets the current slot number set for the attempt.
+     *
+     * @param int $slot
      */
-    public function set_question_slot_number($slot) {
-        if (!is_int($slot) || 0 >= $slot) {
-            throw new coding_exception('adaptiveattempt: Argument 1 is not an positive integer', 'Slot must be a positive integer');
-        }
-
+    public function set_question_slot_number(int $slot): void {
         $this->slot = $slot;
     }
 
@@ -256,13 +252,16 @@ class attempt {
             return false;
         }
 
+        if ($this->slot === null) {
+            throw new coding_exception('slot must be set before calling start_attempt()');
+        }
+
         // Initialize the question usage by activity property.
         $this->initialize_quba($context);
-        // Find the last question viewed/answered by the user.
-        $this->slot = $this->find_last_quest_used_by_attempt($this->quba);
-        // Create a an instance of the fetchquestion class.
+
+        // Create an instance of the fetchquestion class.
         $fetchquestion = new fetchquestion($this->adaptivequiz, 1, $this->adaptivequiz->lowestlevel,
-                $this->adaptivequiz->highestlevel);
+            $this->adaptivequiz->highestlevel);
 
         // Check if this is the beginning of an attempt (and pass the starting level) or the continuation of an attempt.
         if (empty($this->slot) && 0 == $adpqattempt->questionsattempted) {
@@ -391,34 +390,6 @@ class attempt {
         }
 
         return false;
-    }
-
-    /**
-     * This function retrieves the last question that was used in the attempt
-     * @throws moodle_exception - exception is thrown function parameter is not an instance of question_usage_by_activity class
-     * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
-     * @return int question slot or 0 if no unmarked question could be found
-     */
-    public function find_last_quest_used_by_attempt($quba) {
-        if (!$quba instanceof question_usage_by_activity) {
-            throw new coding_exception('find_last_quest_used_by_attempt() - Argument was not a question_usage_by_activity object',
-                $this->vardump($quba));
-        }
-
-        // The last slot in the array should be the last question that was attempted (meaning it was either shown to the user
-        // or the user submitted an answer to it).
-        $questslots = $quba->get_slots();
-
-        if (empty($questslots) || !is_array($questslots)) {
-            $this->print_debug('find_last_quest_used_by_attempt() - No question slots found for this '.
-                'question_usage_by_activity object');
-            return 0;
-        }
-
-        $questslot = end($questslots);
-        $this->print_debug('find_last_quest_used_by_attempt() - Found a question slot: '.$questslot);
-
-        return $questslot;
     }
 
     /**
@@ -551,6 +522,22 @@ class attempt {
         $questions = $DB->get_records_menu('question_attempts', array('questionusageid' => $uniqueid), 'id ASC', 'id,questionid');
 
         return $questions;
+    }
+
+    /**
+     * Sets quba id for the attempt.
+     *
+     * @param int $id
+     */
+    public function set_quba_id(int $id): void {
+        global $DB;
+
+        if ($this->adpqattempt->uniqueid != 0) {
+            throw new coding_exception('quba id is already set for the attempt');
+        }
+
+        $this->adpqattempt->uniqueid = $id;
+        $DB->update_record(self::TABLE, $this->adpqattempt);
     }
 
     /**

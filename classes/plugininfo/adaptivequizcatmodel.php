@@ -14,20 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace mod_adaptivequiz\plugininfo;
+
+use core\plugininfo\base;
+
 /**
- * Plugin basic info.
+ * A Moodle's system-required class - info about adaptive quiz sub plugins.
  *
  * @package    mod_adaptivequiz
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+class adaptivequizcatmodel extends base {
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2024082100;
-$plugin->release = '2.4.0';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->requires = 2024042200;
-$plugin->cron = 0;
-$plugin->component = 'mod_adaptivequiz';
+    /**
+     * Should there be a way to uninstall the plugin via the administration UI.
+     */
+    public function is_uninstall_allowed(): bool {
+        return true;
+    }
+}

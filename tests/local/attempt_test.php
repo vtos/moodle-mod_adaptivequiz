@@ -290,68 +290,6 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * This function tests retrieving the last question viewed by the student for a given attempt.
-     */
-    public function test_find_last_quest_used_by_attempt() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setup_test_data_xml();
-
-        $activityinstance = $DB->get_record('adaptivequiz', ['id' => 330]);
-        $cm = get_coursemodule_from_instance('adaptivequiz', $activityinstance->id, 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-
-        $adaptiveattempt = new attempt($activityinstance, 2);
-        $adaptiveattempt->get_attempt();
-        $quba = $adaptiveattempt->initialize_quba($context);
-
-        $result = $adaptiveattempt->find_last_quest_used_by_attempt($quba);
-
-        $this->assertEquals(2, $result);
-    }
-
-    /**
-     * @test
-     */
-    public function it_fails_to_find_the_last_question_used_by_attempt_with_an_invalid_argument() {
-        $this->resetAfterTest(true);
-
-        $dummy = new stdClass();
-
-        $adaptiveattempt = new attempt($dummy, 2);
-
-        $this->expectException('coding_exception');
-        $adaptiveattempt->find_last_quest_used_by_attempt($dummy);
-    }
-
-    /**
-     * This function tests retrieving the last question viewed by the student for a given attempt, but using failing data
-     */
-    public function test_find_last_umarked_question_using_bad_data() {
-        $this->resetAfterTest(true);
-
-        $dummy = new stdClass();
-
-        $adaptiveattempt = $this->getMockBuilder(attempt::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        // Test passing an invalid object instance.
-        $result = $adaptiveattempt->find_last_quest_used_by_attempt($dummy);
-        $this->assertEquals(0, $result);
-
-        // Test getting an empty slot value.
-        $mockquba = $this->getMockBuilder('question_usage_by_activity')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $result = $adaptiveattempt->find_last_quest_used_by_attempt($mockquba);
-
-        $this->assertEquals(0, $result);
-    }
-
-    /**
      * This function tests whether the user submitted an answer to the question
      */
     public function test_was_answer_submitted_to_question_with_graded_right() {
@@ -632,7 +570,7 @@ class attempt_test extends advanced_testcase {
         $mockattemptthree = $this
             ->getMockBuilder(attempt::class)
             ->onlyMethods(
-                ['get_attempt', 'max_questions_answered', 'initialize_quba', 'find_last_quest_used_by_attempt',
+                ['get_attempt', 'max_questions_answered', 'initialize_quba',
                     'level_in_bounds']
             )
             ->setConstructorArgs(
@@ -657,9 +595,8 @@ class attempt_test extends advanced_testcase {
             ->will($this->returnValue(false));
         $mockattemptthree->expects($this->once())
             ->method('initialize_quba');
-        $mockattemptthree->expects($this->once())
-            ->method('find_last_quest_used_by_attempt')
-            ->will($this->returnValue(0));
+
+        $mockattemptthree->set_question_slot_number(0);
 
         $this->assertFalse($mockattemptthree->start_attempt($context));
     }
@@ -766,9 +703,49 @@ class attempt_test extends advanced_testcase {
         // Simulate continuation of the attempt and make assertions.
         $attempt = new attempt($adaptivequiz, $user->id);
         $attempt->set_level((int) $adaptivequiz->startinglevel);
+
+        $slots = $quba->get_slots();
+        $previousslot = !empty($slots) ? end($slots) : null;
+        $attempt->set_question_slot_number($previousslot);
+
         $attempt->start_attempt($modcontext);
 
         self::assertEquals(7, $attempt->get_level());
+    }
+
+    public function test_start_attempt_fails_when_previous_question_slot_was_not_set(): void {
+        $this->resetAfterTest();
+
+        $datagenerator = $this->getDataGenerator();
+        $questionsgenerator = $datagenerator->get_plugin_generator('core_question');
+        $modgenerator = $datagenerator->get_plugin_generator('mod_adaptivequiz');
+
+        $course = $datagenerator->create_course();
+        $user = $datagenerator->create_user();
+
+        $qcategory = $questionsgenerator->create_question_category([
+            'contextid' => context_course::instance($course->id)->id,
+        ]);
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'questionpool' => [$qcategory->id],
+            'lowestlevel' => 1,
+            'highestlevel' => 15,
+            'startinglevel' => 1,
+            'minimumquestions' => 10,
+            'maximumquestions' => 18,
+            'standarderror' => 9,
+        ]);
+
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id, false, MUST_EXIST);
+        $modcontext = context_module::instance($cm->id);
+
+        $attempt = new attempt($adaptivequiz, $user->id);
+        $attempt->set_level(2);
+
+        self::expectExceptionMessage('slot must be set before calling start_attempt()');
+        $attempt->start_attempt($modcontext);
     }
 
     /**
@@ -827,6 +804,20 @@ class attempt_test extends advanced_testcase {
         adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $userid, '', '');
 
         $this->assertTrue(attempt::user_has_completed_on_quiz($adaptivequizid, $userid));
+    }
+
+    public function test_quba_id_cannot_be_set_if_set_previously(): void {
+        $this->resetAfterTest();
+
+        $adaptivequiz = new stdClass();
+        $adaptivequiz->id = 100500;
+
+        $attempt = new attempt($adaptivequiz, 2);
+        $attempt->get_attempt();
+        $attempt->set_quba_id(100500);
+
+        self::expectExceptionMessage('quba id is already set for the attempt');
+        $attempt->set_quba_id(100501);
     }
 
     public function test_non_meaningful_string_cannot_be_set_as_status(): void {

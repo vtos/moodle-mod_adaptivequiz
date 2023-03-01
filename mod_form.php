@@ -172,8 +172,67 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
 
         $this->add_cat_model_chooser_when_applicable($mform);
 
+        // Button to attach JavaScript to to reload the form.
+        $mform->registerNoSubmitButton('submitcatmodeloption');
+        $mform->addElement('submit', 'submitcatmodeloption', get_string('modformsubmitcatmodeloption', 'adaptivequiz'),
+            ['class' => 'd-none', 'data-action' => 'submitCatModel']);
+
         // Add standard buttons, common to all modules.
         $this->add_action_buttons();
+    }
+
+    /**
+     * Set up the form depending on current values.
+     */
+    public function definition_after_data() {
+        parent::definition_after_data();
+
+        $form = $this->_form;
+
+        if (!$form->elementExists('catmodel')) {
+            return;
+        }
+
+        $catmodelvalue = $form->getElementValue('catmodel');
+        if (empty($catmodelvalue[0])) {
+            return;
+        }
+
+        $catmodel = $catmodelvalue[0];
+
+        $formmodifierclasses = core_component::get_component_classes_in_namespace(
+            "adaptivequizcatmodel_$catmodel",
+            'local\catmodel\form'
+        );
+        if (empty($formmodifierclasses)) {
+            return;
+        }
+
+        $classnames = array_keys($formmodifierclasses);
+        foreach ($classnames as $classname) {
+            if (!is_subclass_of($classname, '\mod_adaptivequiz\local\catmodel\form\catmodel_mod_form_modifier')) {
+                continue;
+            }
+
+            // When having a form modifier we force dropping of some default fields.
+            $defaultelementstodrop = ['startinglevel', 'lowestlevel', 'highestlevel', 'stopingconditionshdr', 'minimumquestions',
+                'maximumquestions', 'standarderror', 'showabilitymeasure', 'showattemptprogress'];
+            foreach ($defaultelementstodrop as $elementname) {
+                $form->removeElement($elementname);
+            }
+
+            $formmodifier = new $classname();
+            $formelements = $formmodifier->definition_after_data_callback($form);
+            if (empty($formelements)) {
+                break;
+            }
+
+            foreach ($formelements as $formelement) {
+                $form->insertElementBefore($form->removeElement($formelement->getName(), false), 'catmodelfieldsmarker');
+            }
+
+            break;
+        }
     }
 
     public function add_completion_rules(): array {
@@ -206,6 +265,11 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
 
         if (empty($data['questionpool'])) {
             $errors['questionpool'] = get_string('formquestionpool', 'adaptivequiz');
+        }
+
+        // When there's a custom CAT model submitted, we wire up its form validation if exists and skip the default validation.
+        if (!empty($data['catmodel'])) {
+            return array_merge($errors, $this->validate_cat_model_fields_or_skip($data, $files));
         }
 
         // Validate for positivity.
@@ -254,6 +318,42 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
     }
 
     /**
+     * Overriding of the parent's method, {@see moodleform_mod::data_preprocessing()}.
+     *
+     * @param array $defaultvalues
+     */
+    public function data_preprocessing(&$defaultvalues) {
+        parent::data_preprocessing($defaultvalues);
+
+        // Run preprocessing hook from the custom CAT model being used (if any).
+        if (empty($defaultvalues['catmodel'])) {
+            return;
+        }
+
+        $catmodel = $defaultvalues['catmodel'];
+
+        $formdatapreprocessorclasses = core_component::get_component_classes_in_namespace(
+            "adaptivequizcatmodel_$catmodel",
+            'local\catmodel\form'
+        );
+        if (empty($formdatapreprocessorclasses)) {
+            return;
+        }
+
+        $classnames = array_keys($formdatapreprocessorclasses);
+        foreach ($classnames as $classname) {
+            if (!is_subclass_of($classname, '\mod_adaptivequiz\local\catmodel\form\catmodel_mod_form_data_preprocessor')) {
+                continue;
+            }
+
+            $formdatapreprocessor = new $classname();
+            $defaultvalues = $formdatapreprocessor->data_preprocessing_callback($defaultvalues);
+
+            break;
+        }
+    }
+
+    /**
      * @param int[] $qcategoryidlist A list of id of selected questions categories.
      * @return string An error message if any.
      * @throws coding_exception
@@ -270,15 +370,59 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
      * @param MoodleQuickForm $form
      */
     private function add_cat_model_chooser_when_applicable(MoodleQuickForm $form): void {
+        global $PAGE;
+
         if (!$catmodelplugins = core_component::get_plugin_list('adaptivequizcatmodel')) {
             return;
         }
+
+        $PAGE->requires->js_call_amd('mod_adaptivequiz/cat_model_chooser', 'init');
 
         $options = ['' => ''];
         foreach (array_keys($catmodelplugins) as $pluginname) {
             $options[$pluginname] = get_string('pluginname', "adaptivequizcatmodel_$pluginname");
         }
 
-        $form->addElement('select', 'catmodel', get_string('modformcatmodel', 'adaptivequiz'), $options);
+        $form->addElement('select', 'catmodel', get_string('modformcatmodel', 'adaptivequiz'), $options,
+            ['data-on-change-action' => 'reloadForm']);
+        $form->addHelpButton('catmodel', 'modformcatmodel', 'adaptivequiz');
+
+        // Just a marker to identify the place in form where custom fields should be added.
+        $form->addElement('hidden', 'catmodelfieldsmarker');
+        $form->setType('catmodelfieldsmarker', PARAM_INT);
+    }
+
+    /**
+     * Searches for implementation of form validation by the CAT model plugin and applies it when found.
+     *
+     * Parameters are same as for {@see moodleform_mod::validation()}.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array What {@see moodleform_mod::validation()} usually returns or an empty array if validation isn't implemented.
+     */
+    private function validate_cat_model_fields_or_skip(array $data, array $files): array {
+        $catmodel = $data['catmodel'];
+
+        $formvalidatorclasses = core_component::get_component_classes_in_namespace(
+            "adaptivequizcatmodel_$catmodel",
+            'local\catmodel\form'
+        );
+        if (empty($formvalidatorclasses)) {
+            return [];
+        }
+
+        $classnames = array_keys($formvalidatorclasses);
+        foreach ($classnames as $classname) {
+            if (!is_subclass_of($classname, '\mod_adaptivequiz\local\catmodel\form\catmodel_mod_form_validator')) {
+                continue;
+            }
+
+            $validator = new $classname();
+
+            return $validator->validation_callback($data, $files);
+        }
+
+        return [];
     }
 }

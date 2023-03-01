@@ -41,6 +41,7 @@ $string['modformcatmodel'] = 'CAT model';
 $string['modformcatmodel_help'] = 'Select one of the CAT model sub-plugins installed to use as a CAT model implementation. The form will perform a reload after the selection.';
 $string['modformshowattemptprogress'] = 'Show quiz progress to students';
 $string['modformshowattemptprogress_help'] = 'When selected, during attempt, a student will see a progress bar depicting how many questions are answered out of the maximum number.';
+$string['modformsubmitcatmodeloption'] = 'Submit CAT model';
 $string['showabilitymeasure'] = 'Show ability measure to students';
 $string['showabilitymeasure_help'] = 'Sometimes it may be useful to reveal ability estimations to students after taking an adaptive quiz. With this setting enabled a student may see ability estimation in the attempts summary and right after finishing an attempt as well.';
 $string['questionspoolerrornovalidstartingquestions'] = 'The selected questions categories do not contain questions which are properly tagged to match the selected starting level of difficulty.';

@@ -54,7 +54,7 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
     /**
      * Process the adaptivequiz element.
      *
-     * @param stdClass $data An object whose properties are nodes in the adatpviequiz structure.
+     * @param stdClass $data An object whose properties are nodes in the adaptivequiz structure.
      */
     protected function process_adaptivequiz($data) {
         global $CFG, $DB;
@@ -128,11 +128,11 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
     }
 
     /**
-     * This function adds any files assocaited with the intro field after the restore process has run.
+     * This function adds any files associated with the intro field after the restore process has run.
      */
     protected function after_execute() {
         parent::after_execute();
-        // Add quiz related files, no need to match by itemname (just internally handled context).
+        // Add quiz related files, no need to match by item name (just internally handled context).
         $this->add_related_files('mod_adaptivequiz', 'intro', null);
     }
 }

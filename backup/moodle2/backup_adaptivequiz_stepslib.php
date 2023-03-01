@@ -36,7 +36,8 @@ class backup_adaptivequiz_activity_structure_step extends backup_questions_activ
         // Define each element separated.
         $nodes = ['name', 'intro', 'introformat', 'attempts', 'password', 'browsersecurity', 'attemptfeedback',
             'attemptfeedbackformat', 'showabilitymeasure', 'showattemptprogress', 'highestlevel', 'lowestlevel', 'minimumquestions',
-            'maximumquestions', 'standarderror', 'startinglevel', 'timecreated', 'timemodified', 'completionattemptcompleted'];
+            'maximumquestions', 'standarderror', 'startinglevel', 'timecreated', 'timemodified', 'completionattemptcompleted',
+            'catmodel'];
         $adaptivequiz = new backup_nested_element('adaptivequiz', ['id'], $nodes);
 
         // Attempts.

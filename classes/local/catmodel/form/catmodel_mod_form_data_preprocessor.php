@@ -15,17 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin basic info.
+ * Interface to be implemented when a custom CAT model wants to populate mod_form's fields related to it.
  *
- * @package    adaptivequizcatmodel_helloworld
+ * @package    mod_adaptivequiz
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace mod_adaptivequiz\local\catmodel\form;
 
-$plugin->version = 2023022200;
-$plugin->release = '1.0.1dev';
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->requires = 2022041900;
-$plugin->component = 'adaptivequizcatmodel_helloworld';
+interface catmodel_mod_form_data_preprocessor {
+
+    /**
+     * Called in {@see \moodleform_mod::data_preprocessing()}, used to customize populating of form fields.
+     *
+     * Unlike the calling form's method, it accepts the form's values as the argument without a reference and returns the modified
+     * values.
+     *
+     * @param array $formdefaultvalues
+     * @return array Modified form values.
+     */
+    public function data_preprocessing_callback(array $formdefaultvalues): array;
+}

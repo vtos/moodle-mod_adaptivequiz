@@ -159,7 +159,7 @@ additional questions.
 Starting level
 ---------------
 As mentioned above, this usually will be set in the lower part of the difficulty
-range (about 1/3 of the way up from the bottom) so that most test takers will be able
+range (about 1/3 of the way up from the bottom) so that most test takers will be able to
 answer one of the first two questions correctly and get a moral boost from their
 correct answers. If the starting level is too high, low-ability users would be asked
 several questions they can't answer before the test begins asking them questions at a
@@ -179,7 +179,7 @@ Note that this measure is not affected by the order of answers, just the total
 difficulty and number of right and wrong answers. This measure is dependent on the
 test algorithm presenting alternating easier/harder questions as the user answers
 wrong/right and may not be applicable to other algorithms. In practice, this means
-that the ability measure should not greatly affected by a small number of spurrious
+that the ability measure should not be greatly affected by a small number of spurious
 right or wrong answers.
 
 As discussed in [Linacre (2000)][2], the ability measure of the test taker aligns
@@ -190,4 +190,150 @@ For example, given a test with levels 1-10 and a test-taker that answered every
 question 5 and below correctly and every question 6 and up wrong, the test-taker's
 ability measure would fall close to 5.5.
 
-Remember that the ability measure does have error associated with it. Be sure to take the standard error ammount into account when acting on the score.
+Remember that the ability measure does have error associated with it. Be sure to take the standard error amount into account when acting on the score.
+
+# Custom CAT models
+
+## General information
+
+Apart from the CAT model described above, the activity can be customized to use another logic to assess answers
+and select questions when running a quiz. At this moment, this is an experimental, partially implemented feature.
+This section describes the ongoing work for those who are interested in this functionality to be present in
+the adaptive quiz activity.
+
+The plugin now supports sub-plugins placed under `/mod/adaptivequiz/catmodel` directory. Each sub-plugin of such type
+is implementation of a custom CAT model. Currently, such sub-plugins are enabled to modify the activity form by adding
+custom fields there, validation for those fields and specifying the way those fields are populated when the form is initialized.
+Also, a sub-plugin can inject custom logic to be called when an adaptive quiz is created, updated and deleted.
+Basically, this allows for processing the custom form fields added by a sub-plugin. The ways a sub-plugin injects such
+functionality are described in detail below.
+
+## Technical implementation
+
+This section makes the most interest for those who would like to implement certain interfaces to add their custom
+CAT models to get used by the adaptive quiz activity. At this point there are two parts of such extension: `mod_form`
+customization and hooking up to the mod's lib functions, particularly, `adaptivequiz_add_instance()`,
+`adaptivequiz_update_instance()` and `adaptivequiz_delete_instance()`.
+
+### Customization of `mod_form`
+
+A new section has been added to the `mod_form` - 'CAT model'. So far it contains just one field - the sub-plugin selector.
+After creating a sub-plugin and placing it under `/mod/adaptivequiz/catmodel` directory, it becomes available in this selector.
+After selecting a sub-plugin with a CAT model to use, the `mod_form` is reloaded and tries to pick up implementations of
+interfaces, which it expects to be implemented to customize the form. The interfaces are defined under
+`/mod/adaptivequiz/classes/local/catmodel/form` dir and `mod_adaptivequiz\local\catmodel\form` namespace.
+
+Below you'll find short description of the interfaces used for `mod_form` customization.
+
+***catmodel_mod_form_modifier***
+
+Used to add custom fields to the form. The fields will be placed right after the CAT model selector.
+
+The interface defines one method to be implemented for adding custom fields:
+
+```
+public function definition_after_data_callback(MoodleQuickForm $form): array;
+```
+
+In Moodle, when you want to define the `moodleform`'s fields based on values of other fields (like the CAT model selector from above)
+you're making use of `moodleform::definition_after_data()` method. The adaptive quiz plugin overrides this method in its `mod_form`
+and wires up implementations of `catmodel_mod_form_modifier::definition_after_data_callback()` in it. You can find an example
+of implementation of this interface in the 'Hello world' sub-plugin included in the adaptive quiz mod. In general, this
+example sub-plugin is a good source of example implementations of the interfaces listed here. Thus, the example source
+code isn't listed here, it can be found in the 'Hello world' sub-plugin.
+
+***catmodel_mod_form_validator***
+
+Used to add extra validation the form. Defines one method:
+
+```
+public function validation_callback(array $data, array $files): array;
+```
+
+Accepts the same parameters as the calling `moodleform_mod::validation()` method, and is expected to return an array
+with the same structure as `moodleform_mod::validation()` returns. Again, see the example implementation in 'Hello world'
+sub-plugin.
+
+***catmodel_mod_form_data_preprocessor***
+
+The interface defines one method to be implemented:
+
+```
+public function data_preprocessing_callback(array $formdefaultvalues): array;
+```
+
+In Moodle, to tweak how the `moodleform`'s fields are populated you're making use of `moodleform::data_preprocessing()` method.
+The adaptive quiz plugin overrides this method in its `mod_form` and wires up implementations of
+`catmodel_mod_form_data_preprocessor::data_preprocessing_callback()` in it. Please, note how the form's values are passed to this
+method and that it expects them to be returned modified. As opposed to the calling method passing it be reference. Again, PHPDocs
+both in interfaces definition and the sub-plugin's implementations is a good source of information.
+
+You may have noticed that there are several interfaces covering extension of `mod_form` containing just one method. We just follow
+the interface segregation principle here, which means a sub-plugin implementation may not necessarily need all methods to be
+implemented. For example, it may implement adding of fields to the form, but no validation is needed, etc. This encourages proper
+extension design in sub-plugins. Later it can be reviewed whether one interface can go without the others in reality, but for now
+such atomic structure is encouraged.
+
+Where those implementations of interfaces should be placed in the sub-plugin's structure? The adaptive quiz plugin searches for
+possible implementations under `adaptivequizcatmodel_{your sub-plugin name}\local\catmodel\form` namespace. Thus, the class(es)
+should be kept under `/mod/adaptivequiz/catmodel/{your sub-plugin name}/classes/local/catmodel/form` directory. The name of
+the class implementing the interfaces does not matter. One class may also implement several interfaces. See the 'Hello world'
+plugin to get some tips on how it should be structured.
+
+### Hooking up to the lib functions
+
+After customizing the `mod_form` by adding some fields the next logical step for a CAT model sub-plugin would be processing those
+values coming from the form. For this, a sub-plugin may implement several hooks, which are called from the adaptive quiz plugin's
+lib functions when creating, updating and deleting a quiz activity instance.
+
+The interfaces, which a sub-plugin may implement to hook up to creation/updating/deleting of an adaptive quiz instance
+are listed below. They're defined under `/mod/adaptivequiz/classes/local/catmodel/instance` dir
+and `mod_adaptivequiz\local\catmodel\instance` namespace.
+
+***catmodel_add_instance_handler***
+
+Defines one method to be implemented:
+
+```
+public function add_instance_callback(stdClass $adaptivequiz, ?mod_adaptivequiz_mod_form $form = null): void;
+```
+
+Gets called in adaptive quiz's lib.php in `adaptivequiz_add_instance()`, during creation of an adaptive quiz instance. Here you can
+process those custom fields values added by the CAT model sub-plugin, perform some other actions, like triggering specific events,
+grades management, etc.
+
+***catmodel_update_instance_handler***
+
+Defines one method:
+
+```
+public function update_instance_callback(stdClass $adaptivequiz, ?mod_adaptivequiz_mod_form $form = null): void;
+```
+
+Gets called in `adaptivequiz_update_instance()`, the definition and purpose are similar to the `add_instance_callback()` above.
+
+***catmodel_delete_instance_handler***
+
+Defines one method:
+
+```
+public function delete_instance_callback(stdClass $adaptivequiz): void;
+```
+
+Gets called in `adaptivequiz_delete_instance()`.
+
+In general, the methods of those interfaces accept the same parameters as the adaptive quiz's calling functions. Here again we
+follow the interface segregation principle and define several interfaces to implement. As with the `mod_form`, a sub-plugin may
+want to implement just one or two interface, depending on its needs.
+
+In a sub-plugin, the implementations of the interfaces listed above are expected to be under
+`adaptivequizcatmodel_{your sub-plugin name}\local\catmodel\instance` namespace
+and `/mod/adaptivequiz/catmodel/{your sub-plugin name}/classes/local/catmodel/instance` directory.
+
+### Future plans
+At this point after developing a CAT model sub-plugin and successfully implementing the available interfaces, an instance of adaptive
+quiz using such sub-plugin will be entirely broken and unusable, because custom CAT models aren't yet supported in
+the adaptive quiz's backend. More work is expected to follow in this direction based on the feedback on initial implementation
+described here.
+
+So, any feedback on the current sub-plugins structure is always welcome!

@@ -29,14 +29,14 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/backup/moodle2/restore_adaptivequi
 class restore_adaptivequiz_activity_task extends restore_activity_task {
 
     /**
-     * Define (add) particular settings this activity can have
+     * Define (add) particular settings this activity can have.
      */
     protected function define_my_settings() {
         // No particular settings for this activity.
     }
 
     /**
-     * Define (add) particular steps this activity can have
+     * Define (add) particular steps this activity can have.
      */
     protected function define_my_steps() {
         // Adaptivequiz only has one structure step.
@@ -57,7 +57,7 @@ class restore_adaptivequiz_activity_task extends restore_activity_task {
     /**
      * Define the decoding rules for links belonging to the activity to be executed by the link decoder.
      *
-     * @return array an array of restore_decode_rule objects
+     * @return array An array of restore_decode_rule objects.
      */
     public static function define_decode_rules() {
         $rules = array();

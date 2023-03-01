@@ -15,17 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin basic info.
+ * Interface to add custom behaviour when an instance of adaptive quiz is created.
  *
- * @package    adaptivequizcatmodel_helloworld
+ * @package    mod_adaptivequiz
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace mod_adaptivequiz\local\catmodel\instance;
 
-$plugin->version = 2023022200;
-$plugin->release = '1.0.1dev';
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->requires = 2022041900;
-$plugin->component = 'adaptivequizcatmodel_helloworld';
+use mod_adaptivequiz_mod_form;
+use stdClass;
+
+interface catmodel_add_instance_handler {
+
+    /**
+     * Called when an instance of adaptive quiz activity is created.
+     *
+     * Accepts submitted data from mod_form and the form object itself to perform custom steps required by a custom CAT model.
+     *
+     * @param stdClass $adaptivequiz Submitted instance data from mod_form.
+     * @param mod_adaptivequiz_mod_form|null $form
+     */
+    public function add_instance_callback(stdClass $adaptivequiz, ?mod_adaptivequiz_mod_form $form = null): void;
+}

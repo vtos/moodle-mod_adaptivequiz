@@ -15,17 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin basic info.
+ * Interface to be implemented when a custom CAT model wants to add some validation to the mod_form.
  *
- * @package    adaptivequizcatmodel_helloworld
+ * @package    mod_adaptivequiz
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace mod_adaptivequiz\local\catmodel\form;
 
-$plugin->version = 2023022200;
-$plugin->release = '1.0.1dev';
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->requires = 2022041900;
-$plugin->component = 'adaptivequizcatmodel_helloworld';
+interface catmodel_mod_form_validator {
+
+    /**
+     * Adds validation to mod_form which may be required for the fields added by the custom CAT model.
+     *
+     * See the description of parameters and return values for {@see \moodleform::validation()}.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
+    public function validation_callback(array $data, array $files): array;
+}

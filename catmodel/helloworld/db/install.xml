@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/adaptivequiz/catmodel/helloworld/db" VERSION="20230222" COMMENT="XMLDB file for Moodle mod/adaptivequiz/catmodel/helloworld"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../../../lib/xmldb/xmldb.xsd"
+>
+    <TABLES>
+        <TABLE NAME="catmodel_helloworld" COMMENT="settings for custom CAT model">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="adaptivequizid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="link with adaptive quiz instance"/>
+                <FIELD NAME="lowestlevel" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="the lowest difficulty level the adaptive quiz will go to"/>
+                <FIELD NAME="highestlevel" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="the highest difficulty level the adaptive quiz will go to"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
+    </TABLES>
+</XMLDB>

@@ -15,17 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin basic info.
+ * Interface to add/remove certain fields to adaptive quiz's mod_form.
  *
- * @package    adaptivequizcatmodel_helloworld
+ * @package    mod_adaptivequiz
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace mod_adaptivequiz\local\catmodel\form;
 
-$plugin->version = 2023022200;
-$plugin->release = '1.0.1dev';
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->requires = 2022041900;
-$plugin->component = 'adaptivequizcatmodel_helloworld';
+use MoodleQuickForm;
+
+interface catmodel_mod_form_modifier {
+
+    /**
+     * Called by mod_form in definition_after_data() method.
+     *
+     * Used to modify the form to add/remove fields as required by the custom CAT model.
+     *
+     * @param MoodleQuickForm $form
+     * @return array An array of form elements added. Each element you add in this method must be returned within this array,
+     * so mod_from could handle it.
+     */
+    public function definition_after_data_callback(MoodleQuickForm $form): array;
+}

@@ -15,17 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin basic info.
+ * Interface to add custom behaviour when an instance of adaptive quiz is deleted.
  *
- * @package    adaptivequizcatmodel_helloworld
+ * @package    mod_adaptivequiz
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace mod_adaptivequiz\local\catmodel\instance;
 
-$plugin->version = 2023022200;
-$plugin->release = '1.0.1dev';
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->requires = 2022041900;
-$plugin->component = 'adaptivequizcatmodel_helloworld';
+use stdClass;
+
+interface catmodel_delete_instance_handler {
+
+    /**
+     * Called when an instance of adaptive quiz activity is deleted.
+     *
+     * @param stdClass $adaptivequiz The instance record being deleted.
+     */
+    public function delete_instance_callback(stdClass $adaptivequiz): void;
+}

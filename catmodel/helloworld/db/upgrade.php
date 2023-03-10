@@ -46,5 +46,19 @@ function xmldb_adaptivequizcatmodel_helloworld_upgrade($oldversion): bool {
         }
     }
 
+    if ($oldversion < 2023031000) {
+        $table = new xmldb_table('catmodel_helloworld');
+
+        $field = new xmldb_field('lowestlevel', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, 0);
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'param1');
+        }
+
+        $field = new xmldb_field('highestlevel', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, 0);
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'param2');
+        }
+    }
+
     return true;
 }

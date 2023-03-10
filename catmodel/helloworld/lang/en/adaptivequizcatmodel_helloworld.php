@@ -25,9 +25,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['formelementnegative'] = 'Input a positive number from 1 to 999';
-$string['formlowlevelgreaterthan'] = 'Lowest level must be less than highest level';
-$string['highestlevel'] = 'Highest level of difficulty';
-$string['highestlevel_help'] = 'The highest or most difficult level the assessment can select questions from.  During an attempt the activity will not go beyond this level of difficulty';
-$string['lowestlevel'] = 'Lowest level of difficulty';
-$string['lowestlevel_help'] = 'The lowest or least difficult level the assessment can select questions from.  During an attempt the activity will not go beyond this level of difficulty';
+$string['formlowlevelgreaterthan'] = 'Parameter 1 must be less than parameter 2';
+$string['param1'] = 'Parameter 1';
+$string['param1_help'] = 'An example parameter for the CAT model. The value must be less than the value of parameter 2 (just for the demo validation purposes).';
+$string['param2'] = 'Parameter 2';
+$string['param2_help'] = 'An example parameter for the CAT model. The value must be higher than the value of parameter 1 (just for the demo validation purposes).';
 $string['pluginname'] = 'Hello world CAT model';

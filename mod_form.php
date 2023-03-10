@@ -267,13 +267,6 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
                 continue;
             }
 
-            // When having a form modifier we force dropping of some default fields.
-            $defaultelementstodrop = ['startinglevel', 'lowestlevel', 'highestlevel', 'stopingconditionshdr', 'minimumquestions',
-                'maximumquestions', 'standarderror'];
-            foreach ($defaultelementstodrop as $elementname) {
-                $form->removeElement($elementname);
-            }
-
             $formmodifier = new $classname();
             $formelements = $formmodifier->definition_after_data_callback($form);
             if (empty($formelements)) {

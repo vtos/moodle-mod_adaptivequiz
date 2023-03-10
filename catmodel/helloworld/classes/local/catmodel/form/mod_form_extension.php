@@ -42,22 +42,28 @@ final class mod_form_extension implements
     public function definition_after_data_callback(MoodleQuickForm $form): array {
         $formelements = [];
 
-        $formelements[] = $form->addElement('text', 'lowestlevel', get_string('lowestlevel', 'adaptivequizcatmodel_helloworld'),
+        $formelements[] = $form->addElement('text', 'param1', get_string('param1', 'adaptivequizcatmodel_helloworld'),
             ['size' => '3', 'maxlength' => '3']);
-        $form->addHelpButton('lowestlevel', 'lowestlevel', 'adaptivequizcatmodel_helloworld');
-        $form->addRule('lowestlevel', get_string('err_required', 'form'), 'required', null, 'client');
-        $form->addRule('lowestlevel', get_string('err_numeric', 'form'), 'numeric', null, 'client');
-        $form->setType('lowestlevel', PARAM_INT);
+        $form->addHelpButton('param1', 'param1', 'adaptivequizcatmodel_helloworld');
+        $form->addRule('param1', get_string('err_required', 'form'), 'required', null, 'client');
+        $form->addRule('param1', get_string('err_numeric', 'form'), 'numeric', null, 'client');
+        $form->setType('param1', PARAM_INT);
 
-        $formelements[] = $form->addElement('text', 'highestlevel', get_string('highestlevel', 'adaptivequizcatmodel_helloworld'),
+        $formelements[] = $form->addElement('text', 'param2', get_string('param2', 'adaptivequizcatmodel_helloworld'),
             ['size' => '3', 'maxlength' => '3']);
-        $form->addHelpButton('highestlevel', 'highestlevel', 'adaptivequizcatmodel_helloworld');
-        $form->addRule('highestlevel', get_string('err_required', 'form'), 'required', null, 'client');
-        $form->addRule('highestlevel', get_string('err_numeric', 'form'), 'numeric', null, 'client');
-        $form->setType('highestlevel', PARAM_INT);
+        $form->addHelpButton('param2', 'param2', 'adaptivequizcatmodel_helloworld');
+        $form->addRule('param2', get_string('err_required', 'form'), 'required', null, 'client');
+        $form->addRule('param2', get_string('err_numeric', 'form'), 'numeric', null, 'client');
+        $form->setType('param2', PARAM_INT);
 
         $form->addElement('hidden', 'catmodelinstanceid', 0);
         $form->setType('catmodelinstanceid', PARAM_INT);
+
+        // Remove some default form fields the sub-plugin does not use.
+        $defaultelementstodrop = ['startinglevel', 'stopingconditionshdr', 'minimumquestions', 'maximumquestions', 'standarderror'];
+        foreach ($defaultelementstodrop as $elementname) {
+            $form->removeElement($elementname);
+        }
 
         return $formelements;
     }
@@ -74,14 +80,14 @@ final class mod_form_extension implements
     public function validation_callback(array $data, array $files): array {
         $errors = [];
 
-        if (0 >= $data['lowestlevel']) {
-            $errors['lowestlevel'] = get_string('formelementnegative', 'adaptivequizcatmodel_helloworld');
+        if (0 >= $data['param1']) {
+            $errors['param1'] = get_string('formelementnegative', 'adaptivequizcatmodel_helloworld');
         }
-        if (0 >= $data['highestlevel']) {
-            $errors['highestlevel'] = get_string('formelementnegative', 'adaptivequizcatmodel_helloworld');
+        if (0 >= $data['param2']) {
+            $errors['param2'] = get_string('formelementnegative', 'adaptivequizcatmodel_helloworld');
         }
-        if ($data['lowestlevel'] >= $data['highestlevel']) {
-            $errors['lowestlevel'] = get_string('formlowlevelgreaterthan', 'adaptivequizcatmodel_helloworld');
+        if ($data['param1'] >= $data['param2']) {
+            $errors['param1'] = get_string('formlowlevelgreaterthan', 'adaptivequizcatmodel_helloworld');
         }
 
         return $errors;

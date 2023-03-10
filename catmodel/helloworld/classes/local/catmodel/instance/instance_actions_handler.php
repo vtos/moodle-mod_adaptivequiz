@@ -45,8 +45,8 @@ class instance_actions_handler implements
 
         $catmodel = new stdClass();
         $catmodel->adaptivequizid = $adaptivequiz->id;
-        $catmodel->lowestlevel = $adaptivequiz->lowestlevel;
-        $catmodel->highestlevel = $adaptivequiz->highestlevel;
+        $catmodel->param1 = $adaptivequiz->param1;
+        $catmodel->param2 = $adaptivequiz->param2;
 
         $DB->insert_record('catmodel_helloworld', $catmodel);
     }
@@ -64,8 +64,8 @@ class instance_actions_handler implements
 
         $catmodelrecord = new stdClass();
         $catmodelrecord->id = $adaptivequiz->catmodelinstanceid;
-        $catmodelrecord->lowestlevel = $adaptivequiz->lowestlevel;
-        $catmodelrecord->highestlevel = $adaptivequiz->highestlevel;
+        $catmodelrecord->param1 = $adaptivequiz->param1;
+        $catmodelrecord->param2 = $adaptivequiz->param2;
 
         $DB->update_record('catmodel_helloworld', $catmodelrecord);
     }

@@ -15,28 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Interface to be implemented when a custom CAT model wants to populate mod_form's fields related to it.
+ * Strings for the English language.
  *
- * @package    mod_adaptivequiz
+ * @package    adaptivequizcatmodel_catquiz
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_adaptivequiz\local\catmodel\form;
+defined('MOODLE_INTERNAL') || die();
 
-use MoodleQuickForm;
-
-interface catmodel_mod_form_data_preprocessor {
-
-    /**
-     * Called in {@see \moodleform_mod::data_preprocessing()}, used to customize populating of form fields.
-     *
-     * Unlike the calling form's method, it accepts the form's values as the argument without a reference and returns the modified
-     * values.
-     *
-     * @param array $formdefaultvalues
-     * @param MoodleQuickForm $form
-     * @return array Modified form values.
-     */
-    public function data_preprocessing_callback(array $formdefaultvalues, ?MoodleQuickForm $form = null): array;
-}
+$string['formelementnegative'] = 'Input a positive number from 1 to 999';
+$string['formlowlevelgreaterthan'] = 'Lowest level must be less than highest level';
+$string['highestlevel'] = 'Highest level of difficulty';
+$string['highestlevel_help'] = 'The highest or most difficult level the assessment can select questions from.  During an attempt the activity will not go beyond this level of difficulty';
+$string['lowestlevel'] = 'Lowest level of difficulty';
+$string['lowestlevel_help'] = 'The lowest or least difficult level the assessment can select questions from.  During an attempt the activity will not go beyond this level of difficulty';
+$string['pluginname'] = 'Catquiz CAT model';

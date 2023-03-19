@@ -96,44 +96,6 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * This function tests the accessor method for $slot.
-     */
-    public function test_set_get_question_slot_number() {
-        $this->resetAfterTest();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-
-        $userid = 1;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $attempt->set_question_slot_number(2);
-        $result = $attempt->get_question_slot_number();
-
-        $this->assertEquals(2, $result);
-    }
-
-    /**
-     * This function tests the accessor method for $slot.
-     */
-    public function test_set_get_question_level() {
-        $this->resetAfterTest();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-
-        $userid = 1;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $attempt->set_level(2);
-        $result = $attempt->get_level();
-
-        $this->assertEquals(2, $result);
-    }
-
-    /**
      * This function tests results returned from get_question_mark().
      */
     public function test_get_question_mark_with_quba_return_float() {
@@ -203,86 +165,6 @@ class attempt_test extends advanced_testcase {
 
         $result = $attempt->get_question_mark($mockqubathree, 1);
         $this->assertEquals(0, $result);
-    }
-
-    /**
-     * This function tests what happens when the maximum number of questions have been answered.
-     */
-    public function test_start_attempt_max_num_of_quest_answered() {
-        global $DB;
-
-        $this->resetAfterTest();
-        $this->setup_test_data_xml();
-
-        $adaptivequizid = 330;
-        $userid = 3;
-        $lastdifficultylevel = 1;
-
-        $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $startattemptresult = $attempt->start_attempt(
-            $this->createStub(question_usage_by_activity::class),
-            $this->createStub(fetchquestion::class),
-            $attempt->read_attempt_data()->questionsattempted,
-            $lastdifficultylevel
-        );
-        $this->assertFalse($startattemptresult);
-    }
-
-    /**
-     * This function tests what happens when a question slot number is not found, but the number of submitted answers is greater
-     * than zero.
-     */
-    public function test_start_attempt_quest_slot_empty_quest_submit_greater_than_one() {
-        $this->markTestSkipped('skipped unless the stoppage reason (status) is identifiable');
-
-        $dummyadaptivequiz = new stdClass();
-        $dummyadaptivequiz->lowestlevel = 1;
-        $dummyadaptivequiz->highestlevel = 100;
-
-        $cmid = 5;
-
-        $mockattemptthree = $this
-            ->getMockBuilder(attempt::class)
-            ->onlyMethods(['record', 'level_in_bounds']
-            )
-            ->setConstructorArgs(
-                [$dummyadaptivequiz, 1]
-            )
-            ->getMock();
-
-        $dummyattempt = new stdClass();
-        $dummyattempt->questionsattempted = 1;
-
-        $mockattemptthree->expects($this->once())
-            ->method('record')
-            ->will($this->returnValue($dummyattempt));
-        $mockattemptthree->expects($this->once())
-            ->method('level_in_bounds')
-            ->will($this->returnValue(true));
-
-        $context = context_module::instance($cmid);
-
-        $this->assertFalse($mockattemptthree->start_attempt($context, $dummyattempt->questionsattempted));
-    }
-
-    /**
-     * This function tests the return values for level_in_bounds().
-     */
-    public function test_level_in_bounds() {
-        $this->resetAfterTest();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->id = 220;
-        $adaptivequiz->lowestlevel = 5;
-        $adaptivequiz->highestlevel = 10;
-
-        $userid = 1;
-
-        $attempt = attempt::create($adaptivequiz, $userid);
-
-        $this->assertTrue($attempt->level_in_bounds(6, $adaptivequiz));
     }
 
     public function test_it_can_check_if_a_user_has_a_completed_attempt_on_a_quiz(): void {

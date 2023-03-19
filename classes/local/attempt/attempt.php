@@ -18,15 +18,7 @@ namespace mod_adaptivequiz\local\attempt;
 
 use coding_exception;
 use context_module;
-use dml_exception;
 use mod_adaptivequiz\event\attempt_completed;
-use mod_adaptivequiz\local\fetchquestion;
-use question_bank;
-use question_engine;
-use question_state_gaveup;
-use question_state_gradedpartial;
-use question_state_gradedright;
-use question_state_gradedwrong;
 use question_usage_by_activity;
 use stdClass;
 
@@ -40,10 +32,13 @@ use stdClass;
  */
 class attempt {
 
+    /**
+     * Database table to store attempt state.
+     */
     private const TABLE = 'adaptivequiz_attempt';
 
     /**
-     * The behaviour to use be default
+     * The behaviour to use by default.
      */
     const ATTEMPTBEHAVIOUR = 'deferredfeedback';
 
@@ -63,36 +58,13 @@ class attempt {
     /** @var int $userid user id */
     protected $userid;
 
-    /** @var int $uniqueid a unique number identifying the activity usage of questions */
-    protected $uniqueid;
-
-    /** @var int $questionsattempted the total of question attempted */
-    protected $questionsattempted;
-
-    /** @var float $standarderror the standard error of the attempt  */
-    protected $standarderror;
-
-    /** @var int $slot - a question slot number */
-    protected $slot = 0;
-
     /** @var array $tags an array of tags that used to identify eligible questions for the attempt */
     protected $tags = array();
-
-    /** @var array $status status message storing the reason why the attempt was stopped */
-    protected $status = '';
-
-    /** @var int $level the difficulty level the attempt is currently set at */
-    protected $level = 0;
 
     /**
      * @var stdClass $adaptivequiz Record from the {adaptivequiz} table.
      */
     private $adaptivequiz;
-
-    /**
-     * @var attempt_state $attemptstate
-     */
-    private $attemptstate;
 
     /**
      * The constructor.
@@ -121,176 +93,6 @@ class attempt {
     }
 
     /**
-     * This function returns the $level property
-     * @return int level property
-     */
-    public function get_level() {
-        return $this->level;
-    }
-
-    /**
-     * This function sets the $level property
-     * @param int $level difficulty level to fetch
-     */
-    public function set_level($level) {
-        $this->level = $level;
-    }
-
-    /**
-     * This function returns the current slot number set for the attempt
-     * @return int question slot number
-     */
-    public function get_question_slot_number() {
-        return $this->slot;
-    }
-
-    /**
-     * This function sets the current slot number set for the attempt
-     * @throws coding_exception - exception is thrown the argument is not a positive integer
-     * @param int $slot slot number
-     */
-    public function set_question_slot_number($slot) {
-        if (!is_int($slot) || 0 >= $slot) {
-            throw new coding_exception('adaptiveattempt: Argument 1 is not an positive integer', 'Slot must be a positive integer');
-        }
-
-        $this->slot = $slot;
-    }
-
-    /**
-     * This function checks to see if the difficulty level is out of the boundries set for the attempt
-     * @param int $level the difficulty level requested
-     * @param stdClass $adaptivequiz an adaptivequiz record
-     * @return bool true if the level is in bounds, otherwise false
-     */
-    public function level_in_bounds($level, $adaptivequiz) {
-        if ($adaptivequiz->lowestlevel <= $level && $adaptivequiz->highestlevel >= $level) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * This function returns the currently set status message.
-     *
-     * @return string The status message property.
-     */
-    public function get_status() {
-        return $this->status;
-    }
-
-    /**
-     * This function does the work of initializing data required to fetch a new question for the attempt.
-     *
-     * @param question_usage_by_activity $quba
-     * @param fetchquestion $fetchquestion
-     * @param int $questionsattempted
-     * @param int $lastdifficultylevel The last difficulty level used in the attempt.
-     * @return bool True if attempt started okay otherwise false.
-     */
-    public function start_attempt(
-        question_usage_by_activity $quba,
-        fetchquestion $fetchquestion,
-        int $questionsattempted,
-        int $lastdifficultylevel
-    ): bool {
-        // Check if the level requested is out of the minimum/maximum boundries for the attempt.
-        if (!$this->level_in_bounds($this->level, $this->adaptivequiz)) {
-            $var = new stdClass();
-            $var->level = $this->level;
-            $this->status = get_string('leveloutofbounds', 'adaptivequiz', $var);
-
-            return false;
-        }
-
-        // Check if the attempt has reached the maximum number of questions attempted.
-        if ($this->max_number_of_questions_is_answered()) {
-            $this->status = get_string('maxquestattempted', 'adaptivequiz');
-
-            return false;
-        }
-
-        // Find the last question viewed/answered by the user.
-        // The last slot in the array should be the last question that was attempted (meaning it was either shown to the user
-        // or the user submitted an answer to it).
-        $questionslots = $quba->get_slots();
-        $this->slot = !empty($questionslots) ? end($questionslots) : 0;
-
-        // Check if this is the beginning of an attempt (and pass the starting level) or the continuation of an attempt.
-        if (empty($this->slot) && 0 == $questionsattempted) {
-            // Set the starting difficulty level.
-            $fetchquestion->set_level((int) $this->adaptivequiz->startinglevel);
-            // Sets the level class property.
-            $this->level = $this->adaptivequiz->startinglevel;
-            // Set the rebuild flag for fetchquestion class.
-            $fetchquestion->rebuild = true;
-
-            $this->print_debug("start_attempt() - Brand new attempt.  Set starting level: {$this->adaptivequiz->startinglevel}.");
-
-        } else if (!empty($this->slot) && $this->was_answer_submitted_to_question($quba)) {
-            // If the attempt already has a question attached to it, check if an answer was submitted to the question.
-            // If so fetch a new question.
-
-            // Provide the question-fetching process with limits based on our last question.
-            // If the last question was correct...
-            if ($quba->get_question_mark($this->slot) > 0) {
-                // Only ask questions harder than the last question unless we are already at the top of the ability scale.
-                if ($lastdifficultylevel < $this->adaptivequiz->highestlevel) {
-                    $fetchquestion->set_minimum_level($lastdifficultylevel + 1);
-                    // Do not ask a question of the same level unless we are already at the max.
-                    if ($lastdifficultylevel == $this->level) {
-                        $this->print_debug("start_attempt() - Last difficulty is the same as the new difficulty, ".
-                                "incrementing level from {$this->level} to ".($this->level + 1).".");
-                        $this->level++;
-                    }
-                }
-            } else {
-                // If the last question was wrong...
-                // Only ask questions easier than the last question unless we are already at the bottom of the ability scale.
-                if ($lastdifficultylevel > $this->adaptivequiz->lowestlevel) {
-                    $fetchquestion->set_maximum_level($lastdifficultylevel - 1);
-                    // Do not ask a question of the same level unless we are already at the min.
-                    if ($lastdifficultylevel == $this->level) {
-                        $this->print_debug("start_attempt() - Last difficulty is the same as the new difficulty, ".
-                                "decrementing level from {$this->level} to ".($this->level - 1).".");
-                        $this->level--;
-                    }
-                }
-            }
-
-            // Reset the slot number back to zero, since we are going to fetch a new question.
-            $this->slot = 0;
-            // Set the level of difficulty to fetch.
-            $fetchquestion->set_level((int) $this->level);
-        } else if (empty($this->slot) && 0 < $questionsattempted) {
-            // If this condition is met, then something went wrong because the slot id is empty BUT the questions attempted is
-            // greater than zero. Stop the attempt.
-            $this->status = get_string('errorattemptstate', 'adaptivequiz');
-
-            return false;
-        }
-
-        // If the slot property is set, then we have a question that is ready to be attempted.  No more process is required.
-        if (!empty($this->slot)) {
-            return true;
-        }
-
-        // If we are here, then the slot property was unset and a new question needs to prepared for display.
-        $status = $this->get_question_ready($fetchquestion, $quba);
-
-        if (empty($status)) {
-            $var = new stdClass();
-            $var->level = $this->level;
-            $this->status = get_string('errorfetchingquest', 'adaptivequiz', $var);
-
-            return false;
-        }
-
-        return $status;
-    }
-
-    /**
      * This function determins whether the user answered the question correctly or incorrectly.
      * If the answer is partially correct it is seen as correct.
      * @param question_usage_by_activity $quba an object loaded with the unique id of the attempt
@@ -310,8 +112,10 @@ class attempt {
     }
 
     /**
+     * Sets the appropriate state for the attempt when a question has been answered.
+     *
      * @param cat_calculation_steps_result $calcstepsresult
-     * @param int $time Timestamp to save the time of attempt modification.
+     * @param int $time Current timestamp.
      * @throws coding_exception
      */
     public function update_after_question_answered(cat_calculation_steps_result $calcstepsresult, int $time): void {
@@ -331,6 +135,15 @@ class attempt {
         $this->save($time);
     }
 
+    /**
+     * Sets the attempt as complete.
+     *
+     * @param context_module $context
+     * @param float $standarderror
+     * @param string $statusmessage
+     * @param int $time Current timestamp.
+     * @return void
+     */
     public function complete(context_module $context, float $standarderror, string $statusmessage, int $time): void {
         // Need to keep the record as it is before triggering the event below.
         $attemptrecordsnapshot = clone $this->adpqattempt;
@@ -354,6 +167,19 @@ class attempt {
     }
 
     /**
+     * Sets quba id for the attempt.
+     *
+     * @param int $id
+     */
+    public function set_quba_id(int $id): void {
+        $this->adpqattempt->uniqueid = $id;
+
+        $this->save(time());
+    }
+
+    /**
+     * Returns the attempt record from {adaptivequiz_attempt}.
+     *
      * @return stdClass {@see self::$adpqattempt}.
      */
     public function read_attempt_data(): stdClass {
@@ -361,7 +187,11 @@ class attempt {
     }
 
     /**
-     * @throws dml_exception
+     * Checks whether the user has a completed attempt for the specified adaptive quiz instance.
+     *
+     * @param int $adaptivequizid
+     * @param int $userid
+     * @return bool
      */
     public static function user_has_completed_on_quiz(int $adaptivequizid, int $userid): bool {
         global $DB;
@@ -370,6 +200,13 @@ class attempt {
             ['userid' => $userid, 'instance' => $adaptivequizid, 'attemptstate' => attempt_state::COMPLETED]);
     }
 
+    /**
+     * Returns an in-progress attempt for the uer, returns null when no such attempt was found.
+     *
+     * @param stdClass $adaptivequiz
+     * @param int $userid
+     * @return self|null
+     */
     public static function find_in_progress_for_user(stdClass $adaptivequiz, int $userid): ?self {
         global $DB;
 
@@ -387,6 +224,14 @@ class attempt {
         return $attempt;
     }
 
+
+    /**
+     * Created an instance of attempt, saves it in the database and returns as the result.
+     *
+     * @param stdClass $adaptivequiz A record from {adaptivequiz}.
+     * @param int $userid
+     * @return self
+     */
     public static function create(stdClass $adaptivequiz, int $userid): self {
         global $DB;
 
@@ -424,112 +269,16 @@ class attempt {
     }
 
     /**
-     * Answer a string view of a variable for debugging purposes
-     * @param mixed $variable
-     */
-    protected function vardump($variable) {
-        ob_start();
-        var_dump($variable);
-        return ob_get_clean();
-    }
-
-    /**
-     * This function gets the question ready for display to the user.
+     * Saves the attempt in its current state to the database.
      *
-     * @param fetchquestion $fetchquestion
-     * @param question_usage_by_activity $quba
-     * @return bool True if everything went okay, otherwise false.
+     * @param int $time Current timestamp.
+     * @return void
      */
-    protected function get_question_ready($fetchquestion, question_usage_by_activity $quba): bool {
-        global $DB;
-
-        // Fetch questions already attempted.
-        $exclude = $DB->get_records_menu('question_attempts', ['questionusageid' => $this->adpqattempt->uniqueid], 'id ASC',
-            'id,questionid');
-        // Fetch questions for display.
-        $questionids = $fetchquestion->fetch_questions($exclude);
-
-        if (empty($questionids)) {
-            $this->print_debug('get_question_ready() - Unable to fetch a question $questionsids:'.$this->vardump($questionids));
-
-            return false;
-        }
-        // Select one random question.
-        $questiontodisplay = array_rand($questionids);
-        if (empty($questiontodisplay)) {
-            $this->print_debug('get_question_ready() - Unable to randomly select a question $questionstodisplay:'.
-                $questiontodisplay);
-
-            return false;
-        }
-
-        // Load basic question data.
-        $questionobj = question_preload_questions(array($questiontodisplay));
-        get_question_options($questionobj);
-        $this->print_debug('get_question_ready() - setup question options');
-
-        // Make a copy of the array and pop off the first (and only) element (current() didn't work for some reason).
-        $quest = $questionobj;
-        $quest = array_pop($quest);
-
-        // Create the question_definition object.
-        $question = question_bank::load_question($quest->id);
-        // Add the question to the usage question_usable_by_activity object.
-        $this->slot = $quba->add_question($question);
-        // Start the question attempt.
-        $quba->start_question($this->slot);
-        // Save the question usage and question attempt state to the DB.
-        question_engine::save_questions_usage_by_activity($quba);
-        // Update the attempt unique id.
-        $this->set_attempt_uniqueid($quba->get_id());
-
-        // Set class level property to the difficulty level of the question returned from fetchquestion class.
-        $this->level = $fetchquestion->get_level();
-        $this->print_debug('get_question_ready() - Question: '.$this->vardump($question).' loaded and attempt started. '.
-                'Question_usage_by_activity saved.');
-
-        return true;
-    }
-
-    /**
-     * This function updates the current attempt with the question_usage_by_activity id.
-     */
-    protected function set_attempt_uniqueid(int $uniqueid): void {
-        global $DB;
-
-        $this->adpqattempt->uniqueid = $uniqueid;
-        $this->timemodified = time();
-
-        $DB->update_record(self::TABLE, $this->adpqattempt);
-    }
-
     private function save(int $time): void {
         global $DB;
 
         $this->adpqattempt->timemodified = $time;
 
         $DB->update_record(self::TABLE, $this->adpqattempt);
-    }
-
-    private function max_number_of_questions_is_answered(): bool {
-        return $this->adpqattempt->questionsattempted >= $this->adaptivequiz->maximumquestions;
-    }
-
-    /**
-     * This function determines if the user submitted an answer to the question.
-     */
-    private function was_answer_submitted_to_question(question_usage_by_activity $quba): bool {
-        $state = $quba->get_question_state($this->slot);
-
-        // Check if the state of the quesiton attempted was graded right, partially right, wrong or gave up, count the question has
-        // having an answer submitted.
-        $marked = $state instanceof question_state_gradedright || $state instanceof question_state_gradedpartial
-            || $state instanceof question_state_gradedwrong || $state instanceof question_state_gaveup;
-
-        if ($marked) {
-            return true;
-        }
-
-        return false;
     }
 }

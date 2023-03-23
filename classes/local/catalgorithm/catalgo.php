@@ -244,11 +244,11 @@ class catalgo {
     }
 
     /**
-     * This function retreives the mark received from the student's submission to the question
-     * @return bool|null true if the question was marked correct. False if the question was marked incorrect or null if there is an
-     *      error determining mark
+     * This function retrieves the mark received from the student's submission to the question.
+     *
+     * @return bool|null Null when there is an error determining mark.
      */
-    public function question_was_marked_correct() {
+    public function question_was_marked_correct(): ?bool {
         // Find the last question attempted by the user.
         $slotid = $this->find_last_quest_used_by_attempt();
 
@@ -258,8 +258,7 @@ class catalgo {
 
         // Check if the question was marked.
         if (!$this->was_answer_submitted_to_question($slotid)) {
-            // If no answer was submitted then the question muast be marked as incorrect.  Increment questions attempted.
-            $this->questattempted++;
+            // If no answer was submitted then the question must be marked as incorrect.
             return false;
         }
 
@@ -271,20 +270,20 @@ class catalgo {
         }
 
         // Return true if the question was marked correct.
-        if ((float) 0 < $mark) {
-            // Increment questions attempted.
-            $this->questattempted++;
+        if (0.0 < $mark) {
             return true;
         }
 
-        // Increment questions attempted.
-        $this->questattempted++;
         return false;
     }
 
     /**
      * This function performs the different steps in the CAT simple algorithm.
      *
+     * @param float $attemptdifficultysum
+     * @param int $questionsattemptednum
+     * @param questions_difficulty_range $questionsdifficultyrange
+     * @param float $standarderrortostop
      * @return int Returns the next difficulty level or 0 if there was an error.
      */
     public function perform_calculation_steps(
@@ -294,16 +293,19 @@ class catalgo {
         float $standarderrortostop
     ) {
         $this->difficultysum = $attemptdifficultysum;
-        $this->questattempted = $questionsattemptednum;
 
         // If the user answered the previous question correctly, calculate the sum of correct answers.
         $correct = $this->question_was_marked_correct();
+
+        if (!is_null($correct)) {
+            $questionsattemptednum++;
+        }
 
         if (true === $correct) {
             // Compute the next difficulty level for the next question.
             $this->nextdifficulty = $this->compute_next_difficulty(
                 $this->level,
-                $this->questattempted,
+                $questionsattemptednum,
                 true,
                 $questionsdifficultyrange
             );
@@ -311,7 +313,7 @@ class catalgo {
             // Compute the next difficulty level for the next question.
             $this->nextdifficulty = $this->compute_next_difficulty(
                 $this->level,
-                $this->questattempted,
+                $questionsattemptednum,
                 false,
                 $questionsdifficultyrange
             );
@@ -331,7 +333,7 @@ class catalgo {
         $this->sumofcorrectanswers = $this->compute_right_answers($this->quba);
         $this->sumofincorrectanswers = $this->compute_wrong_answers($this->quba);
 
-        if (0 == $this->questattempted) {
+        if (0 == $questionsattemptednum) {
             $this->status = get_string('errornumattpzero', 'adaptivequiz');
 
             return 0;
@@ -340,18 +342,18 @@ class catalgo {
         // Test that the sum of incorrect and correct answers equal to the sum of question attempted.
         $validatenumbers = $this->sumofcorrectanswers + $this->sumofincorrectanswers;
 
-        if ($validatenumbers != $this->questattempted) {
+        if ($validatenumbers != $questionsattemptednum) {
             $this->status = get_string('errorsumrightwrong', 'adaptivequiz');
 
             return 0;
         }
 
         // Get the measure estimate.
-        $this->measure = self::estimate_measure($this->difficultysum, $this->questattempted, $this->sumofcorrectanswers,
+        $this->measure = self::estimate_measure($this->difficultysum, $questionsattemptednum, $this->sumofcorrectanswers,
             $this->sumofincorrectanswers);
 
         // Get the standard error estimate.
-        $this->standarderror = self::estimate_standard_error($this->questattempted, $this->sumofcorrectanswers,
+        $this->standarderror = self::estimate_standard_error($questionsattemptednum, $this->sumofcorrectanswers,
             $this->sumofincorrectanswers);
 
         // Convert the standard error (as a percent) set for the activity into a decimal percent, then

@@ -568,7 +568,7 @@ class catalgo_test extends advanced_testcase {
             ->willReturn(0); // Right answers is set to zero.
         $mockcatalgo->expects($this->once())
             ->method('compute_wrong_answers')
-            ->willReturn(10); // Wrong answers is set to 10.
+            ->willReturn(11); // Wrong answers is set to 11.
 
         $result = $mockcatalgo->perform_calculation_steps(
             20,
@@ -603,7 +603,7 @@ class catalgo_test extends advanced_testcase {
             ->willReturn(30);
         $mockcatalgo->expects($this->once())
             ->method('compute_right_answers')
-            ->willReturn(10); // Right answers is set to 10.
+            ->willReturn(11); // Right answers is set to 11.
         $mockcatalgo->expects($this->once())
             ->method('compute_wrong_answers')
             ->willReturn(0); // Wrong answers is set to zero.
@@ -846,12 +846,12 @@ class catalgo_test extends advanced_testcase {
             ->willReturn(true);
         $mockcatalgo->expects($this->once())
             ->method('compute_next_difficulty')
-            ->with(50, 2, true, $questionsdifficultyrange)
+            ->with(50, 3, true, $questionsdifficultyrange)
             ->willReturn(48);
         $mockcatalgo->expects($this->once())
             ->method('compute_right_answers')
             ->withAnyParameters()
-            ->willReturn(1);
+            ->willReturn(2);
         $mockcatalgo->expects($this->once())
             ->method('compute_wrong_answers')
             ->withAnyParameters()

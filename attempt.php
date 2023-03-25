@@ -126,7 +126,6 @@ if ($adaptiveattempt === null) {
 $algo = new stdClass();
 $nextdifficultylevel = null;
 $standarderror = 0.0;
-$message = '';
 
 // If uniqueid is not empty the process respones.
 if (!empty($uniqueid) && confirm_sesskey()) {
@@ -155,13 +154,14 @@ if (!empty($uniqueid) && confirm_sesskey()) {
             // Create an instance of the CAT algo class.
             $algo = new catalgo($quba, $minattemptreached, (int) $attempteddifficultylevel);
 
-            // Calculate the next difficulty level.
-            $nextdifficultylevel = $algo->perform_calculation_steps(
+            // Determine the next difficulty level or whether there is an error.
+            $determinenextdifficultylevelresult = $algo->determine_next_difficulty_level(
                 (float) $adaptiveattempt->read_attempt_data()->difficultysum,
                 (int) $adaptiveattempt->read_attempt_data()->questionsattempted,
                 questions_difficulty_range::from_activity_instance($adaptivequiz),
                 (float) $adaptivequiz->standarderror
             );
+            $nextdifficultylevel = $determinenextdifficultylevelresult->next_difficulty_level();
 
             // Increment difficulty level for attempt.
             $difflogit = $algo->get_levellogit();
@@ -180,11 +180,8 @@ if (!empty($uniqueid) && confirm_sesskey()) {
                     new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $id]));
             }
 
-            // Check whether the status property is empty.
-            $message = $algo->get_status();
-
-            if (!empty($message)) {
-                $adaptiveattempt->complete($context, $standarderror, $message, time());
+            if ($determinenextdifficultylevelresult->is_with_error()) {
+                $adaptiveattempt->complete($context, $standarderror, $determinenextdifficultylevelresult->error_message(), time());
 
                 redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
                     ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]));
@@ -235,9 +232,6 @@ $itemadministrationevaluation = $itemadministration->evaluate_ability_to_adminis
 
 // Check item administration evaluation.
 if ($itemadministrationevaluation->item_administration_is_to_stop()) {
-    // Retrieve the most recent status message for the attempt.
-    $message = $itemadministrationevaluation->stoppage_reason();
-
     // Set the attempt to complete, update the standard error and attempt message, then redirect the user to the attempt-finished
     // page.
     if ($algo instanceof catalgo) {
@@ -252,7 +246,7 @@ if ($itemadministrationevaluation->item_administration_is_to_stop()) {
             (new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]))->out());
     }
 
-    $adaptiveattempt->complete($context, $standarderror, $message, time());
+    $adaptiveattempt->complete($context, $standarderror, $itemadministrationevaluation->stoppage_reason(), time());
 
     redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
         ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]));

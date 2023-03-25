@@ -14,15 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * This class performs the simple algorithm to determine the next level of difficulty a student should attempt.
- * It also recommends whether the calculation has reached an acceptable level of error.
- *
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\catalgorithm;
 
 use coding_exception;
@@ -35,7 +26,18 @@ use question_state_todo;
 use question_usage_by_activity;
 use stdClass;
 
+/**
+ * This class performs the simple algorithm to determine the next level of difficulty a student should attempt.
+ *
+ * It also recommends whether the calculation has reached an acceptable level of error.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class catalgo {
+
     /** @var $quba a question_usage_by_activity object */
     protected $quba = null;
 
@@ -59,9 +61,6 @@ class catalgo {
     /** @var bool $readytostop flag to denote whether to assume the student has met the minimum requirements */
     protected $readytostop = true;
 
-    /** @var int $questattempted the sum number of questions attempted */
-    protected $questattempted = 0;
-
     /** @var $difficultysum the sum of the difficulty levels attempted */
     protected $difficultysum = 0;
 
@@ -80,10 +79,9 @@ class catalgo {
     /** @var float $standarderror the standard error of the measure */
     protected $standarderror = 0.0;
 
-    /** @var string $status status message storing the reason why the attempt needs to be stopped */
-    protected $status = '';
-
     /**
+     * The constructor.
+     *
      * @param question_usage_by_activity $quba
      * @param bool $readytostop True of the algo should assume the user has answered the minimum number of question and should
      *                          compare the results against the standard error.
@@ -284,14 +282,14 @@ class catalgo {
      * @param int $questionsattemptednum
      * @param questions_difficulty_range $questionsdifficultyrange
      * @param float $standarderrortostop
-     * @return int Returns the next difficulty level or 0 if there was an error.
+     * @return determine_next_difficulty_result
      */
-    public function perform_calculation_steps(
+    public function determine_next_difficulty_level(
         float $attemptdifficultysum,
         int $questionsattemptednum,
         questions_difficulty_range $questionsdifficultyrange,
         float $standarderrortostop
-    ) {
+    ): determine_next_difficulty_result {
         $this->difficultysum = $attemptdifficultysum;
 
         // If the user answered the previous question correctly, calculate the sum of correct answers.
@@ -318,15 +316,12 @@ class catalgo {
                 $questionsdifficultyrange
             );
         } else {
-            $this->status = get_string('errorlastattpquest', 'adaptivequiz');
-
-            return 0;
+            return determine_next_difficulty_result::with_error(get_string('errorlastattpquest', 'adaptivequiz'));
         }
 
         // If he user hasn't met the minimum requirements to end the attempt, then return with the next difficulty level.
         if (empty($this->readytostop)) {
-
-            return $this->nextdifficulty;
+            return determine_next_difficulty_result::with_next_difficulty_level_determined($this->nextdifficulty);
         }
 
         // Calculate the sum of correct answers and the sum of incorrect answers.
@@ -334,18 +329,14 @@ class catalgo {
         $this->sumofincorrectanswers = $this->compute_wrong_answers($this->quba);
 
         if (0 == $questionsattemptednum) {
-            $this->status = get_string('errornumattpzero', 'adaptivequiz');
-
-            return 0;
+            return determine_next_difficulty_result::with_error(get_string('errornumattpzero', 'adaptivequiz'));
         }
 
         // Test that the sum of incorrect and correct answers equal to the sum of question attempted.
         $validatenumbers = $this->sumofcorrectanswers + $this->sumofincorrectanswers;
 
         if ($validatenumbers != $questionsattemptednum) {
-            $this->status = get_string('errorsumrightwrong', 'adaptivequiz');
-
-            return 0;
+            return determine_next_difficulty_result::with_error(get_string('errorsumrightwrong', 'adaptivequiz'));
         }
 
         // Get the measure estimate.
@@ -369,18 +360,11 @@ class catalgo {
             $val->calerror = 100 * round($val->calerror, 2);
             $val->definederror = self::convert_logit_to_percent($quizdefinederror);
             $val->definederror = 100 * round($val->definederror, 2);
-            $this->status = get_string('calcerrorwithinlimits', 'adaptivequiz', $val);
+
+            return determine_next_difficulty_result::with_error(get_string('calcerrorwithinlimits', 'adaptivequiz', $val));
         }
 
-        return $this->nextdifficulty;
-    }
-
-    /**
-     * This function returns the currently set status message
-     * @return string the status message property
-     */
-    public function get_status() {
-        return $this->status;
+        return determine_next_difficulty_result::with_next_difficulty_level_determined($this->nextdifficulty);
     }
 
     /**

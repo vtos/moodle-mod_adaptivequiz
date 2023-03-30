@@ -45,7 +45,7 @@
         <column>id</column>
         <column>name</column>
         <row>
-            <value>50</value>
+            <value>1000</value>
             <value>adaptivequiz</value>
         </row>
     </table>
@@ -82,15 +82,22 @@
         <row>
             <value>5</value>
             <value>2</value>
-            <value>50</value>
-            <value>13</value>
+            <value>1000</value>
+            <value>1</value>
             <value>10</value>
         </row>
         <row>
             <value>6</value>
             <value>2</value>
-            <value>50</value>
-            <value>1</value>
+            <value>1000</value>
+            <value>13</value>
+            <value>10</value>
+        </row>
+        <row>
+            <value>7</value>
+            <value>2</value>
+            <value>1000</value>
+            <value>330</value>
             <value>10</value>
         </row>
     </table>

@@ -29,13 +29,11 @@ use MoodleQuickForm;
 interface catmodel_mod_form_modifier {
 
     /**
-     * Called by mod_form in definition_after_data() method.
+     * Called by mod_form in the definition() method.
      *
      * Used to modify the form to add/remove fields as required by the custom CAT model.
      *
      * @param MoodleQuickForm $form
-     * @return array An array of form elements added. Each element you add in this method must be returned within this array,
-     * so mod_from could handle it.
      */
-    public function definition_after_data_callback(MoodleQuickForm $form): array;
+    public function definition_callback(MoodleQuickForm $form): void;
 }

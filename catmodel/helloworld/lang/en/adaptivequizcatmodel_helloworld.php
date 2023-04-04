@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['formelementnegative'] = 'Input a positive number from 1 to 999';
-$string['formlowlevelgreaterthan'] = 'Parameter 1 must be less than parameter 2';
+$string['modform:entervalidcatinteger'] = 'Please, enter a positive integer value greater than 0.';
+$string['modform:param1mustbelessthanparam2'] = 'Parameter 1 must be less than parameter 2.';
 $string['param1'] = 'Parameter 1';
 $string['param1_help'] = 'An example parameter for the CAT model. The value must be less than the value of parameter 2 (just for the demo validation purposes).';
 $string['param2'] = 'Parameter 2';

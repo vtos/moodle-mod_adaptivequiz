@@ -217,34 +217,42 @@ customization and hooking up to the mod's lib functions, particularly, `adaptive
 
 ### Customization of `mod_form`
 
-A new section has been added to the `mod_form` - 'CAT model'. So far it contains just one field - the sub-plugin selector.
-After creating a sub-plugin and placing it under `/mod/adaptivequiz/catmodel` directory, it becomes available in this selector.
-After selecting a sub-plugin with a CAT model to use, the `mod_form` is reloaded and tries to pick up implementations of
-interfaces, which it expects to be implemented to customize the form. The interfaces are defined under
-`/mod/adaptivequiz/classes/local/catmodel/form` dir and `mod_adaptivequiz\local\catmodel\form` namespace.
+A sub-plugin selector has been added to the `mod_form`. After creating a sub-plugin and placing it under
+`/mod/adaptivequiz/catmodel` directory, it becomes available in this selector. The `mod_form` tries to pick up implementations
+of interfaces, which it expects to be implemented to customize the form. The interfaces are defined under
+`/mod/adaptivequiz/classes/local/catmodel/form` dir and `mod_adaptivequiz\local\catmodel\form` namespace. After selecting
+a sub-plugin with a custom CAT model the `mod_form` hides all fields related to the default algorithm settings and displays fields
+defined in the selected sub-plugin instead.
 
 Below you'll find short description of the interfaces used for `mod_form` customization.
 
 ***catmodel_mod_form_modifier***
 
-Used to add custom fields to the form. The fields will be placed right after the CAT model selector.
+Used to add custom fields to the form. The fields will be displayed right after the CAT model selector.
 
 The interface defines one method to be implemented for adding custom fields:
 
 ```
-public function definition_after_data_callback(MoodleQuickForm $form): array;
+public function definition_callback(MoodleQuickForm $form): void;
 ```
 
-In Moodle, when you want to define the `moodleform`'s fields based on values of other fields (like the CAT model selector from above)
-you're making use of `moodleform::definition_after_data()` method. The adaptive quiz plugin overrides this method in its `mod_form`
-and wires up implementations of `catmodel_mod_form_modifier::definition_after_data_callback()` in it. You can find an example
-of implementation of this interface in the 'Hello world' sub-plugin included in the adaptive quiz mod. In general, this
-example sub-plugin is a good source of example implementations of the interfaces listed here. Thus, the example source
-code isn't listed here, it can be found in the 'Hello world' sub-plugin.
+A sub-plugin implements this interface to add custom fields to the `mod_form`. The only method receives an instance of
+`MoodleQuickForm` which it uses in a usual way to add fields. An important note though is to add a `hideIf()` call after adding each
+element. This is due to all form fields are loaded at once, both for default CAT algorithm and sub-plugins. So, displaying of
+the form fields depends on what is selected in the sub-plugin selector and calling `hideIf()` for each field manages that.
+
+Besides, managing form fields this way makes it impossible to use `addRule()` for custom form fields. You have to use the validation
+callback only (see below) to define fields as required, non-empty and so on.
+
+Also, it would be good to prefix all fields defined by a sub-plugin to uniquely distinguish them.
+
+You can find an example of implementation of this interface in the 'Hello world' sub-plugin included in the adaptive quiz mod.
+In general, this example sub-plugin is a good source of example implementations of the interfaces listed here. Thus, the example
+source code isn't listed here, it can be found in the 'Hello world' sub-plugin.
 
 ***catmodel_mod_form_validator***
 
-Used to add extra validation the form. Defines one method:
+Used to add extra validation to the form. Defines one method:
 
 ```
 public function validation_callback(array $data, array $files): array;
@@ -265,7 +273,7 @@ public function data_preprocessing_callback(array $formdefaultvalues): array;
 In Moodle, to tweak how the `moodleform`'s fields are populated you're making use of `moodleform::data_preprocessing()` method.
 The adaptive quiz plugin overrides this method in its `mod_form` and wires up implementations of
 `catmodel_mod_form_data_preprocessor::data_preprocessing_callback()` in it. Please, note how the form's values are passed to this
-method and that it expects them to be returned modified. As opposed to the calling method passing it be reference. Again, PHPDocs
+method and that it expects them to be returned modified. As opposed to the calling method passing it by reference. Again, PHPDocs
 both in interfaces definition and the sub-plugin's implementations is a good source of information.
 
 You may have noticed that there are several interfaces covering extension of `mod_form` containing just one method. We just follow

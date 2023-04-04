@@ -45,8 +45,8 @@ class instance_actions_handler implements
 
         $catmodel = new stdClass();
         $catmodel->adaptivequizid = $adaptivequiz->id;
-        $catmodel->param1 = $adaptivequiz->param1;
-        $catmodel->param2 = $adaptivequiz->param2;
+        $catmodel->param1 = $adaptivequiz->catmodel_helloworld_param1;
+        $catmodel->param2 = $adaptivequiz->catmodel_helloworld_param2;
 
         $DB->insert_record('catmodel_helloworld', $catmodel);
     }
@@ -63,9 +63,9 @@ class instance_actions_handler implements
         global $DB;
 
         $catmodelrecord = new stdClass();
-        $catmodelrecord->id = $adaptivequiz->catmodelinstanceid;
-        $catmodelrecord->param1 = $adaptivequiz->param1;
-        $catmodelrecord->param2 = $adaptivequiz->param2;
+        $catmodelrecord->id = $adaptivequiz->catmodel_helloworld_catmodelinstanceid;
+        $catmodelrecord->param1 = $adaptivequiz->catmodel_helloworld_param1;
+        $catmodelrecord->param2 = $adaptivequiz->catmodel_helloworld_param2;
 
         $DB->update_record('catmodel_helloworld', $catmodelrecord);
     }

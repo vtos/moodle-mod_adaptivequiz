@@ -100,75 +100,14 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addHelpButton('showattemptprogress', 'modformshowattemptprogress', 'adaptivequiz');
         $mform->setDefault('showattemptprogress', 0);
 
-        $this->add_cat_model_section_when_applicable($mform);
+        $this->questions_pool_selector($mform);
 
-        // Button to attach JavaScript to to reload the form.
-        $mform->registerNoSubmitButton('submitcatmodeloption');
-        $mform->addElement('submit', 'submitcatmodeloption', get_string('modformsubmitcatmodeloption', 'adaptivequiz'),
-            ['class' => 'd-none', 'data-action' => 'submitCatModel']);
+        $mform->addElement('header', 'algorithmsettingsheading', get_string('mod_form:algorithmsettingsheading', 'adaptivequiz'));
+        $mform->setExpanded('algorithmsettingsheading', true);
 
-        $mform->addElement('header', 'questionselectionheading', get_string('modformquestionselectionheading', 'adaptivequiz'));
+        $this->custom_cat_model_selector_if_applicable($mform);
 
-        // Retireve a list of available course categories.
-        adaptivequiz_make_default_categories($this->context);
-        $options = adaptivequiz_get_question_categories($this->context);
-        $selquestcat = adaptivequiz_get_selected_question_cateogires($this->_instance);
-
-        $select = $mform->addElement('select', 'questionpool', get_string('questionpool', 'adaptivequiz'), $options);
-        $mform->addHelpButton('questionpool', 'questionpool', 'adaptivequiz');
-        $select->setMultiple(true);
-        $mform->addRule('questionpool', null, 'required', null, 'client');
-        $mform->getElement('questionpool')->setSelected($selquestcat);
-
-        $mform->addElement('text', 'startinglevel', get_string('startinglevel', 'adaptivequiz'),
-            ['size' => '3', 'maxlength' => '3']);
-        $mform->addHelpButton('startinglevel', 'startinglevel', 'adaptivequiz');
-        $mform->addRule('startinglevel', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('startinglevel', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('startinglevel', PARAM_INT);
-        $mform->setDefault('startinglevel', $pluginconfig->startinglevel);
-
-        $mform->addElement('text', 'lowestlevel', get_string('lowestlevel', 'adaptivequiz'),
-            ['size' => '3', 'maxlength' => '3']);
-        $mform->addHelpButton('lowestlevel', 'lowestlevel', 'adaptivequiz');
-        $mform->addRule('lowestlevel', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('lowestlevel', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('lowestlevel', PARAM_INT);
-        $mform->setDefault('lowestlevel', $pluginconfig->lowestlevel);
-
-        $mform->addElement('text', 'highestlevel', get_string('highestlevel', 'adaptivequiz'),
-            ['size' => '3', 'maxlength' => '3']);
-        $mform->addHelpButton('highestlevel', 'highestlevel', 'adaptivequiz');
-        $mform->addRule('highestlevel', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('highestlevel', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('highestlevel', PARAM_INT);
-        $mform->setDefault('highestlevel', $pluginconfig->highestlevel);
-
-        $mform->addElement('header', 'stopingconditionshdr', get_string('stopingconditionshdr', 'adaptivequiz'));
-
-        $mform->addElement('text', 'minimumquestions', get_string('minimumquestions', 'adaptivequiz'),
-            ['size' => '3', 'maxlength' => '3']);
-        $mform->addHelpButton('minimumquestions', 'minimumquestions', 'adaptivequiz');
-        $mform->addRule('minimumquestions', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('minimumquestions', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('minimumquestions', PARAM_INT);
-        $mform->setDefault('minimumquestions', $pluginconfig->minimumquestions);
-
-        $mform->addElement('text', 'maximumquestions', get_string('maximumquestions', 'adaptivequiz'),
-            ['size' => '3', 'maxlength' => '3']);
-        $mform->addHelpButton('maximumquestions', 'maximumquestions', 'adaptivequiz');
-        $mform->addRule('maximumquestions', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('maximumquestions', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('maximumquestions', PARAM_INT);
-        $mform->setDefault('maximumquestions', $pluginconfig->maximumquestions);
-
-        $mform->addElement('text', 'standarderror', get_string('standarderror', 'adaptivequiz'),
-            ['size' => '10', 'maxlength' => '10']);
-        $mform->addHelpButton('standarderror', 'standarderror', 'adaptivequiz');
-        $mform->addRule('standarderror', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('standarderror', get_string('formelementdecimal', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('standarderror', PARAM_FLOAT);
-        $mform->setDefault('standarderror', $pluginconfig->standarderror);
+        $this->default_cat_algorithm_fields_section($mform, $pluginconfig);
 
         // Grade settings.
         $this->standard_grading_coursemodule_elements();
@@ -224,6 +163,12 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         }
     }
 
+    /**
+     * A system method required for the completion API.
+     *
+     * @return string[] List of added elements.
+     * @throws coding_exception
+     */
     public function add_completion_rules(): array {
         $form = $this->_form;
         $form->addElement('checkbox', 'completionattemptcompleted', ' ',
@@ -232,53 +177,17 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         return ['completionattemptcompleted'];
     }
 
+    /**
+     * A system method required for the completion API.
+     *
+     * @param array $data Input data not yet validated.
+     */
     public function completion_rule_enabled($data): bool {
         if (!isset($data['completionattemptcompleted'])) {
             return false;
         }
 
         return $data['completionattemptcompleted'] != 0;
-    }
-
-    /**
-     * Set up the form depending on current values.
-     */
-    public function definition_after_data() {
-        $form = $this->_form;
-
-        $catmodelvalue = $form->getElementValue('catmodel');
-        if (empty($catmodelvalue[0])) {
-            return;
-        }
-
-        $catmodel = $catmodelvalue[0];
-
-        $formmodifierclasses = core_component::get_component_classes_in_namespace(
-            "adaptivequizcatmodel_$catmodel",
-            'local\catmodel\form'
-        );
-        if (empty($formmodifierclasses)) {
-            return;
-        }
-
-        $classnames = array_keys($formmodifierclasses);
-        foreach ($classnames as $classname) {
-            if (!is_subclass_of($classname, '\mod_adaptivequiz\local\catmodel\form\catmodel_mod_form_modifier')) {
-                continue;
-            }
-
-            $formmodifier = new $classname();
-            $formelements = $formmodifier->definition_after_data_callback($form);
-            if (empty($formelements)) {
-                break;
-            }
-
-            foreach ($formelements as $formelement) {
-                $form->insertElementBefore($form->removeElement($formelement->getName(), false), 'catmodelfieldsmarker');
-            }
-
-            break;
-        }
     }
 
     /**
@@ -297,45 +206,12 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
 
         // When there's a custom CAT model submitted, we wire up its form validation if exists and skip the default validation.
         if (!empty($data['catmodel'])) {
-            return array_merge($errors, $this->validate_cat_model_fields_or_skip($data, $files));
+            return array_merge($errors, $this->validate_custom_cat_model_fields_or_skip($data, $files));
         }
 
-        // Validate for positivity.
-        if (0 >= $data['minimumquestions']) {
-            $errors['minimumquestions'] = get_string('formelementnegative', 'adaptivequiz');
-        }
-
-        if (0 >= $data['maximumquestions']) {
-            $errors['maximumquestions'] = get_string('formelementnegative', 'adaptivequiz');
-        }
-
-        if (0 >= $data['startinglevel']) {
-            $errors['startinglevel'] = get_string('formelementnegative', 'adaptivequiz');
-        }
-
-        if (0 >= $data['lowestlevel']) {
-            $errors['lowestlevel'] = get_string('formelementnegative', 'adaptivequiz');
-        }
-
-        if (0 >= $data['highestlevel']) {
-            $errors['highestlevel'] = get_string('formelementnegative', 'adaptivequiz');
-        }
-
-        if ((float) 0 > (float) $data['standarderror'] || (float) 50 <= (float) $data['standarderror']) {
-            $errors['standarderror'] = get_string('formstderror', 'adaptivequiz');
-        }
-
-        // Validate higher and lower values.
-        if ($data['minimumquestions'] >= $data['maximumquestions']) {
-            $errors['minimumquestions'] = get_string('formminquestgreaterthan', 'adaptivequiz');
-        }
-
-        if ($data['lowestlevel'] >= $data['highestlevel']) {
-            $errors['lowestlevel'] = get_string('formlowlevelgreaterthan', 'adaptivequiz');
-        }
-
-        if (!($data['startinglevel'] >= $data['lowestlevel'] && $data['startinglevel'] <= $data['highestlevel'])) {
-            $errors['startinglevel'] = get_string('formstartleveloutofbounds', 'adaptivequiz');
+        $errors = array_merge($errors, $this->validate_cat_algorithm_fields($data));
+        if ($errors) {
+            return $errors;
         }
 
         if ($questionspoolerrormsg = $this->validate_questions_pool($data['questionpool'], $data['startinglevel'])) {
@@ -346,14 +222,201 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
     }
 
     /**
+     * Initializes questions pool selector.
+     *
+     * @param MoodleQuickForm $form
+     */
+    private function questions_pool_selector(MoodleQuickForm $form): void {
+        adaptivequiz_make_default_categories($this->context);
+
+        $options = adaptivequiz_get_question_categories($this->context);
+        $select = $form->addElement('select', 'questionpool', get_string('questionpool', 'adaptivequiz'), $options);
+        $select->setMultiple(true);
+
+        $selquestcat = adaptivequiz_get_selected_question_cateogires($this->_instance);
+        $form->getElement('questionpool')->setSelected($selquestcat);
+
+        $form->addHelpButton('questionpool', 'questionpool', 'adaptivequiz');
+        $form->addRule('questionpool', get_string('err_required', 'form'), 'required', null, 'client');
+    }
+
+    /**
+     * Checks whether there are CAT model plugins to choose and if that's the case adds related elements to the form.
+     *
+     * @param MoodleQuickForm $form
+     */
+    private function custom_cat_model_selector_if_applicable(MoodleQuickForm $form): void {
+        if (!$catmodelplugins = core_component::get_plugin_list('adaptivequizcatmodel')) {
+            return;
+        }
+
+        $options = ['' => ''];
+        foreach (array_keys($catmodelplugins) as $pluginname) {
+            $options[$pluginname] = get_string('pluginname', "adaptivequizcatmodel_$pluginname");
+        }
+        $form->addElement('select', 'catmodel', get_string('modformcatmodel', 'adaptivequiz'), $options);
+        $form->addHelpButton('catmodel', 'modformcatmodel', 'adaptivequiz');
+    }
+
+    /**
+     * Definition of fields related to the default CAT algorithm.
+     *
+     * Each field is set to have a hide-if dependency on the custom CAT model selector.
+     * The method also calls the form definition callback for a CAT model plugin if selected.
+     *
+     * @param MoodleQuickForm $form
+     * @param stdClass $config Plugin's global config.
+     */
+    private function default_cat_algorithm_fields_section(MoodleQuickForm $form, stdClass $config): void {
+        $form->addElement('text', 'startinglevel', get_string('startinglevel', 'adaptivequiz'),
+            ['size' => '3', 'maxlength' => '3']);
+        $form->addHelpButton('startinglevel', 'startinglevel', 'adaptivequiz');
+        $form->setType('startinglevel', PARAM_INT);
+        $form->setDefault('startinglevel', $config->startinglevel);
+        $form->hideIf('startinglevel', 'catmodel', 'neq', '');
+
+        $form->addElement('text', 'lowestlevel', get_string('lowestlevel', 'adaptivequiz'),
+            ['size' => '3', 'maxlength' => '3']);
+        $form->addHelpButton('lowestlevel', 'lowestlevel', 'adaptivequiz');
+        $form->setType('lowestlevel', PARAM_INT);
+        $form->setDefault('lowestlevel', $config->lowestlevel);
+        $form->hideIf('lowestlevel', 'catmodel', 'neq', '');
+
+        $form->addElement('text', 'highestlevel', get_string('highestlevel', 'adaptivequiz'),
+            ['size' => '3', 'maxlength' => '3']);
+        $form->addHelpButton('highestlevel', 'highestlevel', 'adaptivequiz');
+        $form->setType('highestlevel', PARAM_INT);
+        $form->setDefault('highestlevel', $config->highestlevel);
+        $form->hideIf('highestlevel', 'catmodel', 'neq', '');
+
+        $form->addElement('text', 'minimumquestions', get_string('minimumquestions', 'adaptivequiz'),
+            ['size' => '3', 'maxlength' => '3']);
+        $form->addHelpButton('minimumquestions', 'minimumquestions', 'adaptivequiz');
+        $form->setType('minimumquestions', PARAM_INT);
+        $form->setDefault('minimumquestions', $config->minimumquestions);
+        $form->hideIf('minimumquestions', 'catmodel', 'neq', '');
+
+        $form->addElement('text', 'maximumquestions', get_string('maximumquestions', 'adaptivequiz'),
+            ['size' => '3', 'maxlength' => '3']);
+        $form->addHelpButton('maximumquestions', 'maximumquestions', 'adaptivequiz');
+        $form->setType('maximumquestions', PARAM_INT);
+        $form->setDefault('maximumquestions', $config->maximumquestions);
+        $form->hideIf('maximumquestions', 'catmodel', 'neq', '');
+
+        $form->addElement('text', 'standarderror', get_string('standarderror', 'adaptivequiz'),
+            ['size' => '10', 'maxlength' => '10']);
+        $form->addHelpButton('standarderror', 'standarderror', 'adaptivequiz');
+        $form->setType('standarderror', PARAM_FLOAT);
+        $form->setDefault('standarderror', $config->standarderror);
+        $form->hideIf('standarderror', 'catmodel', 'neq', '');
+
+        $this->custom_cat_model_definitions($form);
+    }
+
+    /**
+     * Searches for implementations of definition callbacks for all CAT model plugins and wires them up.
+     *
+     * @param MoodleQuickForm $form
+     */
+    private function custom_cat_model_definitions(MoodleQuickForm $form): void {
+        if (!$catmodelplugins = core_component::get_plugin_list('adaptivequizcatmodel')) {
+            return;
+        }
+
+        foreach (array_keys($catmodelplugins) as $pluginshortname) {
+            $formmodifierclasses = core_component::get_component_classes_in_namespace(
+                "adaptivequizcatmodel_$pluginshortname",
+                'local\catmodel\form'
+            );
+            if (empty($formmodifierclasses)) {
+                continue;
+            }
+
+            $classnames = array_keys($formmodifierclasses);
+            foreach ($classnames as $classname) {
+                if (!is_subclass_of($classname, '\mod_adaptivequiz\local\catmodel\form\catmodel_mod_form_modifier')) {
+                    continue;
+                }
+
+                $formmodifier = new $classname();
+                $formmodifier->definition_callback($form);
+
+                break;
+            }
+        }
+    }
+
+    /**
+     * Validates selected questions pool.
+     *
      * @param int[] $qcategoryidlist A list of id of selected questions categories.
+     * @param int $startinglevel
      * @return string An error message if any.
-     * @throws coding_exception
      */
     private function validate_questions_pool(array $qcategoryidlist, int $startinglevel): string {
         return questions_repository::count_adaptive_questions_in_pool_with_level($qcategoryidlist, $startinglevel) > 0
             ? ''
             : get_string('questionspoolerrornovalidstartingquestions', 'adaptivequiz');
+    }
+
+    /**
+     * Validates fields related to the CAT algorithm.
+     *
+     * @param array $data
+     * @return array
+     */
+    private function validate_cat_algorithm_fields(array $data): array {
+        $errors = [];
+
+        $startinglevel = (int) $data['startinglevel'];
+        if (0 >= $startinglevel) {
+            $errors['startinglevel'] = get_string('modform:entervalidcatinteger', 'adaptivequiz');
+        }
+
+        $lowestlevel = (int) $data['lowestlevel'];
+        if (0 >= $lowestlevel) {
+            $errors['lowestlevel'] = get_string('modform:entervalidcatinteger', 'adaptivequiz');
+        }
+
+        $highestlevel = $data['highestlevel'];
+        if (0 >= $highestlevel) {
+            $errors['highestlevel'] = get_string('modform:entervalidcatinteger', 'adaptivequiz');
+        }
+
+        $minimumquestions = (int) $data['minimumquestions'];
+        if (0 >= $minimumquestions) {
+            $errors['minimumquestions'] = get_string('modform:entervalidcatinteger', 'adaptivequiz');
+        }
+
+        $maximumquestions = (int) $data['maximumquestions'];
+        if (0 >= $maximumquestions) {
+            $errors['maximumquestions'] = get_string('modform:entervalidcatinteger', 'adaptivequiz');
+        }
+
+        $standarderror = (float) $data['standarderror'];
+        if (0.0 > $standarderror || 50.0 <= $standarderror) {
+            $errors['standarderror'] = get_string('formstderror', 'adaptivequiz');
+        }
+
+        if (empty($errors['lowestlevel']) ) {
+            if ($lowestlevel >= $highestlevel) {
+                $errors['lowestlevel'] = get_string('formlowlevelgreaterthan', 'adaptivequiz');
+            }
+        }
+
+        if (empty($errors['startinglevel']) ) {
+            if (!($startinglevel >= $lowestlevel && $startinglevel <= $highestlevel)) {
+                $errors['startinglevel'] = get_string('formstartleveloutofbounds', 'adaptivequiz');
+            }
+        }
+
+        if (empty($errors['minimumquestions'])) {
+            if ($minimumquestions >= $maximumquestions) {
+                $errors['minimumquestions'] = get_string('formminquestgreaterthan', 'adaptivequiz');
+            }
+        }
+
+        return $errors;
     }
 
     /**
@@ -365,7 +428,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
      * @param array $files
      * @return array What {@see moodleform_mod::validation()} usually returns or an empty array if validation isn't implemented.
      */
-    private function validate_cat_model_fields_or_skip(array $data, array $files): array {
+    private function validate_custom_cat_model_fields_or_skip(array $data, array $files): array {
         $catmodel = $data['catmodel'];
 
         $formvalidatorclasses = core_component::get_component_classes_in_namespace(
@@ -388,34 +451,5 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         }
 
         return [];
-    }
-
-    /**
-     * Checks whether there are CAT model plugins to choose and if that's the case adds related elements to the form.
-     *
-     * @param MoodleQuickForm $form
-     */
-    private function add_cat_model_section_when_applicable(MoodleQuickForm $form): void {
-        global $PAGE;
-
-        if (!$catmodelplugins = core_component::get_plugin_list('adaptivequizcatmodel')) {
-            return;
-        }
-
-        $PAGE->requires->js_call_amd('mod_adaptivequiz/cat_model_chooser', 'init');
-
-        $form->addElement('header', 'catmodelheading', get_string('modformcatmodelheading', 'adaptivequiz'));
-
-        $options = ['' => ''];
-        foreach (array_keys($catmodelplugins) as $pluginname) {
-            $options[$pluginname] = get_string('pluginname', "adaptivequizcatmodel_$pluginname");
-        }
-        $form->addElement('select', 'catmodel', get_string('modformcatmodel', 'adaptivequiz'), $options,
-            ['data-on-change-action' => 'reloadForm']);
-        $form->addHelpButton('catmodel', 'modformcatmodel', 'adaptivequiz');
-
-        // Just a marker to identify the place in form where custom fields should be added.
-        $form->addElement('hidden', 'catmodelfieldsmarker');
-        $form->setType('catmodelfieldsmarker', PARAM_INT);
     }
 }

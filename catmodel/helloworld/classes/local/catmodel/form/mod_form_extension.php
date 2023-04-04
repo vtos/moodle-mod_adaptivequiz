@@ -29,7 +29,9 @@ use MoodleQuickForm;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class mod_form_extension implements
-    catmodel_mod_form_modifier, catmodel_mod_form_validator, catmodel_mod_form_data_preprocessor {
+    catmodel_mod_form_modifier,
+    catmodel_mod_form_validator,
+    catmodel_mod_form_data_preprocessor {
 
     /**
      * Implementation of interface, {@see catmodel_mod_form_modifier::definition_after_data_callback()}.
@@ -37,35 +39,23 @@ final class mod_form_extension implements
      * Adds several custom elements to the form.
      *
      * @param MoodleQuickForm $form
-     * @return array
      */
-    public function definition_after_data_callback(MoodleQuickForm $form): array {
-        $formelements = [];
-
-        $formelements[] = $form->addElement('text', 'param1', get_string('param1', 'adaptivequizcatmodel_helloworld'),
+    public function definition_callback(MoodleQuickForm $form): void {
+        $form->addElement('text', 'catmodel_helloworld_param1', get_string('param1', 'adaptivequizcatmodel_helloworld'),
             ['size' => '3', 'maxlength' => '3']);
-        $form->addHelpButton('param1', 'param1', 'adaptivequizcatmodel_helloworld');
-        $form->addRule('param1', get_string('err_required', 'form'), 'required', null, 'client');
-        $form->addRule('param1', get_string('err_numeric', 'form'), 'numeric', null, 'client');
-        $form->setType('param1', PARAM_INT);
+        $form->addHelpButton('catmodel_helloworld_param1', 'param1', 'adaptivequizcatmodel_helloworld');
+        $form->setType('catmodel_helloworld_param1', PARAM_INT);
+        $form->hideIf('catmodel_helloworld_param1', 'catmodel', 'neq', 'helloworld');
 
-        $formelements[] = $form->addElement('text', 'param2', get_string('param2', 'adaptivequizcatmodel_helloworld'),
+        $form->addElement('text', 'catmodel_helloworld_param2', get_string('param2', 'adaptivequizcatmodel_helloworld'),
             ['size' => '3', 'maxlength' => '3']);
-        $form->addHelpButton('param2', 'param2', 'adaptivequizcatmodel_helloworld');
-        $form->addRule('param2', get_string('err_required', 'form'), 'required', null, 'client');
-        $form->addRule('param2', get_string('err_numeric', 'form'), 'numeric', null, 'client');
-        $form->setType('param2', PARAM_INT);
+        $form->addHelpButton('catmodel_helloworld_param2', 'param2', 'adaptivequizcatmodel_helloworld');
+        $form->setType('catmodel_helloworld_param2', PARAM_INT);
+        $form->hideIf('catmodel_helloworld_param2', 'catmodel', 'neq', 'helloworld');
 
-        $form->addElement('hidden', 'catmodelinstanceid', 0);
-        $form->setType('catmodelinstanceid', PARAM_INT);
-
-        // Remove some default form fields the sub-plugin does not use.
-        $defaultelementstodrop = ['startinglevel', 'stopingconditionshdr', 'minimumquestions', 'maximumquestions', 'standarderror'];
-        foreach ($defaultelementstodrop as $elementname) {
-            $form->removeElement($elementname);
-        }
-
-        return $formelements;
+        $form->addElement('hidden', 'catmodel_helloworld_catmodelinstanceid', 0);
+        $form->setType('catmodel_helloworld_catmodelinstanceid', PARAM_INT);
+        $form->hideIf('catmodel_helloworld_catmodelinstanceid', 'catmodel', 'neq', 'helloworld');
     }
 
     /**
@@ -80,14 +70,19 @@ final class mod_form_extension implements
     public function validation_callback(array $data, array $files): array {
         $errors = [];
 
-        if (0 >= $data['param1']) {
-            $errors['param1'] = get_string('formelementnegative', 'adaptivequizcatmodel_helloworld');
+        $param1 = (int) $data['catmodel_helloworld_param1'];
+        if (0 >= $param1) {
+            $errors['catmodel_helloworld_param1'] = get_string('modform:entervalidcatinteger', 'adaptivequizcatmodel_helloworld');
         }
-        if (0 >= $data['param2']) {
-            $errors['param2'] = get_string('formelementnegative', 'adaptivequizcatmodel_helloworld');
+
+        $param2 = (int) $data['catmodel_helloworld_param2'];
+        if (0 >= $param2) {
+            $errors['catmodel_helloworld_param2'] = get_string('modform:entervalidcatinteger', 'adaptivequizcatmodel_helloworld');
         }
-        if ($data['param1'] >= $data['param2']) {
-            $errors['param1'] = get_string('formlowlevelgreaterthan', 'adaptivequizcatmodel_helloworld');
+
+        if ($param1 >= $param2) {
+            $errors['catmodel_helloworld_param1'] = get_string('modform:param1mustbelessthanparam2',
+                'adaptivequizcatmodel_helloworld');
         }
 
         return $errors;
@@ -96,7 +91,7 @@ final class mod_form_extension implements
     /**
      * Implementation of interface, {@see catmodel_mod_form_data_preprocessor::data_preprocessing_callback()}.
      *
-     * Fetches id of the custom CAT model's record to enable using it in the form when updating the model's parameters.
+     * Fetches custom CAT model's record to populate the related form fields.
      *
      * @param array $formdefaultvalues
      * @return array
@@ -104,8 +99,12 @@ final class mod_form_extension implements
     public function data_preprocessing_callback(array $formdefaultvalues): array {
         global $DB;
 
-        $formdefaultvalues['catmodelinstanceid'] = $DB->get_field('catmodel_helloworld', 'id',
-            ['adaptivequizid' => $formdefaultvalues['instance']], MUST_EXIST);
+        $helloworldsettings = $DB->get_record('catmodel_helloworld', ['adaptivequizid' => $formdefaultvalues['instance']], '*',
+            MUST_EXIST);
+
+        $formdefaultvalues['catmodel_helloworld_catmodelinstanceid'] = $helloworldsettings->id;
+        $formdefaultvalues['catmodel_helloworld_param1'] = $helloworldsettings->param1;
+        $formdefaultvalues['catmodel_helloworld_param2'] = $helloworldsettings->param2;
 
         return $formdefaultvalues;
     }

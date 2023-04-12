@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * PHPUnit tests for catalgo class.
- *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\catalgorithm;
 
 defined('MOODLE_INTERNAL') || die();
@@ -31,15 +23,26 @@ require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use coding_exception;
+use context_module;
+use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
+use question_engine;
 use question_usage_by_activity;
 use stdClass;
 
 /**
+ * Unit tests for the catalgo class.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
  * @group mod_adaptivequiz
  * @covers \mod_adaptivequiz\local\catalgo
  */
 class catalgo_test extends advanced_testcase {
+
     /**
      * This function loads data into the PHPUnit tables for testing
      *
@@ -83,118 +86,6 @@ class catalgo_test extends advanced_testcase {
 
         $this->expectException('coding_exception');
         new catalgo($mockquba, true);
-    }
-
-    /**
-     * This function tests was_answer_submitted_to_question() returning a false instead of a true
-     */
-    public function test_quest_was_marked_correct_no_submit_prev_quest_fail() {
-        $this->resetAfterTest(true);
-
-        $mockcatalgo = $this->createPartialMock(catalgo::class,
-            ['find_last_quest_used_by_attempt', 'was_answer_submitted_to_question', 'get_question_mark']);
-        $mockcatalgo->expects($this->once())
-            ->method('find_last_quest_used_by_attempt')
-            ->willReturn(99);
-        $mockcatalgo->expects($this->once())
-            ->method('was_answer_submitted_to_question')
-            ->with(99)
-            ->willReturn(false);
-        $mockcatalgo->expects($this->never())
-            ->method('get_question_mark');
-
-        $result = $mockcatalgo->question_was_marked_correct();
-        $this->assertFalse($result);
-    }
-
-    /**
-     * This function tests was_answer_submitted_to_question() returning a 0 instead of a slot number
-     */
-    public function test_quest_was_marked_correct_zero_slot_number_fail() {
-        $this->resetAfterTest(true);
-
-        $mockcatalgo = $this->createPartialMock(catalgo::class,
-            ['find_last_quest_used_by_attempt', 'get_question_mark']);
-        $mockcatalgo->expects($this->once())
-            ->method('find_last_quest_used_by_attempt')
-            ->willReturn(0);
-        $mockcatalgo->expects($this->never())
-            ->method('get_question_mark');
-
-        $result = $mockcatalgo->question_was_marked_correct();
-        $this->assertNull($result);
-    }
-
-    /**
-     * This function tests get_question_mark() returning null
-     */
-    public function test_quest_was_marked_correct_mark_is_null_fail() {
-        $this->resetAfterTest(true);
-
-        $mockcatalgo = $this->createPartialMock(catalgo::class,
-            ['find_last_quest_used_by_attempt', 'was_answer_submitted_to_question', 'get_question_mark']);
-        $mockcatalgo->expects($this->once())
-            ->method('find_last_quest_used_by_attempt')
-            ->willReturn(99);
-        $mockcatalgo->expects($this->once())
-            ->method('was_answer_submitted_to_question')
-            ->with(99)
-            ->willReturn(true);
-        $mockcatalgo->expects($this->once())
-            ->method('get_question_mark')
-            ->withAnyParameters()
-            ->willReturn(null);
-
-        $result = $mockcatalgo->question_was_marked_correct();
-        $this->assertNull($result);
-    }
-
-    /**
-     * This function tests get_question_mark() returning a mark of zero
-     */
-    public function test_quest_was_marked_correct_mark_zero() {
-        $this->resetAfterTest(true);
-
-        $mockcatalgo = $this->createPartialMock(catalgo::class,
-            ['find_last_quest_used_by_attempt', 'was_answer_submitted_to_question', 'get_question_mark']);
-        $mockcatalgo->expects($this->once())
-            ->method('find_last_quest_used_by_attempt')
-            ->willReturn(99);
-        $mockcatalgo->expects($this->once())
-            ->method('was_answer_submitted_to_question')
-            ->with(99)
-            ->willReturn(true);
-        $mockcatalgo->expects($this->once())
-            ->method('get_question_mark')
-            ->withAnyParameters()
-            ->willReturn(0.00);
-
-        $result = $mockcatalgo->question_was_marked_correct();
-        $this->assertFalse($result);
-    }
-
-    /**
-     * This function tests get_question_mark() returning a mark of greater than zero
-     */
-    public function test_quest_was_marked_correct_mark_non_zero() {
-        $this->resetAfterTest(true);
-
-        $mockcatalgo = $this->createPartialMock(catalgo::class,
-            ['find_last_quest_used_by_attempt', 'was_answer_submitted_to_question', 'get_question_mark']);
-        $mockcatalgo->expects($this->once())
-            ->method('find_last_quest_used_by_attempt')
-            ->willReturn(99);
-        $mockcatalgo->expects($this->once())
-            ->method('was_answer_submitted_to_question')
-            ->with(99)
-            ->willReturn(true);
-        $mockcatalgo->expects($this->once())
-            ->method('get_question_mark')
-            ->withAnyParameters()
-            ->willReturn(0.10);
-
-        $result = $mockcatalgo->question_was_marked_correct();
-        $this->assertTrue($result);
     }
 
     public function test_it_can_define_current_difficulty_level(): void {
@@ -501,385 +392,169 @@ class catalgo_test extends advanced_testcase {
         $this->assertEquals(0.69007, $result);
     }
 
-    /**
-     * This function tests the return data from perform_calculation_steps(), where question_was_marked_correct() returns null.
-     */
-    public function test_perform_calc_steps_marked_correct_return_null_fail() {
-        $this->markTestSkipped();
+    public function test_it_determines_next_difficulty_as_with_error_when_question_was_not_answered(): void {
+        self::resetAfterTest();
 
-        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'highestlevel' => 10,
+                'lowestlevel' => 1,
+                'standarderror' => 5,
+                'course' => $course->id
+            ]);
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
+        $context = context_module::instance($cm->id);
 
-        $mockcatalgo = $this->createPartialMock(catalgo::class, ['question_was_marked_correct', 'compute_next_difficulty',
-            'compute_right_answers', 'compute_wrong_answers', 'estimate_measure', 'estimate_standard_error',
-            'standard_error_within_parameters']);
+        $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
 
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->lowestlevel = 1;
-        $adaptivequiz->highestlevel = 10;
-        $adaptivequiz->standarderror = 5;
+        $catalgo = new catalgo($quba, false, 1);
 
-        $mockcatalgo->expects($this->once())
-            ->method('question_was_marked_correct')
-            ->willReturn(null); // Questions marked correctly returns null.
-        $mockcatalgo->expects($this->never())
-            ->method('compute_next_difficulty');
-        $mockcatalgo->expects($this->never())
-            ->method('compute_right_answers');
-        $mockcatalgo->expects($this->never())
-            ->method('compute_wrong_answers');
-        $mockcatalgo->expects($this->never())
-            ->method('estimate_measure');
-        $mockcatalgo->expects($this->never())
-            ->method('estimate_standard_error');
-        $mockcatalgo->expects($this->never())
-            ->method('standard_error_within_parameters');
-
-        $result = $mockcatalgo->perform_calculation_steps(
-            20,
-            10,
+        $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
+            1,
+            5,
             questions_difficulty_range::from_activity_instance($adaptivequiz),
-            $adaptivequiz->standarderror
+            $adaptivequiz->standarderror,
+            question_answer_evaluation_result::when_answer_was_not_given()
         );
 
-        $this->assertEquals(0, $result);
-    }
-
-    /**
-     * This function tests the return data from perform_calculation_steps(), where compute_right_answers() returns 0,
-     * but the next difficulty number is returned.
-     */
-    public function test_perform_calc_steps_right_ans_ret_zero_but_return_non_zero() {
-        $this->markTestSkipped();
-
-        $this->resetAfterTest(true);
-
-        $mockcatalgo = $this->createPartialMock(catalgo::class, ['question_was_marked_correct', 'compute_next_difficulty',
-            'compute_right_answers', 'compute_wrong_answers']);
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->lowestlevel = 1;
-        $adaptivequiz->highestlevel = 10;
-        $adaptivequiz->standarderror = 1.45095;
-
-        $mockcatalgo->expects($this->once())
-            ->method('question_was_marked_correct')
-            ->willReturn(true);
-        $mockcatalgo->expects($this->once())
-            ->method('compute_next_difficulty')
-            ->willReturn(30);
-        $mockcatalgo->expects($this->once())
-            ->method('compute_right_answers')
-            ->willReturn(0); // Right answers is set to zero.
-        $mockcatalgo->expects($this->once())
-            ->method('compute_wrong_answers')
-            ->willReturn(11); // Wrong answers is set to 11.
-
-        $result = $mockcatalgo->perform_calculation_steps(
-            20,
-            10,
-            questions_difficulty_range::from_activity_instance($adaptivequiz),
-            $adaptivequiz->standarderror
+        self::assertEquals(
+            determine_next_difficulty_result::with_error(get_string('errorlastattpquest', 'adaptivequiz')),
+            $determinenextdifficultylevelresult
         );
-
-        $this->assertNotEquals(0, $result);
     }
 
-    /**
-     * This function tests the return data from perform_calculation_steps(), where compute_wrong_answers() returns 0,
-     * but the next difficulty number is returned.
-     */
-    public function test_perform_calc_steps_wrong_ans_return_zero_but_return_non_zero() {
-        $this->markTestSkipped();
+    public function test_it_determines_next_difficulty_as_with_error_when_number_of_questions_attempted_is_not_valid(): void {
+        self::resetAfterTest();
 
-        $this->resetAfterTest(true);
+        $course = $this->getDataGenerator()->create_course();
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'highestlevel' => 10,
+                'lowestlevel' => 1,
+                'standarderror' => 5,
+                'course' => $course->id
+            ]);
 
-        $mockcatalgo = $this->createPartialMock(catalgo::class, ['question_was_marked_correct', 'compute_next_difficulty',
-            'compute_right_answers', 'compute_wrong_answers']);
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->lowestlevel = 1;
-        $adaptivequiz->highestlevel = 10;
-        $adaptivequiz->standarderror = 1.45095;
-
-        $mockcatalgo->expects($this->any())
-            ->method('question_was_marked_correct')
-            ->willReturn(true);
-        $mockcatalgo->expects($this->once())
-            ->method('compute_next_difficulty')
-            ->willReturn(30);
-        $mockcatalgo->expects($this->once())
-            ->method('compute_right_answers')
-            ->willReturn(11); // Right answers is set to 11.
-        $mockcatalgo->expects($this->once())
-            ->method('compute_wrong_answers')
-            ->willReturn(0); // Wrong answers is set to zero.
-
-        $result = $mockcatalgo->perform_calculation_steps(
-            20,
-            10,
-            questions_difficulty_range::from_activity_instance($adaptivequiz),
-            $adaptivequiz->standarderror
-        );
-
-        $this->assertNotEquals(0, $result);
-    }
-
-    /**
-     * This function tests the return data from perform_calculation_steps(), where questions attempted is set to 0.
-     */
-    public function test_perform_calc_steps_quest_attempted_return_zero_fail() {
-        $this->markTestSkipped();
-
-        $this->resetAfterTest();
-
-        $mockcatalgo = $this->createPartialMock(catalgo::class, ['question_was_marked_correct', 'compute_next_difficulty',
-            'compute_right_answers', 'compute_wrong_answers', 'estimate_measure', 'estimate_standard_error',
-            'standard_error_within_parameters']);
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->lowestlevel = 1;
-        $adaptivequiz->highestlevel = 10;
-        $adaptivequiz->standarderror = 5;
-
-        $mockcatalgo->expects($this->once())
-            ->method('question_was_marked_correct')
-            ->willReturn(true);
-        $mockcatalgo->expects($this->once())
-            ->method('compute_next_difficulty')
-            ->willReturn(30);
-        $mockcatalgo->expects($this->once())
+        // Still have to mock some methods to not mess up with quba, but referencing quba in the class will be eventually removed
+        // as well.
+        $catalgo = $this->createPartialMock(catalgo::class, ['compute_right_answers', 'compute_wrong_answers']);
+        $catalgo->expects($this->once())
             ->method('compute_right_answers')
             ->willReturn(1);
-        $mockcatalgo->expects($this->once())
+        $catalgo->expects($this->once())
             ->method('compute_wrong_answers')
             ->willReturn(1);
-        $mockcatalgo->expects($this->never())
-            ->method('estimate_measure');
-        $mockcatalgo->expects($this->never())
-            ->method('estimate_standard_error');
-        $mockcatalgo->expects($this->never())
-            ->method('standard_error_within_parameters');
 
-        $result = $mockcatalgo->perform_calculation_steps(
+        $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
             20,
             10,
             questions_difficulty_range::from_activity_instance($adaptivequiz),
-            $adaptivequiz->standarderror
+            $adaptivequiz->standarderror,
+            question_answer_evaluation_result::when_answer_is_correct()
         );
 
-        $this->assertEquals(0, $result);
-    }
-
-    /**
-     * This function tests the return data from perform_calculation_steps(), where the sum of correct and incorrect answers
-     * does not equal the sum of questions attempted.
-     */
-    public function test_perform_calc_steps_sum_corr_and_incorr_not_equl_sum_quest_attempt_fail() {
-        $this->markTestSkipped();
-
-        $this->resetAfterTest();
-
-        $mockcatalgo = $this->createPartialMock(catalgo::class, ['question_was_marked_correct', 'compute_next_difficulty',
-            'compute_right_answers', 'compute_wrong_answers', 'estimate_measure', 'estimate_standard_error',
-            'standard_error_within_parameters']);
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->lowestlevel = 1;
-        $adaptivequiz->highestlevel = 10;
-        $adaptivequiz->standarderror = 5;
-
-        $mockcatalgo->expects($this->once())
-            ->method('question_was_marked_correct')
-            ->willReturn(true);
-        $mockcatalgo->expects($this->once())
-            ->method('compute_next_difficulty')
-            ->willReturn(30);
-        $mockcatalgo->expects($this->once())
-            ->method('compute_right_answers')
-            ->willReturn(1); // Sum of right answers.
-        $mockcatalgo->expects($this->once())
-            ->method('compute_wrong_answers')
-            ->willReturn(1); // Sum of wrong answers.
-        $mockcatalgo->expects($this->never())
-            ->method('estimate_measure');
-        $mockcatalgo->expects($this->never())
-            ->method('estimate_standard_error');
-        $mockcatalgo->expects($this->never())
-            ->method('standard_error_within_parameters');
-
-        $result = $mockcatalgo->perform_calculation_steps(
-            20,
-            10,
-            questions_difficulty_range::from_activity_instance($adaptivequiz),
-            $adaptivequiz->standarderror
+        $this->assertEquals(
+            determine_next_difficulty_result::with_error(get_string('errorsumrightwrong', 'adaptivequiz')),
+            $determinenextdifficultylevelresult
         );
-
-        $this->assertEquals(0, $result);
     }
 
-    /**
-     * This function tests the return data from perform_calculation_steps(), where the user answered
-     * the last question correctly and the attempt has not met the minimum stopping criteria.
-     */
-    public function test_perform_calculation_steps_nostop_correct_answer() {
-        $this->markTestSkipped();
+    public function test_it_determines_next_difficulty_when_answer_is_given_and_stopping_criteria_is_not_met(): void {
+        self::resetAfterTest();
 
-        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'highestlevel' => 10,
+                'lowestlevel' => 1,
+                'standarderror' => 5,
+                'course' => $course->id
+            ]);
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
+        $context = context_module::instance($cm->id);
 
-        $mockquba = $this->createMock(question_usage_by_activity::class);
+        $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
 
-        // Minimum stopping criteria has not been met.
-        $mockcatalgo = $this
-            ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
-                ['question_was_marked_correct', 'compute_next_difficulty', 'compute_right_answers', 'compute_wrong_answers',
-                    'estimate_measure', 'estimate_standard_error', 'standard_error_within_parameters']
-            )
-            ->setConstructorArgs(
-                [$mockquba, false, 50]
-            )
-            ->getMock();
+        $catalgo = new catalgo($quba, false, 5);
 
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->lowestlevel = 1;
-        $adaptivequiz->highestlevel = 10;
-        $adaptivequiz->standarderror = 5;
-
-        $mockcatalgo->expects($this->once())
-            ->method('question_was_marked_correct')
-            ->willReturn(true); // Last attempted question marked correctly.
-        $mockcatalgo->expects($this->once())
-            ->method('compute_next_difficulty')
-            ->willReturn(52);
-        $mockcatalgo->expects($this->never())
-            ->method('compute_right_answers');
-        $mockcatalgo->expects($this->never())
-            ->method('compute_wrong_answers');
-        $mockcatalgo->expects($this->never())
-            ->method('estimate_measure');
-        $mockcatalgo->expects($this->never())
-            ->method('estimate_standard_error');
-        $mockcatalgo->expects($this->never())
-            ->method('standard_error_within_parameters');
-
-        $result = $mockcatalgo->perform_calculation_steps(
-            50,
+        // When answer is correct.
+        $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
             1,
+            5,
             questions_difficulty_range::from_activity_instance($adaptivequiz),
-            $adaptivequiz->standarderror
+            $adaptivequiz->standarderror,
+            question_answer_evaluation_result::when_answer_is_correct()
         );
 
-        $this->assertEquals(52, $result);
-    }
+        self::assertEquals(
+            determine_next_difficulty_result::with_next_difficulty_level_determined(6),
+            $determinenextdifficultylevelresult
+        );
 
-    /**
-     * This function tests the return data from perform_calculation_steps(), where the user answered
-     * the last question incorrectly and the attempt has not met the minimum stopping criteria.
-     */
-    public function test_perform_calculation_steps_nostop_incorrect_answer() {
-        $this->markTestSkipped();
-
-        $this->resetAfterTest();
-
-        $mockquba = $this->createMock(question_usage_by_activity::class);
-
-        // Minimum stopping criteria has not been met.
-        $mockcatalgo = $this
-            ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
-                ['question_was_marked_correct', 'compute_next_difficulty', 'compute_right_answers', 'compute_wrong_answers',
-                    'estimate_measure', 'estimate_standard_error', 'standard_error_within_parameters']
-            )
-            ->setConstructorArgs(
-                [$mockquba, false, 50]
-            )
-            ->getMock();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->lowestlevel = 1;
-        $adaptivequiz->highestlevel = 10;
-        $adaptivequiz->standarderror = 5;
-
-        $mockcatalgo->expects($this->once())
-            ->method('question_was_marked_correct')
-            ->willReturn(false); // Last attempted question marked incorrectly.
-        $mockcatalgo->expects($this->once())
-            ->method('compute_next_difficulty')
-            ->willReturn(48);
-        $mockcatalgo->expects($this->never())
-            ->method('compute_right_answers');
-        $mockcatalgo->expects($this->never())
-            ->method('compute_wrong_answers');
-        $mockcatalgo->expects($this->never())
-            ->method('estimate_measure');
-        $mockcatalgo->expects($this->never())
-            ->method('estimate_standard_error');
-        $mockcatalgo->expects($this->never())
-            ->method('standard_error_within_parameters');
-
-        $result = $mockcatalgo->perform_calculation_steps(
-            50,
+        // When answer is not correct.
+        $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
             1,
+            5,
             questions_difficulty_range::from_activity_instance($adaptivequiz),
-            $adaptivequiz->standarderror
+            $adaptivequiz->standarderror,
+            question_answer_evaluation_result::when_answer_is_incorrect()
         );
 
-        $this->assertEquals(48, $result);
+        self::assertEquals(
+            determine_next_difficulty_result::with_next_difficulty_level_determined(4),
+            $determinenextdifficultylevelresult
+        );
     }
 
-    /**
-     * This function tests the return data from perform_calculation_steps(), where the attempt has met
-     * all the criteria to determine the standard error and the function runs from beginning to end.
-     */
-    public function test_perform_calculation_steps_stop_no_fail() {
-        $this->markTestSkipped();
+    public function test_it_determines_next_difficulty_when_answer_is_given_and_stopping_criteria_is_met(): void {
+        self::resetAfterTest();
 
-        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'highestlevel' => 10,
+                'lowestlevel' => 1,
+                'standarderror' => 5,
+                'course' => $course->id
+            ]);
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
+        $context = context_module::instance($cm->id);
 
-        $mockquba = $this->createMock(question_usage_by_activity::class);
+        $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
 
-        // Minimum stopping criteria has been met.
-        $mockcatalgo = $this
+        // Still have to mock some methods to not mess up with quba, but referencing quba in the class will be eventually removed
+        // as well.
+        $catalgo = $this
             ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
-                ['question_was_marked_correct', 'compute_next_difficulty', 'compute_right_answers', 'compute_wrong_answers',
-                    'standard_error_within_parameters']
-            )
-            ->setConstructorArgs(
-                [$mockquba, true, 50]
-            )
+            ->onlyMethods(['compute_right_answers', 'compute_wrong_answers'])
+            ->setConstructorArgs([$quba, true, 5])
             ->getMock();
-
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->lowestlevel = 1;
-        $adaptivequiz->highestlevel = 10;
-        $adaptivequiz->standarderror = 5;
-
-        $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
-
-        $mockcatalgo->expects($this->once())
-            ->method('question_was_marked_correct')
-            ->willReturn(true);
-        $mockcatalgo->expects($this->once())
-            ->method('compute_next_difficulty')
-            ->with(50, 3, true, $questionsdifficultyrange)
-            ->willReturn(48);
-        $mockcatalgo->expects($this->once())
+        $catalgo->expects($this->once())
             ->method('compute_right_answers')
             ->withAnyParameters()
             ->willReturn(2);
-        $mockcatalgo->expects($this->once())
+        $catalgo->expects($this->once())
             ->method('compute_wrong_answers')
             ->withAnyParameters()
             ->willReturn(1);
-        $mockcatalgo->expects($this->once())
-            ->method('standard_error_within_parameters')
-            ->withAnyParameters() // Second parameter (is not rounded) and has decimal with many decimal places.
-            ->willReturn(1.0);
 
-        $result = $mockcatalgo->perform_calculation_steps(50, 2, $questionsdifficultyrange, $adaptivequiz->standarderror);
+        $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
+            50,
+            2,
+            questions_difficulty_range::from_activity_instance($adaptivequiz),
+            $adaptivequiz->standarderror,
+            question_answer_evaluation_result::when_answer_is_incorrect()
+        );
 
-        $this->assertEquals(48, $result);
+        self::assertEquals(
+            determine_next_difficulty_result::with_next_difficulty_level_determined(4),
+            $determinenextdifficultylevelresult
+        );
     }
 
     /**

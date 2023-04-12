@@ -26,13 +26,13 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 
-use core\output\notification;
 use mod_adaptivequiz\local\adaptive_quiz_requires;
 use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\itemadministration\item_administration;
+use mod_adaptivequiz\local\question\question_answer_evaluation;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
@@ -67,7 +67,7 @@ try {
 
 // Setup page global for standard viewing.
 $viewurl = new moodle_url('/mod/adaptivequiz/view.php', array('id' => $cm->id));
-$PAGE->set_url('/mod/adaptivequiz/view.php', array('id' => $cm->id));
+$PAGE->set_url('/mod/adaptivequiz/view.php', array('cmid' => $cm->id));
 $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_context($context);
 $PAGE->activityheader->disable();
@@ -154,12 +154,16 @@ if (!empty($uniqueid) && confirm_sesskey()) {
             // Create an instance of the CAT algo class.
             $algo = new catalgo($quba, $minattemptreached, (int) $attempteddifficultylevel);
 
+            $questionanswerevaluation = new question_answer_evaluation($quba);
+            $questionanswerevaluationresult = $questionanswerevaluation->perform();
+
             // Determine the next difficulty level or whether there is an error.
             $determinenextdifficultylevelresult = $algo->determine_next_difficulty_level(
                 (float) $adaptiveattempt->read_attempt_data()->difficultysum,
                 (int) $adaptiveattempt->read_attempt_data()->questionsattempted,
                 questions_difficulty_range::from_activity_instance($adaptivequiz),
-                (float) $adaptivequiz->standarderror
+                (float) $adaptivequiz->standarderror,
+                $questionanswerevaluationresult
             );
             $nextdifficultylevel = $determinenextdifficultylevelresult->next_difficulty_level();
 

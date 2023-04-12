@@ -17,11 +17,9 @@
 namespace mod_adaptivequiz\local\catalgorithm;
 
 use coding_exception;
+use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use moodle_exception;
-use question_state_gradedpartial;
-use question_state_gradedright;
-use question_state_gradedwrong;
 use question_state_todo;
 use question_usage_by_activity;
 use stdClass;
@@ -119,32 +117,6 @@ class catalgo {
     }
 
     /**
-     * Answer a string view of a variable for debugging purposes
-     * @param mixed $variable
-     */
-    protected function vardump($variable) {
-        ob_start();
-        var_dump($variable);
-        return ob_get_clean();
-    }
-
-    /**
-     * This function returns the debug array
-     * @return array array of debugging messages
-     */
-    public function get_debug() {
-        return $this->debug;
-    }
-
-    /**
-     * This function returns the $difficultysum property
-     * @return int returns the $difficultysum property
-     */
-    public function get_difficultysum() {
-        return $this->difficultysum;
-    }
-
-    /**
      * This function returns the $levellogit property
      * @return float retuns the $levellogit property
      */
@@ -169,61 +141,6 @@ class catalgo {
     }
 
     /**
-     * Refactored code from adaptiveattempt.class.php @see find_last_quest_used_by_attempt()
-     * This function retrieves the last question that was used in the attempt
-     * @return int question slot or 0 if no unmarked question could be found
-     */
-    protected function find_last_quest_used_by_attempt() {
-        if (!$this->quba instanceof question_usage_by_activity) {
-            $this->print_debug('find_last_quest_used_by_attempt() - Argument was not a question_usage_by_activity object');
-            return 0;
-        }
-
-        // The last slot in the array should be the last question that was attempted (meaning it was either shown to the user or the
-        // user submitted an answer to it).
-        $questslots = $this->quba->get_slots();
-
-        if (empty($questslots) || !is_array($questslots)) {
-            $this->print_debug('find_last_quest_used_by_attempt() - No question slots found for this question_usage_by_activity '.
-                'object');
-            return 0;
-        }
-
-        $questslot = end($questslots);
-        $this->print_debug('find_last_quest_used_by_attempt() - Found a question slot: '.$questslot);
-        return $questslot;
-    }
-
-    /**
-     * Refactored code from adaptiveattempt.class.php @see was_answer_submitted_to_question()
-     * This function determines if the user submitted an answer to the question
-     * @param int $slot question slot id
-     * @return bool true if an answer to the question was submitted, otherwise false
-     */
-    protected function was_answer_submitted_to_question($slotid) {
-        if (empty($slotid)) {
-            $this->print_debug('was_answer_submitted_to_question() refactored - slot id was zero');
-            return false;
-        }
-
-        $state = $this->quba->get_question_state($slotid);
-
-        // Check if the state of the quesiton attempted was graded right, partially right or wrong.
-        $marked = $state instanceof question_state_gradedright || $state instanceof question_state_gradedpartial
-            || $state instanceof question_state_gradedwrong;
-        if ($marked) {
-            return true;
-        } else {
-            // Save some debugging information.
-            $debugmsg = 'was_answer_submitted_to_question() refactored - question state is unrecognized state: '.get_class($state);
-            $debugmsg .= ' questionslotid: '.$slotid.' quba id: '.$this->quba->get_id();
-            $this->print_debug($debugmsg);
-        }
-
-        return false;
-    }
-
-    /**
      * This function determins whether the user answered the question correctly or incorrectly.
      * If the answer is partially correct it is seen as correct.
      * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
@@ -242,82 +159,38 @@ class catalgo {
     }
 
     /**
-     * This function retrieves the mark received from the student's submission to the question.
-     *
-     * @return bool|null Null when there is an error determining mark.
-     */
-    public function question_was_marked_correct(): ?bool {
-        // Find the last question attempted by the user.
-        $slotid = $this->find_last_quest_used_by_attempt();
-
-        if (empty($slotid)) {
-            return null;
-        }
-
-        // Check if the question was marked.
-        if (!$this->was_answer_submitted_to_question($slotid)) {
-            // If no answer was submitted then the question must be marked as incorrect.
-            return false;
-        }
-
-        // Retrieve the mark received.
-        $mark = $this->get_question_mark($this->quba, $slotid);
-
-        if (is_null($mark)) {
-            return null;
-        }
-
-        // Return true if the question was marked correct.
-        if (0.0 < $mark) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * This function performs the different steps in the CAT simple algorithm.
      *
      * @param float $attemptdifficultysum
      * @param int $questionsattemptednum
      * @param questions_difficulty_range $questionsdifficultyrange
      * @param float $standarderrortostop
+     * @param question_answer_evaluation_result $questionanswerevaluationresult
      * @return determine_next_difficulty_result
      */
     public function determine_next_difficulty_level(
         float $attemptdifficultysum,
         int $questionsattemptednum,
         questions_difficulty_range $questionsdifficultyrange,
-        float $standarderrortostop
+        float $standarderrortostop,
+        question_answer_evaluation_result $questionanswerevaluationresult
     ): determine_next_difficulty_result {
         $this->difficultysum = $attemptdifficultysum;
 
-        // If the user answered the previous question correctly, calculate the sum of correct answers.
-        $correct = $this->question_was_marked_correct();
-
-        if (!is_null($correct)) {
-            $questionsattemptednum++;
-        }
-
-        if (true === $correct) {
-            // Compute the next difficulty level for the next question.
-            $this->nextdifficulty = $this->compute_next_difficulty(
-                $this->level,
-                $questionsattemptednum,
-                true,
-                $questionsdifficultyrange
-            );
-        } else if (false === $correct) {
-            // Compute the next difficulty level for the next question.
-            $this->nextdifficulty = $this->compute_next_difficulty(
-                $this->level,
-                $questionsattemptednum,
-                false,
-                $questionsdifficultyrange
-            );
-        } else {
+        if (!$questionanswerevaluationresult->answer_was_given()) {
             return determine_next_difficulty_result::with_error(get_string('errorlastattpquest', 'adaptivequiz'));
         }
+
+        $questionsattemptednum++;
+
+        $correct = $questionanswerevaluationresult->answer_is_correct();
+
+        $this->nextdifficulty = $this->compute_next_difficulty(
+            $this->level,
+            $questionsattemptednum,
+            $correct,
+            $questionsdifficultyrange
+        );
 
         // If he user hasn't met the minimum requirements to end the attempt, then return with the next difficulty level.
         if (empty($this->readytostop)) {
@@ -327,10 +200,6 @@ class catalgo {
         // Calculate the sum of correct answers and the sum of incorrect answers.
         $this->sumofcorrectanswers = $this->compute_right_answers($this->quba);
         $this->sumofincorrectanswers = $this->compute_wrong_answers($this->quba);
-
-        if (0 == $questionsattemptednum) {
-            return determine_next_difficulty_result::with_error(get_string('errornumattpzero', 'adaptivequiz'));
-        }
 
         // Test that the sum of incorrect and correct answers equal to the sum of question attempted.
         $validatenumbers = $this->sumofcorrectanswers + $this->sumofincorrectanswers;

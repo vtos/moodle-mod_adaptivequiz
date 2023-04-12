@@ -92,7 +92,6 @@ $string['noattemptsallowed'] = 'Plus aucune tentative autorisée pour cette acti
 $string['numofattemptshdr'] = 'Nombre de tentatives';
 $string['standarderrorhdr'] = 'Erreur standard';
 $string['errorlastattpquest'] = 'Erreur lors de la vérification de réponse du dernier item';
-$string['errornumattpzero'] = 'Le nombre de tentatives est égal à zéro, bien que l’utilisateur ait soumis une réponse à la question précédente';
 $string['errorsumrightwrong'] = 'La somme des réponses correctes et incorrectes est différent du nombre total de items tentées';
 $string['calcerrorwithinlimits'] = 'L’erreur standard calculée par {$a->calerror} est comprise dans les limites imposées par l’application {$a->definederror}';
 $string['missingtagprefix'] = 'Tag prefix manquant';

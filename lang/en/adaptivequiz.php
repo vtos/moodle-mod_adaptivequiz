@@ -146,7 +146,6 @@ $string['noattemptsallowed'] = 'No more attempts allowed at this activity';
 $string['numofattemptshdr'] = 'Number of attempts';
 $string['standarderrorhdr'] = 'Standard error';
 $string['errorlastattpquest'] = 'Error checking the response value for the last attempted question';
-$string['errornumattpzero'] = 'Error with number of questions attempted equals zero, but user submitted an answer to previous question';
 $string['errorsumrightwrong'] = 'Sum of correct and incorrect answers does not equal the total number of questions attempted';
 $string['calcerrorwithinlimits'] = 'Calculated standard error of {$a->calerror} is within the limits imposed by the activity {$a->definederror}';
 $string['missingtagprefix'] = 'Missing tag prefix';

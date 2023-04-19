@@ -36,6 +36,8 @@ final class question_answer_evaluation {
 
     /**
      * The constructor.
+     *
+     * @param question_usage_by_activity $quba
      */
     public function __construct(question_usage_by_activity $quba) {
         $this->quba = $quba;

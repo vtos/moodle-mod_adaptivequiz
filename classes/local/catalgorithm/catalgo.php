@@ -18,6 +18,7 @@ namespace mod_adaptivequiz\local\catalgorithm;
 
 use coding_exception;
 use mod_adaptivequiz\local\question\question_answer_evaluation_result;
+use mod_adaptivequiz\local\question\questions_answered_summary;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use moodle_exception;
 use question_state_todo;
@@ -36,9 +37,6 @@ use stdClass;
  */
 class catalgo {
 
-    /** @var $quba a question_usage_by_activity object */
-    protected $quba = null;
-
     /**
      * @var bool $debugenabled flag to denote developer debugging is enabled and this class should write message to the debug array
      */
@@ -52,7 +50,7 @@ class catalgo {
 
     /**
      * @var float $levelogit the logit value of the difficulty level represented as a percentage of the minimum and maximum
-     *      difficulty @see compute_next_difficulty()
+     *                       difficulty, see {@see self::compute_next_difficulty()}.
      */
     protected $levellogit = 0.0;
 
@@ -65,12 +63,6 @@ class catalgo {
     /** @var int $nextdifficulty the next dificulty level to administer */
     protected $nextdifficulty = 0;
 
-    /** @var int $sumofcorrectanswers the sum of questions answered correctly */
-    protected $sumofcorrectanswers;
-
-    /** @var int @sumofincorrectanswers the sum of questions answered incorretly */
-    protected $sumofincorrectanswers;
-
     /** @var float $measure the ability measure */
     protected $measure = 0.0;
 
@@ -80,23 +72,16 @@ class catalgo {
     /**
      * The constructor.
      *
-     * @param question_usage_by_activity $quba
      * @param bool $readytostop True of the algo should assume the user has answered the minimum number of question and should
      *                          compare the results against the standard error.
      * @param int $level The level of difficulty for the most recently attempted question.
      * @throws moodle_exception
      */
-    public function __construct($quba, $readytostop = true, $level = 0) {
-        if (!$quba instanceof question_usage_by_activity) {
-            throw new coding_exception('catalgo: Argument 1 is not a question_usage_by_activity object',
-                    'Question usage by activity must be a question_usage_by_activity object');
-        }
-
+    public function __construct($readytostop = true, $level = 0) {
         if (!is_int($level) || 0 >= $level) {
             throw new coding_exception('catalgo: Argument 4 not a positive integer', 'level must be a positive integer');
         }
 
-        $this->quba = $quba;
         $this->readytostop = $readytostop;
         $this->level = $level;
 
@@ -166,6 +151,7 @@ class catalgo {
      * @param questions_difficulty_range $questionsdifficultyrange
      * @param float $standarderrortostop
      * @param question_answer_evaluation_result $questionanswerevaluationresult
+     * @param questions_answered_summary $answersummary
      * @return determine_next_difficulty_result
      */
     public function determine_next_difficulty_level(
@@ -173,7 +159,8 @@ class catalgo {
         int $questionsattemptednum,
         questions_difficulty_range $questionsdifficultyrange,
         float $standarderrortostop,
-        question_answer_evaluation_result $questionanswerevaluationresult
+        question_answer_evaluation_result $questionanswerevaluationresult,
+        questions_answered_summary $answersummary
     ): determine_next_difficulty_result {
         $this->difficultysum = $attemptdifficultysum;
 
@@ -197,24 +184,16 @@ class catalgo {
             return determine_next_difficulty_result::with_next_difficulty_level_determined($this->nextdifficulty);
         }
 
-        // Calculate the sum of correct answers and the sum of incorrect answers.
-        $this->sumofcorrectanswers = $this->compute_right_answers($this->quba);
-        $this->sumofincorrectanswers = $this->compute_wrong_answers($this->quba);
-
         // Test that the sum of incorrect and correct answers equal to the sum of question attempted.
-        $validatenumbers = $this->sumofcorrectanswers + $this->sumofincorrectanswers;
-
-        if ($validatenumbers != $questionsattemptednum) {
+        if ($answersummary->sum_of_answers() != $questionsattemptednum) {
             return determine_next_difficulty_result::with_error(get_string('errorsumrightwrong', 'adaptivequiz'));
         }
 
-        // Get the measure estimate.
-        $this->measure = self::estimate_measure($this->difficultysum, $questionsattemptednum, $this->sumofcorrectanswers,
-            $this->sumofincorrectanswers);
+        $this->measure = self::estimate_measure($this->difficultysum, $questionsattemptednum,
+            $answersummary->number_of_correct_answers(), $answersummary->number_of_wrong_answers());
 
-        // Get the standard error estimate.
-        $this->standarderror = self::estimate_standard_error($questionsattemptednum, $this->sumofcorrectanswers,
-            $this->sumofincorrectanswers);
+        $this->standarderror = self::estimate_standard_error($questionsattemptednum, $answersummary->number_of_correct_answers(),
+            $answersummary->number_of_wrong_answers());
 
         // Convert the standard error (as a percent) set for the activity into a decimal percent, then
         // convert it to a logit.
@@ -335,54 +314,6 @@ class catalgo {
             $measure = ($diffsum / $questattempt) + log( $sumcorrect / $sumincorrect );
         }
         return round($measure, 5, PHP_ROUND_HALF_UP);
-    }
-
-    /**
-     * This function counts the total number of correct answers for the attempt
-     * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
-     * @return int the number of correct answer submission
-     */
-    public function compute_right_answers($quba) {
-        $correctanswers = 0;
-
-        // Get question slots for the attempt.
-        $slots = $quba->get_slots();
-
-        // Iterate over slots and count correct answers.
-        foreach ($slots as $slot) {
-            $mark = $this->get_question_mark($quba, $slot);
-
-            if (!is_null($mark) && 0.0 < $mark) {
-                $correctanswers++;
-            }
-        }
-
-        $this->print_debug('compute_right_answers() - Sum of correct answers: '.$correctanswers);
-        return $correctanswers;
-    }
-
-    /**
-     * This function counts the total number of incorrect answers for the attempt
-     * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
-     * @return int the number of correct answer submission
-     */
-    public function compute_wrong_answers($quba) {
-        $incorrectanswers = 0;
-
-        // Get question slots for the attempt.
-        $slots = $quba->get_slots();
-
-        // Iterate over slots and count correct answers.
-        foreach ($slots as $slot) {
-            $mark = $this->get_question_mark($quba, $slot);
-
-            if (is_null($mark) || 0.0 >= $mark) {
-                $incorrectanswers++;
-            }
-        }
-
-        $this->print_debug('compute_right_answers() - Sum of incorrect answers: '.$incorrectanswers);
-        return $incorrectanswers;
     }
 
     /**

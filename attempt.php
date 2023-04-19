@@ -17,6 +17,7 @@
 /**
  * Adaptive quiz attempt script.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -33,6 +34,7 @@ use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\itemadministration\item_administration;
 use mod_adaptivequiz\local\question\question_answer_evaluation;
+use mod_adaptivequiz\local\question\questions_answered_summary_provider;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
@@ -152,7 +154,7 @@ if (!empty($uniqueid) && confirm_sesskey()) {
             $minattemptreached = adaptivequiz_min_attempts_reached($uniqueid, $cm->instance, $USER->id);
 
             // Create an instance of the CAT algo class.
-            $algo = new catalgo($quba, $minattemptreached, (int) $attempteddifficultylevel);
+            $algo = new catalgo($minattemptreached, (int) $attempteddifficultylevel);
 
             $questionanswerevaluation = new question_answer_evaluation($quba);
             $questionanswerevaluationresult = $questionanswerevaluation->perform();
@@ -163,7 +165,8 @@ if (!empty($uniqueid) && confirm_sesskey()) {
                 (int) $adaptiveattempt->read_attempt_data()->questionsattempted,
                 questions_difficulty_range::from_activity_instance($adaptivequiz),
                 (float) $adaptivequiz->standarderror,
-                $questionanswerevaluationresult
+                $questionanswerevaluationresult,
+                (new questions_answered_summary_provider($quba))->collect_summary()
             );
             $nextdifficultylevel = $determinenextdifficultylevelresult->next_difficulty_level();
 

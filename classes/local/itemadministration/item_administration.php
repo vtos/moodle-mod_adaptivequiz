@@ -17,13 +17,17 @@
 namespace mod_adaptivequiz\local\itemadministration;
 
 use mod_adaptivequiz\local\attempt\attempt;
+use mod_adaptivequiz\local\catalgorithm\catalgo;
+use mod_adaptivequiz\local\catalgorithm\determine_next_difficulty_result;
 use mod_adaptivequiz\local\fetchquestion;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use question_bank;
 use question_engine;
 use question_state_gaveup;
 use question_state_gradedpartial;
 use question_state_gradedright;
 use question_state_gradedwrong;
+use question_state_todo;
 use question_usage_by_activity;
 use stdClass;
 
@@ -60,13 +64,13 @@ final class item_administration {
     }
 
     /**
-     * This function does the work of initializing data required to fetch a new question for the attempt.
+     * Assesses the ability to administer next question during the quiz.
      *
      * @param attempt $attempt
      * @param stdClass $adaptivequiz
      * @param int $questionsattempted
      * @param int $lastdifficultylevel The last difficulty level used in the attempt.
-     * @param int $nextdifficultylevel The next calculated difficulty level.
+     * @param determine_next_difficulty_result|null $determinenextdifficultyresult
      * @return item_administration_evaluation
      */
     public function evaluate_ability_to_administer_next_item(
@@ -74,8 +78,21 @@ final class item_administration {
         stdClass $adaptivequiz,
         int $questionsattempted,
         int $lastdifficultylevel,
-        int $nextdifficultylevel
+        ?determine_next_difficulty_result $determinenextdifficultyresult
     ): item_administration_evaluation {
+        if (!is_null($determinenextdifficultyresult)) {
+            if ($determinenextdifficultyresult->is_with_error()) {
+                return item_administration_evaluation::with_stoppage_reason($determinenextdifficultyresult->error_message());
+            }
+        }
+
+        $nextdifficultylevel = is_null($determinenextdifficultyresult)
+            ? $this->get_next_difficulty_level_from_quba(
+                $adaptivequiz->startinglevel,
+                questions_difficulty_range::from_activity_instance($adaptivequiz)
+            )
+            : $determinenextdifficultyresult->next_difficulty_level();
+
         // Check if the level requested is out of the minimum/maximum boundaries for the attempt.
         if (!$this->level_in_bounds($nextdifficultylevel, $adaptivequiz)) {
 
@@ -223,12 +240,6 @@ final class item_administration {
 
         // Select one random question.
         $questiontodisplay = array_rand($questionids);
-        if (empty($questiontodisplay)) {
-
-            return item_administration_evaluation::with_stoppage_reason(
-                get_string('errorfetchingquest', 'adaptivequiz', $nextdifficultylevel)
-            );
-        }
 
         // Load basic question data.
         $questionobj = question_preload_questions(array($questiontodisplay));
@@ -253,5 +264,57 @@ final class item_administration {
         $nextdifficultylevel = $this->fetchquestion->get_level();
 
         return item_administration_evaluation::with_next_item(new next_item($nextdifficultylevel, $slot));
+    }
+
+    /**
+     * Gets the next difficulty level based on previously answered questions.
+     *
+     * @param int $startinglevel
+     * @param questions_difficulty_range $questionsdifficultyrange
+     * @return int
+     */
+    private function get_next_difficulty_level_from_quba(
+        int $startinglevel,
+        questions_difficulty_range $questionsdifficultyrange
+    ): int {
+        $questattempted = 0;
+        $currdiff = $startinglevel;
+
+        // Get question slots for the attempt.
+        $slots = $this->quba->get_slots();
+
+        // Should not normally happen.
+        if (empty($slots)) {
+            return $startinglevel;
+        }
+
+        // Get the last question's state.
+        $state = $this->quba->get_question_state(end($slots));
+        // If the state of the last question in the attempt is 'todo' remove it from the array, as the user never submitted their
+        // answer.
+        if ($state instanceof question_state_todo) {
+            array_pop($slots);
+        }
+
+        // Reset the array pointer back to the beginning.
+        reset($slots);
+
+        $algo = new catalgo(false, 1);
+
+        // Iterate over slots and count correct answers.
+        foreach ($slots as $slot) {
+            $mark = $this->quba->get_question_mark($slot);
+
+            if (is_null($mark) || 0.0 >= $mark) {
+                $correct = false;
+            } else {
+                $correct = true;
+            }
+
+            $questattempted++;
+            $currdiff = $algo->compute_next_difficulty($currdiff, $questattempted, $correct, $questionsdifficultyrange);
+        }
+
+        return $currdiff;
     }
 }

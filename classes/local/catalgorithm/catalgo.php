@@ -21,8 +21,6 @@ use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use mod_adaptivequiz\local\question\questions_answered_summary;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use moodle_exception;
-use question_state_todo;
-use question_usage_by_activity;
 use stdClass;
 
 /**
@@ -37,14 +35,6 @@ use stdClass;
  */
 class catalgo {
 
-    /**
-     * @var bool $debugenabled flag to denote developer debugging is enabled and this class should write message to the debug array
-     */
-    protected $debugenabled = false;
-
-    /** @var array $debug debugging array of messages */
-    protected $debug = array();
-
     /** @var int $level level of difficulty of the most recently attempted question */
     protected $level = 0;
 
@@ -57,7 +47,7 @@ class catalgo {
     /** @var bool $readytostop flag to denote whether to assume the student has met the minimum requirements */
     protected $readytostop = true;
 
-    /** @var $difficultysum the sum of the difficulty levels attempted */
+    /** @var int $difficultysum the sum of the difficulty levels attempted */
     protected $difficultysum = 0;
 
     /** @var int $nextdifficulty the next dificulty level to administer */
@@ -91,7 +81,8 @@ class catalgo {
     }
 
     /**
-     * This function adds a message to the debugging array
+     * This function adds a message to the debugging array.
+     *
      * @param string $message details of the debugging message
      * @return void
      */
@@ -102,7 +93,8 @@ class catalgo {
     }
 
     /**
-     * This function returns the $levellogit property
+     * This function returns the $levellogit property.
+     *
      * @return float retuns the $levellogit property
      */
     public function get_levellogit() {
@@ -110,7 +102,8 @@ class catalgo {
     }
 
     /**
-     * This function returns the $standarderror property
+     * This function returns the $standarderror property.
+     *
      * @return float retuns the $standarderror property
      */
     public function get_standarderror() {
@@ -118,29 +111,12 @@ class catalgo {
     }
 
     /**
-     * This function returns the $measure property
+     * This function returns the $measure property.
+     *
      * @return float retuns the $measure property
      */
     public function get_measure() {
         return $this->measure;
-    }
-
-    /**
-     * This function determins whether the user answered the question correctly or incorrectly.
-     * If the answer is partially correct it is seen as correct.
-     * @param question_usage_by_activity $quba an object loaded using the unique id of the attempt
-     * @param int $slotid the slot id of the question
-     * @return float|null a float representing the user's mark.  Or null if there was no mark
-     */
-    public function get_question_mark($quba, $slotid) {
-        $mark = $quba->get_question_mark($slotid);
-
-        if (is_float($mark)) {
-            return $mark;
-        }
-
-        $this->print_debug('get_question_mark() - Question mark was not a float slot id: '.$slotid);
-        return null;
     }
 
     /**
@@ -216,7 +192,8 @@ class catalgo {
     }
 
     /**
-     * This function takes a percent as a float between 0 and less than 0.5 and converts it into a logit value
+     * This function takes a percent as a float between 0 and less than 0.5 and converts it into a logit value.
+     *
      * @throws coding_exception if percent is out of bounds
      * @param float $percent percent represented as a decimal 15% = 0.15
      * @return float logit value of percent
@@ -229,7 +206,8 @@ class catalgo {
     }
 
     /**
-     * This function takes a logit as a float greater than or equal to 0 and converts it into a percent
+     * This function takes a logit as a float greater than or equal to 0 and converts it into a percent.
+     *
      * @throws coding_exception if logit is out of bounds
      * @param float $logit logit value
      * @return float logit value of percent
@@ -244,6 +222,7 @@ class catalgo {
 
     /**
      * Convert a logit value to a fraction between 0 and 1.
+     *
      * @param float $logit logit value
      * @return float the logit value mapped as a fraction
      */
@@ -252,7 +231,8 @@ class catalgo {
     }
 
     /**
-     * This function takes the inverse of a logit value, then maps the value onto the scale defined for the attempt
+     * This function takes the inverse of a logit value, then maps the value onto the scale defined for the attempt.
+     *
      * @param float $logit logit value
      * @param int $max the maximum value of the scale
      * @param int $min the minimum value of the scale
@@ -265,7 +245,8 @@ class catalgo {
     }
 
     /**
-     * This function compares the calulated standard error with the activity defined standard error allowd for the attempt
+     * This function compares the calculated standard error with the activity defined standard error allowed for the attempt.
+     *
      * @param float $calculatederror the error calculated from the parameters of the user's current attempt
      * @param float $definederror the allowed error set for the activity instance
      * @return bool true if the calulated error is less than or equal to the defined error, otherwise false
@@ -279,7 +260,8 @@ class catalgo {
     }
 
     /**
-     * This function estimates the standard error in the measurement
+     * This function estimates the standard error in the measurement.
+     *
      * @param int $questattempt the number of question attempted
      * @param int $sumcorrect the sum of correct answers
      * @param int $sumincorrect the sum of incorrect answers
@@ -298,7 +280,8 @@ class catalgo {
     }
 
     /**
-     * This function estimates the measure of ability
+     * This function estimates the measure of ability.
+     *
      * @param float $diffsum the sum of difficulty levels expressed as logits
      * @param int $questattempt the number of question attempted
      * @param int $sumcorrect the sum of correct answers
@@ -314,59 +297,6 @@ class catalgo {
             $measure = ($diffsum / $questattempt) + log( $sumcorrect / $sumincorrect );
         }
         return round($measure, 5, PHP_ROUND_HALF_UP);
-    }
-
-    /**
-     * This function calculates the current difficulty level of the attempt.
-     *
-     * @param question_usage_by_activity $quba
-     * @param int $level The starting level of difficulty for the attempt.
-     * @param questions_difficulty_range $questionsdifficultyrange
-     * @return int The current level of difficulty.
-     */
-    public function get_current_diff_level(
-        question_usage_by_activity $quba,
-        int $level,
-        questions_difficulty_range $questionsdifficultyrange
-    ) {
-        $questattempted = 0;
-
-        // Set current difficulty to the starting level.
-        $currdiff = $level;
-
-        // Get question slots for the attempt.
-        $slots = $quba->get_slots();
-
-        if (empty($slots)) {
-            return 0;
-        }
-
-        // Get the last question's state.
-        $state = $quba->get_question_state(end($slots));
-        // If the state of the last question in the attempt is 'todo' remove it from the array, as the user never submitted their
-        // answer.
-        if ($state instanceof question_state_todo) {
-            array_pop($slots);
-        }
-
-        // Reset the array pointer back to the beginning.
-        reset($slots);
-
-        // Iterate over slots and count correct answers.
-        foreach ($slots as $slot) {
-            $mark = $this->get_question_mark($quba, $slot);
-
-            if (is_null($mark) || 0.0 >= $mark) {
-                $correct = false;
-            } else {
-                $correct = true;
-            }
-
-            $questattempted++;
-            $currdiff = $this->compute_next_difficulty($currdiff, $questattempted, $correct, $questionsdifficultyrange);
-        }
-
-        return $currdiff;
     }
 
     /**

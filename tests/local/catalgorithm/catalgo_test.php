@@ -26,7 +26,6 @@ use coding_exception;
 use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use mod_adaptivequiz\local\question\questions_answered_summary;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
-use question_usage_by_activity;
 use stdClass;
 
 /**
@@ -37,8 +36,7 @@ use stdClass;
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
- * @group mod_adaptivequiz
- * @covers \mod_adaptivequiz\local\catalgo
+ * @covers \mod_adaptivequiz\local\catalgorithm\catalgo
  */
 class catalgo_test extends advanced_testcase {
 
@@ -59,59 +57,6 @@ class catalgo_test extends advanced_testcase {
     public function test_init_catalgo_no_level_throw_except() {
         $this->expectException('coding_exception');
         new catalgo(true);
-    }
-
-    public function test_it_can_define_current_difficulty_level(): void {
-        $adaptivequiz = new stdClass();
-        $adaptivequiz->lowestlevel = 0;
-        $adaptivequiz->highestlevel = 100;
-
-        // In case the quba object cannot get any slots.
-        $quba = $this->createPartialMock(question_usage_by_activity::class, ['get_slots']);
-        $quba->expects($this->once())
-            ->method('get_slots')
-            ->willReturn([]);
-
-        $catalgo = new catalgo(true, 1);
-        $difficultylevel = $catalgo->get_current_diff_level(
-            $quba,
-            1,
-            questions_difficulty_range::from_activity_instance($adaptivequiz)
-        );
-
-        $this->assertEquals(0, $difficultylevel);
-
-        // In case compute_next_difficulty() method does the job.
-        $quba = $this->getMockBuilder(question_usage_by_activity::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $quba->expects($this->once())
-            ->method('get_slots')
-            ->willReturn([1, 2, 3, 4, 5]);
-
-        $questionstate = $this->createMock('question_state_gradedright');
-        $quba->expects($this->once())
-            ->method('get_question_state')
-            ->with(5)
-            ->will($this->returnValue($questionstate));
-
-        $quba->expects($this->exactly(5))
-            ->method('get_question_mark')
-            ->will($this->returnValue(1.0));
-
-        $catalgo = $this->createPartialMock(catalgo::class, ['compute_next_difficulty']);
-        $catalgo->expects($this->exactly(5))
-            ->method('compute_next_difficulty')
-            ->willReturn(5);
-
-        $difficultylevel = $catalgo->get_current_diff_level(
-            $quba,
-            1,
-            questions_difficulty_range::from_activity_instance($adaptivequiz)
-        );
-
-        $this->assertEquals(5, $difficultylevel);
     }
 
     /**
@@ -166,33 +111,6 @@ class catalgo_test extends advanced_testcase {
 
         $result = $catalgo->compute_next_difficulty(10, 2, true, $questionsdifficultyrange);
         $this->assertEquals(10, $result);
-    }
-
-    /**
-     * This function tests results returned from get_question_mark().
-     */
-    public function test_get_question_mark() {
-        // Test quba returning a mark of 1.0.
-        $mockquba = $this->createMock(question_usage_by_activity::class);
-
-        $mockquba->expects($this->once())
-            ->method('get_question_mark')
-            ->will($this->returnValue(1.0));
-
-        $catalgo = new catalgo(true, 1);
-        $result = $catalgo->get_question_mark($mockquba, 1);
-        $this->assertEquals(1.0, $result);
-
-        // Test quba returning a non float value.
-        $mockqubatwo = $this->createMock('question_usage_by_activity');
-
-        $mockqubatwo->expects($this->once())
-            ->method('get_question_mark')
-            ->will($this->returnValue(1));
-
-        $catalgo = new catalgo(true, 1);
-        $result = $catalgo->get_question_mark($mockqubatwo, 1);
-        $this->assertNull($result);
     }
 
     /**

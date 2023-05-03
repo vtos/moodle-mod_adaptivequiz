@@ -60,16 +60,6 @@ Feature: Attempt an adaptive quiz
     Then I should see "First question"
 
   @javascript
-  Scenario: Return to a started attempt
-    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
-    And I click on "True" "radio"
-    And I press "Submit answer"
-    And I am on the "adaptivequiz1" "Activity" page
-    And I press "Start attempt"
-    Then I should see "Second question"
-
-  @javascript
   Scenario: A student cannot attempt an adaptive quiz if no more attempts are allowed
     Given I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     And I press "Start attempt"
@@ -81,3 +71,40 @@ Feature: Attempt an adaptive quiz
     When I am on the "adaptivequiz1" "Activity" page
     Then "Start attempt" "button" should not be visible
     And I should see "No more attempts allowed at this activity"
+
+  @javascript
+  Scenario: Return to a started attempt
+    Given the following "questions" exist:
+      | questioncategory        | qtype     | name | questiontext    |
+      | Adaptive Quiz Questions | truefalse | Q3   | Third question  |
+      | Adaptive Quiz Questions | truefalse | Q4   | Fourth question |
+    And I log in as "teacher1"
+    And I am on "Course 1" course homepage
+    And I navigate to "Question bank" in current page administration
+    And I set the field "Select a category" to "Adaptive Quiz Questions (4)"
+    And I choose "Edit question" action for "Q3" in the question bank
+    And I expand all fieldsets
+    And I set the field "Tags" to "adpq_2"
+    And I press "id_submitbutton"
+    And I wait until the page is ready
+    And I choose "Edit question" action for "Q4" in the question bank
+    And I expand all fieldsets
+    And I set the field "Tags" to "adpq_3"
+    And I press "id_submitbutton"
+    And I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    And I click on "Settings" "link"
+    And I set the following fields to these values:
+      | Highest level of difficulty  | 3 |
+      | Minimum number of questions  | 1 |
+      | Maximum number of questions  | 3 |
+    And I click on "Save and return to course" "button"
+    And I log out
+    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+    And I press "Start attempt"
+    And I click on "True" "radio"
+    And I press "Submit answer"
+    And I am on the "adaptivequiz1" "Activity" page
+    And I press "Start attempt"
+    And I click on "True" "radio"
+    And I press "Submit answer"
+    Then I should see "Fourth question"

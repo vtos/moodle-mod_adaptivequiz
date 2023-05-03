@@ -126,8 +126,9 @@ if ($adaptiveattempt === null) {
 }
 
 $algo = new stdClass();
-$nextdifficultylevel = null;
 $standarderror = 0.0;
+
+$determinenextdifficultylevelresult = null;
 
 // If uniqueid is not empty the process respones.
 if (!empty($uniqueid) && confirm_sesskey()) {
@@ -168,7 +169,6 @@ if (!empty($uniqueid) && confirm_sesskey()) {
                 $questionanswerevaluationresult,
                 (new questions_answered_summary_provider($quba))->collect_summary()
             );
-            $nextdifficultylevel = $determinenextdifficultylevelresult->next_difficulty_level();
 
             // Increment difficulty level for attempt.
             $difflogit = $algo->get_levellogit();
@@ -187,16 +187,12 @@ if (!empty($uniqueid) && confirm_sesskey()) {
                     new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $id]));
             }
 
-            if ($determinenextdifficultylevelresult->is_with_error()) {
-                $adaptiveattempt->complete($context, $standarderror, $determinenextdifficultylevelresult->error_message(), time());
-
-                redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
-                    ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]));
+            if (!$determinenextdifficultylevelresult->is_with_error()) {
+                // Lastly decrement the sum of questions for the attempted difficulty level.
+                (new fetchquestion($adaptivequiz, $attempteddifficultylevel, $adaptivequiz->lowestlevel,
+                    $adaptivequiz->highestlevel)
+                )->decrement_question_sum_for_difficulty_level($attempteddifficultylevel);
             }
-
-            // Lastly decrement the sum of questions for the attempted difficulty level.
-            (new fetchquestion($adaptivequiz, $attempteddifficultylevel, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel))
-                ->decrement_question_sum_for_difficulty_level($attempteddifficultylevel);
         }
     } catch (question_out_of_sequence_exception $e) {
         $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $id));
@@ -214,14 +210,6 @@ if (!empty($uniqueid) && confirm_sesskey()) {
     }
 }
 
-$adaptivequiz->context = $context;
-$adaptivequiz->cm = $cm;
-
-// If value is null then set the difficulty level to the starting level for the attempt.
-if (is_null($nextdifficultylevel)) {
-    $nextdifficultylevel = $adaptivequiz->startinglevel;
-}
-
 // Initialize quba.
 $qubaid = $adaptiveattempt->read_attempt_data()->uniqueid;
 $quba = ($qubaid == 0)
@@ -231,11 +219,14 @@ if ($qubaid == 0) {
     $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 }
 
+$adaptivequiz->context = $context;
+$adaptivequiz->cm = $cm;
+
 $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
 $itemadministration = new item_administration($quba, $fetchquestion);
 $itemadministrationevaluation = $itemadministration->evaluate_ability_to_administer_next_item($adaptiveattempt, $adaptivequiz,
-    $adaptiveattempt->read_attempt_data()->questionsattempted, $attempteddifficultylevel, $nextdifficultylevel);
+    $adaptiveattempt->read_attempt_data()->questionsattempted, $attempteddifficultylevel, $determinenextdifficultylevelresult);
 
 // Check item administration evaluation.
 if ($itemadministrationevaluation->item_administration_is_to_stop()) {
@@ -262,21 +253,7 @@ if ($itemadministrationevaluation->item_administration_is_to_stop()) {
 // Retrieve the question slot id.
 $slot = $itemadministrationevaluation->next_item()->slot();
 
-// If $nextdifficultylevel is null then this is either a new attempt or a continuation of a previous attempt.
-// Calculate the current difficulty level the attempt should be at.
-if (is_null($nextdifficultylevel)) {
-    // Calculate the current difficulty level.
-    // Create an instance of the catalgo class, however constructor arguments are not important.
-    $algo = new catalgo($quba, false, 1);
-    $level = $algo->get_current_diff_level(
-        $quba,
-        (int) $adaptivequiz->startinglevel,
-        questions_difficulty_range::from_activity_instance($adaptivequiz)
-    );
-} else {
-    // Retrieve the currently set difficulty level.
-    $level = $itemadministrationevaluation->next_item()->difficulty_level();
-}
+$level = $itemadministrationevaluation->next_item()->difficulty_level();
 
 $headtags = $output->init_metadata($quba, $slot);
 $PAGE->requires->js_init_call('M.mod_adaptivequiz.init_attempt_form', array($viewurl->out(), $adaptivequiz->browsersecurity),

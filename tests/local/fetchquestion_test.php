@@ -252,21 +252,21 @@ class fetchquestion_test extends advanced_testcase {
         $this->resetAfterTest();
 
         $this->expectException('coding_exception');
-        (new fetchquestion(new stdClass(), 0, 1, 100, ['phpunittag_']));
+        (new fetchquestion(new stdClass(), 0, 1, 100));
     }
 
     public function test_it_fails_when_instantiated_with_a_negative_difficulty_level(): void {
         $this->resetAfterTest();
 
         $this->expectException('coding_exception');
-        (new fetchquestion(new stdClass(), -11, 1, 100, ['phpunittag_']));
+        (new fetchquestion(new stdClass(), -11, 1, 100));
     }
 
     public function test_it_fails_when_instantiated_with_a_difficulty_level_as_a_string(): void {
         $this->resetAfterTest();
 
         $this->expectException('coding_exception');
-        (new fetchquestion(new stdClass(), 'asdf', 1, 100, ['phpunittag_']));
+        (new fetchquestion(new stdClass(), 'asdf', 1, 100));
     }
 
     /**
@@ -279,13 +279,13 @@ class fetchquestion_test extends advanced_testcase {
 
         $dummyclass = new stdClass();
 
-        $fetchquestion = new fetchquestion($dummyclass, 5, 1, 100, ['phpunittag_']);
+        $fetchquestion = new fetchquestion($dummyclass, 5, 1, 100);
         $data = $fetchquestion->retrieve_tag(5);
 
-        $this->assertEquals(2, count($data));
-        $this->assertEquals([0 => 1, 1 => 2], $data);
+        $this->assertEquals(1, count($data));
+        $this->assertEquals([0 => 1], $data);
 
-        $fetchquestion2 = new fetchquestion($dummyclass, 888, 1, 100, ['phpunittag_']);
+        $fetchquestion2 = new fetchquestion($dummyclass, 888, 1, 100);
         $data = $fetchquestion2->retrieve_tag(888);
 
         $this->assertEquals(0, count($data));

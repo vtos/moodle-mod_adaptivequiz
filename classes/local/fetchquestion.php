@@ -56,9 +56,6 @@ class fetchquestion {
     /** @var array $debug array containing debugging information */
     protected $debug = array();
 
-    /** @var array $tags an array of tags that used to identify eligible questions for the attempt */
-    protected $tags = array();
-
     /** @var int $level the level of difficutly that will be used to fetch questions */
     protected $level = 1;
 
@@ -81,21 +78,23 @@ class fetchquestion {
     public $rebuild = false;
 
     /**
+     * @var array $tags An array of tags that used to identify eligible questions for the attempt.
+     */
+    private $tags;
+
+    /**
      * Constructor initializes data required to retrieve questions associated with tag and within question categories.
      *
      * @param stdClass $adaptivequiz A record object from the {adaptivequiz} table.
      * @param int $level Level of difficulty to look for when fetching a question.
      * @param int $minimumlevel The minimum level the student can achieve.
      * @param int $maximumlevel The maximum level the student can achieve.
-     * @param array $tags An array of accepted tags.
      * @throws coding_exception
      */
-    public function __construct($adaptivequiz, $level, $minimumlevel, $maximumlevel, $tags = []) {
+    public function __construct($adaptivequiz, $level, $minimumlevel, $maximumlevel) {
         global $SESSION;
 
         $this->adaptivequiz = $adaptivequiz;
-        $this->tags = $tags;
-        $this->tags[] = ADAPTIVEQUIZ_QUESTION_TAG;
         $this->minimumlevel = $minimumlevel;
         $this->maximumlevel = $maximumlevel;
 
@@ -109,6 +108,8 @@ class fetchquestion {
         }
 
         $this->level = $level;
+
+        $this->tags = [ADAPTIVEQUIZ_QUESTION_TAG];
 
         // Initialize $tagquestsum property.
         if (!isset($SESSION->adpqtagquestsum)) {

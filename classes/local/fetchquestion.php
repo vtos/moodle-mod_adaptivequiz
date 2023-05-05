@@ -20,6 +20,7 @@ use coding_exception;
 use dml_exception;
 use dml_read_exception;
 use invalid_parameter_exception;
+use mod_adaptivequiz\local\question\difficulty_questions_mapping;
 use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
 use mod_adaptivequiz\local\repository\questions_repository;
 use mod_adaptivequiz\local\repository\tags_repository;
@@ -68,14 +69,13 @@ class fetchquestion {
     /** @var int $maximumlevel the maximum level achievable in the attempt */
     protected $maximumlevel;
 
-    /**
-     * @var array $tagquestsum an array whose keys are difficulty numbers and values are the sum of questions associated with the
-     *      difficulty level
-     */
-    protected $tagquestsum = array();
-
     /** @var bool $rebuild a flag used to force the rebuilding of the $tagquestsum property */
     public $rebuild = false;
+
+    /**
+     * @var difficulty_questions_mapping $tagquestsum
+     */
+    private $tagquestsum;
 
     /**
      * @var array $tags An array of tags that used to identify eligible questions for the attempt.
@@ -92,8 +92,6 @@ class fetchquestion {
      * @throws coding_exception
      */
     public function __construct($adaptivequiz, $level, $minimumlevel, $maximumlevel) {
-        global $SESSION;
-
         $this->adaptivequiz = $adaptivequiz;
         $this->minimumlevel = $minimumlevel;
         $this->maximumlevel = $maximumlevel;
@@ -109,15 +107,9 @@ class fetchquestion {
 
         $this->level = $level;
 
-        $this->tags = [ADAPTIVEQUIZ_QUESTION_TAG];
+        $this->tagquestsum = difficulty_questions_mapping::from_global_session_or_empty();
 
-        // Initialize $tagquestsum property.
-        if (!isset($SESSION->adpqtagquestsum)) {
-            $SESSION->adpqtagquestsum = array();
-            $this->tagquestsum = $SESSION->adpqtagquestsum;
-        } else {
-            $this->tagquestsum = $SESSION->adpqtagquestsum;
-        }
+        $this->tags = [ADAPTIVEQUIZ_QUESTION_TAG];
 
         if (debugging('', DEBUG_DEVELOPER)) {
             $this->debugenabled = true;
@@ -208,91 +200,68 @@ class fetchquestion {
      * @param int $level
      */
     public function decrement_question_sum_for_difficulty_level(int $level): void {
-        if (!array_key_exists($level, $this->tagquestsum)) {
-            return;
-        }
-
-        $this->tagquestsum[$level]--;
+        $this->tagquestsum = $this->tagquestsum->decrement_questions_number_for_difficulty($level);
         $this->update_global_session();
     }
 
     /**
-     * This function first checks if the session variable already contains a mapping of difficulty levels and the number of
-     * questions associated with each level. Otherwise it constructos a mapping of difficulty levels and the number of questions
-     * in each difficulty level.
-     * @param array $tagquestsum an array equal to the $tagquestsum property, where the key is the difficulty level and the value
-     *      is the total number of
-     * questions associated with it. This parameter will be modified.
-     * @param array $tags an array of tags used by the activity
-     * @param int $min the minimum difficulty allowed for the attempt
-     * @param int $max the maximum difficulty allowed for the attempt
-     * @param bool $rebuild true to force the rebuilding the difficulty question count array, otherwise false.  Set to "true" only
-     *      for brand new attempts
-     * @return array an array whose keys are difficulty levels and values are the sum of questions associated with the difficulty
+     * Constructs a mapping of difficulty levels and the number of questions in each difficulty level.
+     *
+     * @param array $tags An array of tags used by the activity.
+     * @param int $min The minimum difficulty allowed for the attempt.
+     * @param int $max The maximum difficulty allowed for the attempt.
+     * @return difficulty_questions_mapping
      */
-    public function initalize_tags_with_quest_count($tagquestsum, $tags, $min, $max, $rebuild = false) {
-        global $SESSION;
+    public function initalize_tags_with_quest_count(array $tags, int $min, int $max): difficulty_questions_mapping {
+        $tagquestsum = difficulty_questions_mapping::create_empty();
+        $questcat = $this->retrieve_question_categories();
 
-        // Check to see if the tagquestsum argument is initialized.
-        $count = count($tagquestsum);
-        if (empty($count) || !empty($rebuild)) {
-            $tagquestsum = array();
-            // Retrieve the question categories set for this activity.
-            $questcat = $this->retrieve_question_categories();
-            // Traverse through the array of configured tags used by the activity.
-            foreach ($tags as $tag) {
-                // Retrieve all of id for the configured tag.
-                $tagids = $this->retrieve_all_tag_ids($min, $max, $tag);
-                // Retrieve a count of all of the questions associated with each tag.
-                $difficultiesquestionsnumber = $this->retrieve_tags_with_question_count($tagids, $questcat);
+        // Traverse through the array of configured tags used by the activity.
+        foreach ($tags as $tag) {
+            $tagids = $this->retrieve_all_tag_ids($min, $max, $tag);
+            $difficultyquestionsmappings = $this->retrieve_tags_with_question_count($tagids, $questcat);
 
-                // Traverse the $difficultiesquestionsnumber array and add the values with the values current in the
-                // $tagquestsum argument.
-                foreach ($difficultiesquestionsnumber as $questionsnumberperdifficulty) {
-                    $difflevel = $questionsnumberperdifficulty->difficulty();
-                    $totalquestindiff = $questionsnumberperdifficulty->questions_number();
-
-                    // If the array key exists, then add the sum to what is already in the array.
-                    if (array_key_exists($difflevel, $tagquestsum)) {
-                        $tagquestsum[$difflevel] += $totalquestindiff;
-                    } else {
-                        $tagquestsum[$difflevel] = $totalquestindiff;
-                    }
-                }
+            // Traverse the $difficultyquestionsmappings array and add the values with the values current in the
+            // $tagquestsum argument.
+            foreach ($difficultyquestionsmappings as $difficultyquestionsmapping) {
+                $tagquestsum = $tagquestsum->add_to_questions_number_for_difficulty(
+                    $difficultyquestionsmapping->difficulty(),
+                    $difficultyquestionsmapping->questions_number()
+                );
             }
-        } else {
-            $tagquestsum = $SESSION->adpqtagquestsum;
         }
 
         return $tagquestsum;
     }
 
     /**
-     * This function retrieves a question associated with a Moodle tag level of difficulty.  If the search for the tag turns up
-     * empty the function tries to find another tag whose difficulty level is either higher or lower
-     * @param array $excquestids an array of question ids to exclude from the search
-     * @return array an array of question ids
+     * This function retrieves a question associated with a Moodle tag level of difficulty.
+     *
+     * If the search for the tag turns up empty the function tries to find another tag whose difficulty level is either higher
+     * or lower.
+     *
+     * @param array $excquestids An array of question ids to exclude from the search.
+     * @return array An array of question ids.
      */
-    public function fetch_questions($excquestids = array()) {
+    public function fetch_questions(array $excquestids = array()): array {
         $questids = array();
 
-        // Initialize the difficulty tag question sum property for searching.
-        $this->tagquestsum = $this->initalize_tags_with_quest_count($this->tagquestsum, $this->tags, $this->minimumlevel,
-            $this->maximumlevel, $this->rebuild);
-
-        $this->update_global_session();
+        if ($this->tagquestsum->is_empty() || $this->rebuild) {
+            // Initialize the difficulty tag question sum property for searching.
+            $this->tagquestsum = $this->initalize_tags_with_quest_count($this->tags, $this->minimumlevel, $this->maximumlevel);
+            $this->update_global_session();
+        }
 
         // If tagquestsum property ie empty then return with nothing.
-        if (empty($this->tagquestsum)) {
+        if ($this->tagquestsum->is_empty()) {
             $this->print_debug('fetch_questions() - tagquestsum is empty');
             return array();
         }
         // Check if the requested level has available questions.
-        if (array_key_exists($this->level, $this->tagquestsum) && 0 < $this->tagquestsum[$this->level]) {
+        if ($this->tagquestsum->questions_exist_for_difficulty($this->level)) {
             $tagids = $this->retrieve_tag($this->level);
             $questids = $this->find_questions_with_tags($tagids, $excquestids);
-            $this->print_debug('fetch_questions() - Requested level '.$this->level.' has available questions. '.
-                $this->tagquestsum[$this->level].' question remaining.');
+
             return $questids;
         }
 
@@ -314,8 +283,7 @@ class fetchquestion {
              * If the level is within the boundries set for the attempt and the level exists and the count of question is greater
              * than zero, retrieve the tag id and the questions available
              */
-            $condition = $newlevel <= $this->maximumlevel && array_key_exists($newlevel, $this->tagquestsum)
-                && 0 < $this->tagquestsum[$newlevel];
+            $condition = $newlevel <= $this->maximumlevel && $this->tagquestsum->questions_exist_for_difficulty($newlevel);
             if ($condition) {
                 $tagids = $this->retrieve_tag($newlevel);
                 $questids = $this->find_questions_with_tags($tagids, $excquestids);
@@ -333,8 +301,7 @@ class fetchquestion {
              * If the level is within the boundries set for the attempt and the level exists and the count of question is greater
              *  than zero, retrieve the tag id and thequestions available
              */
-            $condition = $newlevel >= $this->minimumlevel && array_key_exists($newlevel, $this->tagquestsum)
-                && 0 < $this->tagquestsum[$newlevel];
+            $condition = $newlevel >= $this->minimumlevel && $this->tagquestsum->questions_exist_for_difficulty($newlevel);
             if ($condition) {
                 $tagids = $this->retrieve_tag($newlevel);
                 $questids = $this->find_questions_with_tags($tagids, $excquestids);
@@ -451,11 +418,11 @@ class fetchquestion {
     }
 
     /**
-     * Stores value of the 'tagquestsum' property in the session.
+     * Stores the serialized value of the 'tagquestsum' property in the session.
      */
     private function update_global_session(): void {
         global $SESSION;
 
-        $SESSION->adpqtagquestsum = $this->tagquestsum;
+        $SESSION->adpqtagquestsum = $this->tagquestsum->as_array();
     }
 }

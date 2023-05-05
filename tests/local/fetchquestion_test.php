@@ -31,6 +31,7 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use coding_exception;
+use mod_adaptivequiz\local\question\difficulty_questions_mapping;
 use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
 use stdClass;
 
@@ -308,7 +309,7 @@ class fetchquestion_test extends advanced_testcase {
             ->getMock();
         $mockclass->expects($this->once())
             ->method('initalize_tags_with_quest_count')
-            ->willReturn([]);
+            ->willReturn(difficulty_questions_mapping::create_empty());
         $mockclass->expects($this->never())
             ->method('retrieve_tag');
         $mockclass->expects($this->never())
@@ -335,10 +336,8 @@ class fetchquestion_test extends advanced_testcase {
             ->getMock();
         $mockclass->expects($this->once())
             ->method('initalize_tags_with_quest_count')
-            ->with([], ['adpq_'], '1', '100')
-            ->willReturn(
-                    [5 => 2]
-            );
+            ->with(['adpq_'], '1', '100')
+            ->willReturn(difficulty_questions_mapping::create_empty()->add_to_questions_number_for_difficulty(5, 2));
         $mockclass->expects($this->once())
             ->method('retrieve_tag')
             ->with(5)
@@ -372,18 +371,23 @@ class fetchquestion_test extends advanced_testcase {
                 [new stdClass(), 5, 1, 100]
             )
             ->getMock();
+
+        $difficultyquestionsmapping = difficulty_questions_mapping::create_empty()
+            ->add_to_questions_number_for_difficulty(5, 1)
+            ->add_to_questions_number_for_difficulty(6, 1)
+            ->decrement_questions_number_for_difficulty(5);
         $mockclass->expects($this->once())
             ->method('initalize_tags_with_quest_count')
-            ->with([], ['adpq_'], '1', '100')
-            ->willReturn(
-                [5 => 0, 6 => 1]
-            );
+            ->with(['adpq_'], '1', '100')
+            ->willReturn($difficultyquestionsmapping);
+
         $mockclass->expects($this->once())
             ->method('retrieve_tag')
             ->with(6)
             ->willReturn(
                 [11]
             );
+
         $mockclass->expects($this->once())
             ->method('find_questions_with_tags')
             ->with([11], [])
@@ -411,18 +415,23 @@ class fetchquestion_test extends advanced_testcase {
                 [new stdClass(), 5, 1, 100]
             )
             ->getMock();
+
+        $difficultyquestionsmapping = difficulty_questions_mapping::create_empty()
+            ->add_to_questions_number_for_difficulty(1, 1)
+            ->add_to_questions_number_for_difficulty(10, 2)
+            ->decrement_questions_number_for_difficulty(1);
         $mockclass->expects($this->once())
             ->method('initalize_tags_with_quest_count')
-            ->with([], ['adpq_'], '1', '100')
-            ->willReturn(
-                [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0, 6 => 0, 7 => 0, 8 => 0, 9 => 0, 10 => 2]
-            );
+            ->with(['adpq_'], '1', '100')
+            ->willReturn($difficultyquestionsmapping);
+
         $mockclass->expects($this->once())
             ->method('retrieve_tag')
             ->with(10)
             ->willReturn(
                 [11]
             );
+
         $mockclass->expects($this->once())
             ->method('find_questions_with_tags')
             ->with([11], [])
@@ -450,18 +459,23 @@ class fetchquestion_test extends advanced_testcase {
                 [new stdClass(), 5, 1, 100]
             )
             ->getMock();
+
+        $difficultyquestionsmapping = difficulty_questions_mapping::create_empty()
+            ->add_to_questions_number_for_difficulty(1, 1)
+            ->add_to_questions_number_for_difficulty(2, 1)
+            ->decrement_questions_number_for_difficulty(2);
         $mockclass->expects($this->once())
             ->method('initalize_tags_with_quest_count')
-            ->with([], ['adpq_'], '1', '100')
-            ->willReturn(
-                [1 => 1, 2 => 0, 3 => 0, 4 => 0, 5 => 0, 6 => 0, 7 => 0, 8 => 0, 9 => 0, 10 => 0]
-            );
+            ->with(['adpq_'], '1', '100')
+            ->willReturn($difficultyquestionsmapping);
+
         $mockclass->expects($this->once())
             ->method('retrieve_tag')
             ->with(1)
             ->willReturn(
                 [11]
             );
+
         $mockclass->expects($this->once())
             ->method('find_questions_with_tags')
             ->with([11], [])
@@ -487,14 +501,18 @@ class fetchquestion_test extends advanced_testcase {
                 [new stdClass(),  50, 49, 51]
             )
             ->getMock();
+
+        $difficultyquestionsmapping = difficulty_questions_mapping::create_empty()
+            ->add_to_questions_number_for_difficulty(48, 1)
+            ->add_to_questions_number_for_difficulty(52, 1);
         $mockclass->expects($this->once())
             ->method('initalize_tags_with_quest_count')
-            ->with([], ['adpq_'], 49, 51)
-            ->willReturn(
-                [48 => 1, 52 => 1]
-            );
+            ->with(['adpq_'], 49, 51)
+            ->willReturn($difficultyquestionsmapping);
+
         $mockclass->expects($this->never())
             ->method('retrieve_tag');
+
         $mockclass->expects($this->never())
             ->method('find_questions_with_tags');
 
@@ -588,8 +606,13 @@ class fetchquestion_test extends advanced_testcase {
                 ]
             );
 
-        $result = $mockclass->initalize_tags_with_quest_count([], ['test1_', 'test2_'], 1, 100);
-        $this->assertEquals([1 => 16, 2 => 6, 5 => 20], $result);
+        $result = $mockclass->initalize_tags_with_quest_count(['test1_', 'test2_'], 1, 100);
+
+        $expectation = difficulty_questions_mapping::create_empty()
+            ->add_to_questions_number_for_difficulty(1, 16)
+            ->add_to_questions_number_for_difficulty(2, 6)
+            ->add_to_questions_number_for_difficulty(5, 20);
+        $this->assertEquals($expectation, $result);
     }
 
     /**
@@ -630,7 +653,12 @@ class fetchquestion_test extends advanced_testcase {
                 ]
             );
 
-        $result = $mockclass->initalize_tags_with_quest_count([1, 2, 3, 4], ['test1_', 'test2_'], 1, 100, true);
-        $this->assertEquals([1 => 16, 2 => 6, 5 => 20], $result);
+        $result = $mockclass->initalize_tags_with_quest_count(['test1_', 'test2_'], 1, 100);
+
+        $expectation = difficulty_questions_mapping::create_empty()
+            ->add_to_questions_number_for_difficulty(1, 16)
+            ->add_to_questions_number_for_difficulty(2, 6)
+            ->add_to_questions_number_for_difficulty(5, 20);
+        $this->assertEquals($expectation, $result);
     }
 }

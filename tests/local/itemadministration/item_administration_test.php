@@ -22,6 +22,7 @@ use context_module;
 use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\catalgorithm\determine_next_difficulty_result;
 use mod_adaptivequiz\local\fetchquestion;
+use mod_adaptivequiz\local\question\difficulty_questions_mapping;
 use question_bank;
 use question_engine;
 
@@ -80,6 +81,8 @@ class item_administration_test extends advanced_testcase {
     }
 
     public function test_it_stops_administering_items_when_next_difficulty_level_is_out_of_bounds(): void {
+        global $SESSION;
+
         self::resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
@@ -105,6 +108,13 @@ class item_administration_test extends advanced_testcase {
 
         // Random, doesn't matter.
         $attempteddifficultylevel = 1;
+
+        // Initialize difficulty-questions mapping by setting a value directly in global session.
+        // This is a bad practice and leads to fragile tests. Normally, operating on global session should be removed from
+        // the fetching questions class.
+        $SESSION->adpqtagquestsum = difficulty_questions_mapping::create_empty()
+            ->add_to_questions_number_for_difficulty($attempteddifficultylevel, 1)
+            ->as_array();
 
         // Given the determined difficulty level is out of range, which is set for the quiz.
         $determinenextdifficultylevelresult = determine_next_difficulty_result::with_next_difficulty_level_determined(11);
@@ -230,6 +240,8 @@ class item_administration_test extends advanced_testcase {
     }
 
     public function test_it_stops_administration_when_no_question_with_the_required_difficulty_can_be_fetched(): void {
+        global $SESSION;
+
         self::resetAfterTest();
 
         $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
@@ -285,6 +297,13 @@ class item_administration_test extends advanced_testcase {
 
         $numberofquestionsattempted = 1;
         $attempteddifficultylevel = 4;
+
+        // Initialize difficulty-questions mapping by setting a value directly in global session.
+        // This is a bad practice and leads to fragile tests. Normally, operating on global session should be removed from
+        // the fetching questions class.
+        $SESSION->adpqtagquestsum = difficulty_questions_mapping::create_empty()
+            ->add_to_questions_number_for_difficulty($attempteddifficultylevel, 1)
+            ->as_array();
 
         $determinenextdifficultylevelresult =
             determine_next_difficulty_result::with_next_difficulty_level_determined($attempteddifficultylevel + 1);
@@ -448,6 +467,8 @@ class item_administration_test extends advanced_testcase {
     }
 
     public function test_it_approves_administering_next_item_when_previous_question_was_answered(): void {
+        global $SESSION;
+
         self::resetAfterTest();
 
         $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
@@ -570,6 +591,16 @@ class item_administration_test extends advanced_testcase {
 
         $numberofquestionsattempted = 3;
         $attempteddifficultylevel = 6;
+
+        // Initialize difficulty-questions mapping by setting a value directly in global session.
+        // This is a bad practice and leads to fragile tests. Normally, operating on global session should be removed from
+        // the fetching questions class.
+        $SESSION->adpqtagquestsum = difficulty_questions_mapping::create_empty()
+            ->add_to_questions_number_for_difficulty($attemptedquestion1difficulty, 1)
+            ->add_to_questions_number_for_difficulty($attemptedquestion2difficulty, 1)
+            ->add_to_questions_number_for_difficulty($attemptedquestion3difficulty, 1)
+            ->add_to_questions_number_for_difficulty($notattemptedquestion2difficulty, 1)
+            ->as_array();
 
         $determinenextdifficultylevelresult =
             determine_next_difficulty_result::with_next_difficulty_level_determined($notattemptedquestion2difficulty);

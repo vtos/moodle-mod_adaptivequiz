@@ -186,13 +186,6 @@ if (!empty($uniqueid) && confirm_sesskey()) {
                 throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
                     new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $id]));
             }
-
-            if (!$determinenextdifficultylevelresult->is_with_error()) {
-                // Lastly decrement the sum of questions for the attempted difficulty level.
-                (new fetchquestion($adaptivequiz, $attempteddifficultylevel, $adaptivequiz->lowestlevel,
-                    $adaptivequiz->highestlevel)
-                )->decrement_question_sum_for_difficulty_level($attempteddifficultylevel);
-            }
         }
     } catch (question_out_of_sequence_exception $e) {
         $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $id));

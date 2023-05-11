@@ -84,6 +84,9 @@ final class item_administration {
             if ($determinenextdifficultyresult->is_with_error()) {
                 return item_administration_evaluation::with_stoppage_reason($determinenextdifficultyresult->error_message());
             }
+
+            // An answer was submitted, decrement the sum of questions for the attempted difficulty level.
+            fetchquestion::decrement_question_sum_for_difficulty_level($lastdifficultylevel);
         }
 
         $nextdifficultylevel = is_null($determinenextdifficultyresult)

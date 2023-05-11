@@ -17,6 +17,7 @@
 namespace mod_adaptivequiz\local\question;
 
 use coding_exception;
+use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
 
 /**
  * Defines mapping of difficulty levels and the number of questions associated with each level.
@@ -123,19 +124,17 @@ final class difficulty_questions_mapping {
     }
 
     /**
-     * Looks up for data in session to instantiate an object.
+     * Instantiates an object from array of single typed mappings.
      *
+     * @param questions_number_per_difficulty[] $mappings
      * @return self
      */
-    public static function from_global_session_or_empty(): self {
-        global $SESSION;
-
-        if (!isset($SESSION->adpqtagquestsum)) {
-            return new self();
-        }
-
+    public static function from_array_of_single_mappings(array $mappings): self {
         $object = new self();
-        $object->mapping = $SESSION->adpqtagquestsum;
+
+        foreach ($mappings as $difficultyquestionsmapping) {
+            $object->mapping[$difficultyquestionsmapping->difficulty()] = $difficultyquestionsmapping->questions_number();
+        }
 
         return $object;
     }

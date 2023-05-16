@@ -16,11 +16,16 @@
 
 namespace mod_adaptivequiz\local\itemadministration;
 
+use Exception;
 use mod_adaptivequiz\local\attempt\attempt;
+use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
-use mod_adaptivequiz\local\catalgorithm\determine_next_difficulty_result;
 use mod_adaptivequiz\local\fetchquestion;
+use mod_adaptivequiz\local\question\question_answer_evaluation_result;
+use mod_adaptivequiz\local\question\questions_answered_summary_provider;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
+use moodle_exception;
+use moodle_url;
 use question_bank;
 use question_engine;
 use question_state_gaveup;
@@ -48,6 +53,11 @@ final class item_administration {
     private $quba;
 
     /**
+     * @var catalgo $algorithm
+     */
+    private $algorithm;
+
+    /**
      * @var fetchquestion $fetchquestion
      */
     private $fetchquestion;
@@ -56,10 +66,12 @@ final class item_administration {
      * The constructor.
      *
      * @param question_usage_by_activity $quba
+     * @param catalgo $algorithm
      * @param fetchquestion $fetchquestion
      */
-    public function __construct(question_usage_by_activity $quba, fetchquestion $fetchquestion) {
+    public function __construct(question_usage_by_activity $quba, catalgo $algorithm, fetchquestion $fetchquestion) {
         $this->quba = $quba;
+        $this->algorithm = $algorithm;
         $this->fetchquestion = $fetchquestion;
     }
 
@@ -68,18 +80,53 @@ final class item_administration {
      *
      * @param attempt $attempt
      * @param stdClass $adaptivequiz
-     * @param int $questionsattempted
      * @param int $lastdifficultylevel The last difficulty level used in the attempt.
-     * @param determine_next_difficulty_result|null $determinenextdifficultyresult
+     * @param question_answer_evaluation_result|null $questionanswerevaluationresult
      * @return item_administration_evaluation
+     * @throws moodle_exception
      */
     public function evaluate_ability_to_administer_next_item(
         attempt $attempt,
         stdClass $adaptivequiz,
-        int $questionsattempted,
         int $lastdifficultylevel,
-        ?determine_next_difficulty_result $determinenextdifficultyresult
+        ?question_answer_evaluation_result $questionanswerevaluationresult
     ): item_administration_evaluation {
+        $questionsattempted = $attempt->read_attempt_data()->questionsattempted;
+
+        $determinenextdifficultyresult = null;
+        if (!is_null($questionanswerevaluationresult)) {
+            // Determine the next difficulty level or whether there is an error.
+            $determinenextdifficultyresult = $this->algorithm->determine_next_difficulty_level(
+                (float) $attempt->read_attempt_data()->difficultysum,
+                (int) $questionsattempted,
+                questions_difficulty_range::from_activity_instance($adaptivequiz),
+                (float) $adaptivequiz->standarderror,
+                $questionanswerevaluationresult,
+                (new questions_answered_summary_provider($this->quba))->collect_summary(),
+                $lastdifficultylevel
+            );
+
+            $difflogit = $this->algorithm->get_levellogit();
+            if (is_infinite($difflogit)) {
+                $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, 0, false, MUST_EXIST);
+
+                throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
+                    new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
+            }
+
+            try {
+                $catcalculationresult = cat_calculation_steps_result::from_floats(
+                    $difflogit, $this->algorithm->get_standarderror(), $this->algorithm->get_measure()
+                );
+                $attempt->update_after_question_answered($catcalculationresult, time());
+            } catch (Exception $exception) {
+                $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, 0, false, MUST_EXIST);
+
+                throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
+                    new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
+            }
+        }
+
         if (!is_null($determinenextdifficultyresult)) {
             if ($determinenextdifficultyresult->is_with_error()) {
                 return item_administration_evaluation::with_stoppage_reason($determinenextdifficultyresult->error_message());
@@ -97,6 +144,7 @@ final class item_administration {
             : $determinenextdifficultyresult->next_difficulty_level();
 
         // Check if the level requested is out of the minimum/maximum boundaries for the attempt.
+        // Note: this seems to be unreachable, as the algorithm seems to never produce difficulty which exceeds the maximum.
         if (!$this->level_in_bounds($nextdifficultylevel, $adaptivequiz)) {
 
             return item_administration_evaluation::with_stoppage_reason(
@@ -181,6 +229,17 @@ final class item_administration {
         }
 
         return $status;
+    }
+
+    /**
+     * Gets standard error parameter from the algorithm.
+     *
+     * This method should not be there normally, it's used to support refactoring. Must be removed as soon as possible.
+     *
+     * @return float
+     */
+    public function standard_error_from_algorithm(): float {
+        return $this->algorithm->get_standarderror();
     }
 
     /**
@@ -302,7 +361,7 @@ final class item_administration {
         // Reset the array pointer back to the beginning.
         reset($slots);
 
-        $algo = new catalgo(false, 1);
+        $algo = new catalgo(false);
 
         // Iterate over slots and count correct answers.
         foreach ($slots as $slot) {

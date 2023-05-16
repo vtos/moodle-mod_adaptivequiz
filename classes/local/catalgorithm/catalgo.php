@@ -20,7 +20,6 @@ use coding_exception;
 use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use mod_adaptivequiz\local\question\questions_answered_summary;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
-use moodle_exception;
 use stdClass;
 
 /**
@@ -34,9 +33,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class catalgo {
-
-    /** @var int $level level of difficulty of the most recently attempted question */
-    protected $level = 0;
 
     /**
      * @var float $levelogit the logit value of the difficulty level represented as a percentage of the minimum and maximum
@@ -64,32 +60,9 @@ class catalgo {
      *
      * @param bool $readytostop True of the algo should assume the user has answered the minimum number of question and should
      *                          compare the results against the standard error.
-     * @param int $level The level of difficulty for the most recently attempted question.
-     * @throws moodle_exception
      */
-    public function __construct($readytostop = true, $level = 0) {
-        if (!is_int($level) || 0 >= $level) {
-            throw new coding_exception('catalgo: Argument 4 not a positive integer', 'level must be a positive integer');
-        }
-
+    public function __construct(bool $readytostop = true) {
         $this->readytostop = $readytostop;
-        $this->level = $level;
-
-        if (debugging('', DEBUG_DEVELOPER)) {
-            $this->debugenabled = true;
-        }
-    }
-
-    /**
-     * This function adds a message to the debugging array.
-     *
-     * @param string $message details of the debugging message
-     * @return void
-     */
-    protected function print_debug($message = '') {
-        if ($this->debugenabled) {
-            $this->debug[] = $message;
-        }
     }
 
     /**
@@ -128,7 +101,9 @@ class catalgo {
      * @param float $standarderrortostop
      * @param question_answer_evaluation_result $questionanswerevaluationresult
      * @param questions_answered_summary $answersummary
+     * @param int $lastdifficultylevel
      * @return determine_next_difficulty_result
+     * @throws coding_exception
      */
     public function determine_next_difficulty_level(
         float $attemptdifficultysum,
@@ -136,8 +111,13 @@ class catalgo {
         questions_difficulty_range $questionsdifficultyrange,
         float $standarderrortostop,
         question_answer_evaluation_result $questionanswerevaluationresult,
-        questions_answered_summary $answersummary
+        questions_answered_summary $answersummary,
+        int $lastdifficultylevel
     ): determine_next_difficulty_result {
+        if (0 >= $lastdifficultylevel) {
+            throw new coding_exception('last difficulty level must have a positive value');
+        }
+
         $this->difficultysum = $attemptdifficultysum;
 
         if (!$questionanswerevaluationresult->answer_was_given()) {
@@ -149,7 +129,7 @@ class catalgo {
         $correct = $questionanswerevaluationresult->answer_is_correct();
 
         $this->nextdifficulty = $this->compute_next_difficulty(
-            $this->level,
+            $lastdifficultylevel,
             $questionsattemptednum,
             $correct,
             $questionsdifficultyrange

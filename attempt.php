@@ -29,13 +29,10 @@ require_once($CFG->dirroot . '/tag/lib.php');
 
 use mod_adaptivequiz\local\adaptive_quiz_requires;
 use mod_adaptivequiz\local\attempt\attempt;
-use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\itemadministration\item_administration;
 use mod_adaptivequiz\local\question\question_answer_evaluation;
-use mod_adaptivequiz\local\question\questions_answered_summary_provider;
-use mod_adaptivequiz\local\report\questions_difficulty_range;
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
 $uniqueid  = optional_param('uniqueid', 0, PARAM_INT);  // Unique id of the attempt.
@@ -125,12 +122,11 @@ if ($adaptiveattempt === null) {
     $adaptiveattempt = attempt::create($adaptivequiz, $USER->id);
 }
 
-$algo = new stdClass();
 $standarderror = 0.0;
 
-$determinenextdifficultylevelresult = null;
+$questionanswerevaluationresult = null;
 
-// If uniqueid is not empty the process respones.
+// If uniqueid is not empty then process response.
 if (!empty($uniqueid) && confirm_sesskey()) {
     // Check if the uniqueid belongs to the same attempt record the user is currently using.
     if (!adaptivequiz_uniqueid_part_of_attempt($uniqueid, $cm->instance, $USER->id)) {
@@ -151,41 +147,8 @@ if (!empty($uniqueid) && confirm_sesskey()) {
         question_engine::save_questions_usage_by_activity($quba);
 
         if (!empty($attempteddifficultylevel)) {
-            // Check if the minimum number of attempts have been reached.
-            $minattemptreached = adaptivequiz_min_attempts_reached($uniqueid, $cm->instance, $USER->id);
-
-            // Create an instance of the CAT algo class.
-            $algo = new catalgo($minattemptreached, (int) $attempteddifficultylevel);
-
             $questionanswerevaluation = new question_answer_evaluation($quba);
             $questionanswerevaluationresult = $questionanswerevaluation->perform();
-
-            // Determine the next difficulty level or whether there is an error.
-            $determinenextdifficultylevelresult = $algo->determine_next_difficulty_level(
-                (float) $adaptiveattempt->read_attempt_data()->difficultysum,
-                (int) $adaptiveattempt->read_attempt_data()->questionsattempted,
-                questions_difficulty_range::from_activity_instance($adaptivequiz),
-                (float) $adaptivequiz->standarderror,
-                $questionanswerevaluationresult,
-                (new questions_answered_summary_provider($quba))->collect_summary()
-            );
-
-            // Increment difficulty level for attempt.
-            $difflogit = $algo->get_levellogit();
-            if (is_infinite($difflogit)) {
-                throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
-                    new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $id]));
-            }
-
-            $standarderror = $algo->get_standarderror();
-
-            try {
-                $catcalculationresult = cat_calculation_steps_result::from_floats($difflogit, $standarderror, $algo->get_measure());
-                $adaptiveattempt->update_after_question_answered($catcalculationresult, time());
-            } catch (Exception $exception) {
-                throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
-                    new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $id]));
-            }
         }
     } catch (question_out_of_sequence_exception $e) {
         $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $id));
@@ -215,20 +178,18 @@ if ($qubaid == 0) {
 $adaptivequiz->context = $context;
 $adaptivequiz->cm = $cm;
 
+// Check if the minimum number of attempts have been reached.
+$minattemptreached = adaptivequiz_min_attempts_reached($uniqueid, $cm->instance, $USER->id);
+
+$algorithm = new catalgo($minattemptreached);
 $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-$itemadministration = new item_administration($quba, $fetchquestion);
+$itemadministration = new item_administration($quba, $algorithm, $fetchquestion);
 $itemadministrationevaluation = $itemadministration->evaluate_ability_to_administer_next_item($adaptiveattempt, $adaptivequiz,
-    $adaptiveattempt->read_attempt_data()->questionsattempted, $attempteddifficultylevel, $determinenextdifficultylevelresult);
+    $attempteddifficultylevel, $questionanswerevaluationresult);
 
 // Check item administration evaluation.
 if ($itemadministrationevaluation->item_administration_is_to_stop()) {
-    // Set the attempt to complete, update the standard error and attempt message, then redirect the user to the attempt-finished
-    // page.
-    if ($algo instanceof catalgo) {
-        $standarderror = $algo->get_standarderror();
-    }
-
     $noquestionsfetchedforattempt = $uniqueid == 0;
     if ($noquestionsfetchedforattempt) {
         // The script will try to complete an 'empty' attempt as it couldn't fetch the first question for some reason.
@@ -237,7 +198,10 @@ if ($itemadministrationevaluation->item_administration_is_to_stop()) {
             (new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]))->out());
     }
 
-    $adaptiveattempt->complete($context, $standarderror, $itemadministrationevaluation->stoppage_reason(), time());
+    // Set the attempt to complete, update the standard error and attempt message, then redirect the user to the attempt-finished
+    // page.
+    $adaptiveattempt->complete($context, $itemadministration->standard_error_from_algorithm(),
+        $itemadministrationevaluation->stoppage_reason(), time());
 
     redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
         ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]));

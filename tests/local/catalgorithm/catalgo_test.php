@@ -52,19 +52,11 @@ class catalgo_test extends advanced_testcase {
     }
 
     /**
-     * This function tests instantiating the catalgo class without setting the level argument.
-     */
-    public function test_init_catalgo_no_level_throw_except() {
-        $this->expectException('coding_exception');
-        new catalgo(true);
-    }
-
-    /**
      * This function tests compute_next_difficulty().
      * Setting 0 as the lowest level and 100 as the highest level.
      */
     public function test_compute_next_difficulty_zero_min_one_hundred_max() {
-        $catalgo = new catalgo(true, 1);
+        $catalgo = new catalgo(true);
 
         $adaptivequiz = new stdClass();
         $adaptivequiz->lowestlevel = 0;
@@ -98,7 +90,7 @@ class catalgo_test extends advanced_testcase {
      * Setting 1 as the lowest level and 10 as the highest level.
      */
     public function test_compute_next_difficulty_one_min_ten_max_compute_infinity() {
-        $catalgo = new catalgo(true, 1);
+        $catalgo = new catalgo(true);
 
         $adaptivequiz = new stdClass();
         $adaptivequiz->lowestlevel = 1;
@@ -120,7 +112,7 @@ class catalgo_test extends advanced_testcase {
         // Test an attempt with the following details:
         // sum of difficulty - 20, number of questions attempted - 10, number of correct answers - 7,
         // number of incorrect answers - 3.
-        $catalgo = new catalgo(true, 1);
+        $catalgo = new catalgo(true);
         $result = $catalgo->estimate_measure(20, 10, 7, 3);
         $this->assertEquals(2.8473, $result);
     }
@@ -131,7 +123,7 @@ class catalgo_test extends advanced_testcase {
     public function test_estimate_standard_error() {
         // Test an attempt with the following details;
         // sum of questions attempted - 10, number of correct answers - 7, number of incorrect answers - 3.
-        $catalgo = new catalgo(true, 1);
+        $catalgo = new catalgo(true);
         $result = $catalgo->estimate_standard_error(10, 7, 3);
         $this->assertEquals(0.69007, $result);
     }
@@ -149,7 +141,10 @@ class catalgo_test extends advanced_testcase {
                 'course' => $course->id
             ]);
 
-        $catalgo = new catalgo(false, 1);
+        $catalgo = new catalgo(false);
+
+        // Random, does not matter in this test.
+        $lastdifficultylevel = 1;
 
         $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
             1,
@@ -157,7 +152,8 @@ class catalgo_test extends advanced_testcase {
             questions_difficulty_range::from_activity_instance($adaptivequiz),
             $adaptivequiz->standarderror,
             question_answer_evaluation_result::when_answer_was_not_given(),
-            questions_answered_summary::from_integers(2, 4)
+            questions_answered_summary::from_integers(2, 4),
+            $lastdifficultylevel
         );
 
         self::assertEquals(
@@ -179,7 +175,10 @@ class catalgo_test extends advanced_testcase {
                 'course' => $course->id
             ]);
 
-        $catalgo = new catalgo(true, 1);
+        $catalgo = new catalgo(true);
+
+        // Random, does not matter in this test.
+        $lastdifficultylevel = 1;
 
         $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
             20,
@@ -187,7 +186,8 @@ class catalgo_test extends advanced_testcase {
             questions_difficulty_range::from_activity_instance($adaptivequiz),
             $adaptivequiz->standarderror,
             question_answer_evaluation_result::when_answer_is_correct(),
-            questions_answered_summary::from_integers(1, 1)
+            questions_answered_summary::from_integers(1, 1),
+            $lastdifficultylevel
         );
 
         $this->assertEquals(
@@ -209,7 +209,9 @@ class catalgo_test extends advanced_testcase {
                 'course' => $course->id
             ]);
 
-        $catalgo = new catalgo(false, 5);
+        $catalgo = new catalgo(false);
+
+        $lastdifficultylevel = 5;
 
         // When answer is correct.
         $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
@@ -218,7 +220,8 @@ class catalgo_test extends advanced_testcase {
             questions_difficulty_range::from_activity_instance($adaptivequiz),
             $adaptivequiz->standarderror,
             question_answer_evaluation_result::when_answer_is_correct(),
-            questions_answered_summary::from_integers(2, 4)
+            questions_answered_summary::from_integers(2, 4),
+            $lastdifficultylevel
         );
 
         self::assertEquals(
@@ -233,7 +236,8 @@ class catalgo_test extends advanced_testcase {
             questions_difficulty_range::from_activity_instance($adaptivequiz),
             $adaptivequiz->standarderror,
             question_answer_evaluation_result::when_answer_is_incorrect(),
-            questions_answered_summary::from_integers(2, 4)
+            questions_answered_summary::from_integers(2, 4),
+            $lastdifficultylevel
         );
 
         self::assertEquals(
@@ -255,7 +259,9 @@ class catalgo_test extends advanced_testcase {
                 'course' => $course->id
             ]);
 
-        $catalgo = new catalgo(false, 5);
+        $catalgo = new catalgo(false);
+
+        $lastdifficultylevel = 5;
 
         $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
             50,
@@ -263,7 +269,8 @@ class catalgo_test extends advanced_testcase {
             questions_difficulty_range::from_activity_instance($adaptivequiz),
             $adaptivequiz->standarderror,
             question_answer_evaluation_result::when_answer_is_incorrect(),
-            questions_answered_summary::from_integers(1, 2)
+            questions_answered_summary::from_integers(1, 2),
+            $lastdifficultylevel
         );
 
         self::assertEquals(
@@ -276,7 +283,7 @@ class catalgo_test extends advanced_testcase {
      * This function tests the return value from standard_error_within_parameters().
      */
     public function test_standard_error_within_parameters_return_true_then_false() {
-        $catalgo = new catalgo(true, 1);
+        $catalgo = new catalgo(true);
         $result = $catalgo->standard_error_within_parameters(0.02, 0.1);
         $this->assertTrue($result);
 

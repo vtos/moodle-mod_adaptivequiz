@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adaptive quiz - generate a graph of the question difficulties asked and the measured
- * ability of the test-taker as the test progressed.
+ * Generates a graph of the question difficulties asked and the measured ability of the test-taker as the test progressed.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -49,12 +49,11 @@ require_capability('mod/adaptivequiz:viewreport', $context);
 
 $param = array('uniqueid' => $uniqueid, 'userid' => $userid, 'activityid' => $cm->instance);
 $sql = 'SELECT a.name, a.highestlevel, a.lowestlevel, a.startinglevel, aa.timecreated, aa.timemodified, aa.attemptstate,
-               aa.attemptstopcriteria, aa.questionsattempted, aa.difficultysum, aa.standarderror, aa.measure
+               aa.attemptstopcriteria, aa.questionsattempted, acp.difficultysum, acp.standarderror, acp.measure
           FROM {adaptivequiz} a
           JOIN {adaptivequiz_attempt} aa ON a.id = aa.instance
-         WHERE aa.uniqueid = :uniqueid
-               AND aa.userid = :userid
-               AND a.id = :activityid
+          JOIN {adaptivequiz_cat_params} acp ON aa.id = acp.attempt
+         WHERE aa.uniqueid = :uniqueid AND aa.userid = :userid AND a.id = :activityid
       ORDER BY a.name ASC';
 $adaptivequiz  = $DB->get_record_sql($sql, $param);
 $user = $DB->get_record('user', array('id' => $userid));

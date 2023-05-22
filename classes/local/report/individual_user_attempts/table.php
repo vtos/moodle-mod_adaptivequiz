@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Contains definition of the table class for the user attempts report.
- *
- * @package   mod_adaptivequiz
- * @copyright 2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\report\individual_user_attempts;
 
 defined('MOODLE_INTERNAL') || die();
@@ -38,7 +30,9 @@ use table_sql;
 /**
  * Definition of the table class for the user attempts report.
  *
- * @package mod_adaptivequiz
+ * @package   mod_adaptivequiz
+ * @copyright 2023 Vitaly Potenko <potenkov@gmail.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class table extends table_sql {
 
@@ -58,31 +52,43 @@ final class table extends table_sql {
     private $questionsdifficultyrange;
 
     /**
-     * @var int $cmid
+     * The constructor.
+     *
+     * @param mod_adaptivequiz_renderer $renderer
+     * @param filter $filter
+     * @param moodle_url $baseurl
+     * @param questions_difficulty_range $questionsdifficultyrange
      */
-    private $cmid;
-
     public function __construct(
         mod_adaptivequiz_renderer $renderer,
         filter $filter,
         moodle_url $baseurl,
-        questions_difficulty_range $questionsdifficultyrange,
-        int $cmid
+        questions_difficulty_range $questionsdifficultyrange
     ) {
         parent::__construct('individualuserattemptstable');
 
         $this->renderer = $renderer;
         $this->filter = $filter;
         $this->questionsdifficultyrange = $questionsdifficultyrange;
-        $this->cmid = $cmid;
 
         $this->init($baseurl);
     }
 
-    public function get_sql_sort() {
+    /**
+     * Returns an SQL fragment that can be used in an ORDER BY clause.
+     *
+     * @return string
+     */
+    public function get_sql_sort(): string {
         return 'timemodified DESC';
     }
 
+    /**
+     * Handles value for the attempt state column.
+     *
+     * @param stdClass $row
+     * @return string
+     */
     protected function col_attemptstate(stdClass $row): string {
         if (0 == strcmp(attempt_state::IN_PROGRESS, $row->attemptstate)) {
             return get_string('recentinprogress', 'adaptivequiz');
@@ -91,6 +97,12 @@ final class table extends table_sql {
         return get_string('recentcomplete', 'adaptivequiz');
     }
 
+    /**
+     * Handles value for the score column.
+     *
+     * @param stdClass $row
+     * @return string
+     */
     protected function col_score(stdClass $row): string {
         if ($row->measure === null || $row->stderror === null || $row->stderror == 0.0) {
             return 'n/a';
@@ -105,10 +117,22 @@ final class table extends table_sql {
             ' ' . $this->renderer->format_standard_error($row);
     }
 
+    /**
+     * Handles value for the column with the time when attempt was created.
+     *
+     * @param stdClass $row
+     * @return string
+     */
     protected function col_timecreated(stdClass $row): string {
         return userdate($row->timecreated);
     }
 
+    /**
+     * Handles value for the column with the time when attempt was modified.
+     *
+     * @param stdClass $row
+     * @return string
+     */
     protected function col_timemodified(stdClass $row): string {
         return userdate($row->timemodified);
     }
@@ -122,6 +146,11 @@ final class table extends table_sql {
         return $this->renderer->individual_user_attempt_actions($row);
     }
 
+    /**
+     * A convenience method to call a bunch of init methods.
+     *
+     * @param moodle_url $baseurl
+     */
     private function init(moodle_url $baseurl): void {
         $this->define_columns(['attemptstate', 'attemptstopcriteria', 'questionsattempted', 'score',
             'timecreated', 'timemodified', 'actions']);
@@ -142,14 +171,17 @@ final class table extends table_sql {
         $this->sortable(false);
 
         $this->set_sql(
-            'id, userid, uniqueid, attemptstopcriteria, measure, attemptstate, questionsattempted,timemodified,
-            standarderror AS stderror, timecreated',
-            '{adaptivequiz_attempt}',
-            'instance = :adaptivequiz AND userid = :userid',
+            'a.id, a.userid, a.uniqueid, a.attemptstopcriteria, a.attemptstate, a.questionsattempted, a.timemodified,
+            a.timecreated, acp.measure, acp.standarderror AS stderror',
+            '{adaptivequiz_attempt} a, {adaptivequiz_cat_params} acp',
+            'a.id = acp.attempt AND a.instance = :adaptivequiz AND a.userid = :userid',
             ['adaptivequiz' => $this->filter->adaptivequizid, 'userid' => $this->filter->userid]
         );
     }
 
+    /**
+     * Applies required alignment to certain columns.
+     */
     private function set_content_alignment_in_columns(): void {
         foreach (array_keys($this->columns) as $column) {
             $this->column_class[$column] .= ' text-center';

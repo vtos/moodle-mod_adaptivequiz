@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * A class to display a table with user's own attempts on the activity's view page.
- *
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local;
 
 use coding_exception;
@@ -31,12 +24,25 @@ use moodle_url;
 use stdClass;
 use table_sql;
 
+/**
+ * A class to display a table with user's own attempts on the activity's view page.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 final class user_attempts_table extends table_sql {
+
     /**
      * @var mod_adaptivequiz_renderer $renderer
      */
     private $renderer;
 
+    /**
+     * The constructor.
+     *
+     * @param mod_adaptivequiz_renderer $renderer
+     */
     public function __construct(mod_adaptivequiz_renderer $renderer) {
         parent::__construct('userattemptstable');
 
@@ -79,18 +85,30 @@ final class user_attempts_table extends table_sql {
         $this->set_column_css_classes();
         $this->set_content_alignment_in_columns();
         $this->define_baseurl($baseurl);
-        $this->set_sql('a.id, a.attemptstate AS state, a.timemodified AS timefinished, a.measure, q.highestlevel, ' .
-            'q.lowestlevel', '{adaptivequiz_attempt} a, {adaptivequiz} q', 'a.instance = q.id AND q.id = ? ' .
-            'AND userid = ?', [$adaptivequiz->id, $userid]);
+        $this->set_sql(
+            'a.id, a.attemptstate AS state, a.timemodified AS timefinished, acp.measure, q.highestlevel, q.lowestlevel',
+            '{adaptivequiz_attempt} a, {adaptivequiz_cat_params} acp, {adaptivequiz} q',
+            'a.id = acp.attempt AND a.instance = q.id AND q.id = ? AND userid = ?',
+            [$adaptivequiz->id, $userid]
+        );
     }
 
     /**
-     * @throws coding_exception
+     * Handles value for the attempt state column.
+     *
+     * @param stdClass $row
+     * @return string
      */
     protected function col_state(stdClass $row): string {
         return get_string('recent' . $row->state, 'adaptivequiz');
     }
 
+    /**
+     * Handles value for the column with the attempt finish time value.
+     *
+     * @param stdClass $row
+     * @return string
+     */
     protected function col_timefinished(stdClass $row): string {
         if ($row->state != attempt_state::COMPLETED) {
             return '';
@@ -99,16 +117,28 @@ final class user_attempts_table extends table_sql {
         return userdate($row->timefinished);
     }
 
+    /**
+     * Handles value for the measure column.
+     *
+     * @param stdClass $row
+     * @return string
+     */
     protected function col_measure(stdClass $row): string {
         return $this->renderer->format_measure($row);
     }
 
+    /**
+     * Applies required alignment to certain columns.
+     */
     private function set_content_alignment_in_columns(): void {
         foreach (array_keys($this->columns) as $columnname) {
             $this->column_class[$columnname] .= ' text-center';
         }
     }
 
+    /**
+     * Sets CSS classes for columns where required.
+     */
     private function set_column_css_classes(): void {
         $this->column_class['state'] .= ' statecol';
 

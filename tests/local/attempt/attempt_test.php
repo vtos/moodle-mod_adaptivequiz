@@ -22,11 +22,8 @@ global $CFG;
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
-use coding_exception;
 use context_module;
 use mod_adaptivequiz\event\attempt_completed;
-use mod_adaptivequiz\local\fetchquestion;
-use question_usage_by_activity;
 use stdClass;
 
 /**
@@ -36,6 +33,7 @@ use stdClass;
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
  * @covers \mod_adaptivequiz\local\attempt
  */
 class attempt_test extends advanced_testcase {
@@ -179,7 +177,7 @@ class attempt_test extends advanced_testcase {
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
 
         $attempt = attempt::create($adaptivequiz, $user->id);
-        $attempt->complete(context_module::instance($cm->id), 0.70711, '_some_reason_to_stop_the_attempt', time());
+        $attempt->complete(context_module::instance($cm->id), '_some_reason_to_stop_the_attempt', time());
 
         $this->assertTrue(attempt::user_has_completed_on_quiz($adaptivequiz->id, $user->id));
     }
@@ -221,11 +219,10 @@ class attempt_test extends advanced_testcase {
         $expectedfields->uniqueid = '0';
         $expectedfields->attemptstate = attempt_state::IN_PROGRESS;
         $expectedfields->questionsattempted = '0';
-        $expectedfields->standarderror = '999.00000';
 
         $attemptfields = $DB->get_record('adaptivequiz_attempt',
             ['instance' => $adaptivequiz->id, 'userid' => $user->id, 'attemptstate' => attempt_state::IN_PROGRESS],
-            'id, instance, userid, uniqueid, attemptstate, questionsattempted, standarderror', MUST_EXIST
+            'id, instance, userid, uniqueid, attemptstate, questionsattempted', MUST_EXIST
         );
         $expectedfields->id = $attemptfields->id;
 
@@ -245,19 +242,15 @@ class attempt_test extends advanced_testcase {
 
         $attempt = attempt::create($adaptivequiz, $user->id);
 
-        $calcresults = cat_calculation_steps_result::from_floats(-10.7435883, 0.73030, -0.83212);
-        $attempt->update_after_question_answered($calcresults, 1658759115);
+        $attempt->update_after_question_answered(1658759115);
 
         $expectedfields = new stdClass();
-        $expectedfields->difficultysum = '-10.7435883';
         $expectedfields->questionsattempted = '1';
-        $expectedfields->standarderror = '0.73030';
-        $expectedfields->measure = '-0.83212';
         $expectedfields->timemodified = '1658759115';
 
         $attemptfields = $DB->get_record('adaptivequiz_attempt',
             ['instance' => $adaptivequiz->id, 'userid' => $user->id, 'attemptstate' => attempt_state::IN_PROGRESS],
-            'id, questionsattempted, difficultysum, standarderror, measure, timemodified', MUST_EXIST
+            'id, questionsattempted, timemodified', MUST_EXIST
         );
 
         $attemptid = $attemptfields->id;
@@ -266,19 +259,15 @@ class attempt_test extends advanced_testcase {
         $this->assertEquals($expectedfields, $attemptfields);
 
         $calcresults = cat_calculation_steps_result::from_floats(1.1422792, 0.70711, 1.79982);
-        $attempt->update_after_question_answered($calcresults, 1658759315);
+        $attempt->update_after_question_answered(1658759315);
 
         $expectedfields = new stdClass();
         $expectedfields->id = $attemptid;
-        $expectedfields->difficultysum = '-9.6013091';
         $expectedfields->questionsattempted = '2';
-        $expectedfields->standarderror = '0.70711';
-        $expectedfields->measure = '1.79982';
         $expectedfields->timemodified = '1658759315';
 
-        $attemptfields = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid],
-            'id, questionsattempted, difficultysum, standarderror, measure, timemodified', MUST_EXIST
-        );
+        $attemptfields = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid], 'id, questionsattempted, timemodified',
+            MUST_EXIST);
 
         $this->assertEquals($expectedfields, $attemptfields);
     }
@@ -298,19 +287,16 @@ class attempt_test extends advanced_testcase {
 
         $attempt = attempt::create($adaptivequiz, $user->id);
 
-        $standarderror = 0.70711;
         $message = '_some_reason_to_stop_the_attempt';
-
-        $attempt->complete(context_module::instance($cm->id), $standarderror, $message, time());
+        $attempt->complete(context_module::instance($cm->id), $message, time());
 
         $expectedfields = new stdClass();
         $expectedfields->attemptstate = attempt_state::COMPLETED;
         $expectedfields->attemptstopcriteria = $message;
-        $expectedfields->standarderror = (string) $standarderror;
 
         $attemptfields = $DB->get_record('adaptivequiz_attempt',
             ['instance' => $adaptivequiz->id, 'userid' => $user->id, 'attemptstate' => attempt_state::COMPLETED],
-            'id, attemptstate, attemptstopcriteria, standarderror', MUST_EXIST
+            'id, attemptstate, attemptstopcriteria', MUST_EXIST
         );
 
         $expectedfields->id = $attemptfields->id;
@@ -333,7 +319,7 @@ class attempt_test extends advanced_testcase {
         $context = context_module::instance($cm->id);
 
         $attempt = attempt::create($adaptivequiz, $user->id);
-        $attempt->complete($context, 0.70711, '_some_reason_to_stop_the_attempt', time());
+        $attempt->complete($context, '_some_reason_to_stop_the_attempt', time());
 
         $events = $eventsink->get_events();
 

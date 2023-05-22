@@ -17,6 +17,7 @@
 /**
  * Adaptive quiz attempt script
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,6 +26,7 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
+use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\output\ability_measure;
 
 $cmid = required_param('cmid', PARAM_INT); // Course module id.
@@ -42,7 +44,10 @@ $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $cm->instance], '*', MU
 
 $abilitymeasurerenderable = null;
 if ($adaptivequiz->showabilitymeasure) {
-    $abilitymeasurevalue = $DB->get_field('adaptivequiz_attempt', 'measure', ['uniqueid' => $uniqueid], MUST_EXIST);
+    // TODO: do this in a better way.
+    $attemptid = $DB->get_field('adaptivequiz_attempt', 'id', ['uniqueid' => $uniqueid], MUST_EXIST);
+    $abilitymeasurevalue = cat_model_params::for_attempt($attemptid)->get('measure');
+
     $abilitymeasurerenderable = ability_measure::of_attempt_on_adaptive_quiz($adaptivequiz, $abilitymeasurevalue);
 }
 
@@ -60,7 +65,7 @@ if (!$validattempt) {
     throw new moodle_exception('notyourattempt', 'adaptivequiz', $url);
 }
 
-$PAGE->set_url('/mod/adaptivequiz/view.php', array('id' => $cm->id));
+$PAGE->set_url('/mod/adaptivequiz/attemptfinished.php', ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]);
 $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_context($context);
 $PAGE->activityheader->disable();

@@ -17,6 +17,7 @@
 /**
  * Page to view info about a certain attempt.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,6 +26,8 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
+
+use mod_adaptivequiz\local\attempt\cat_model_params;
 
 $attemptid = required_param('attempt', PARAM_INT);
 $page = optional_param('page', 0, PARAM_INT);
@@ -43,6 +46,8 @@ require_capability('mod/adaptivequiz:viewreport', $context);
 
 $user = $DB->get_record('user', ['id' => $attempt->userid], '*', MUST_EXIST);
 $quba = question_engine::load_questions_usage_by_activity($attempt->uniqueid);
+
+$catmodelparams = cat_model_params::for_attempt($attempt->id);
 
 $a = new stdClass();
 $a->quizname = format_string($adaptivequiz->name);
@@ -65,6 +70,7 @@ echo $renderer->print_header();
 echo $renderer->heading($title);
 
 echo $renderer->attempt_review_tabs($PAGE->url, $tab);
-echo $renderer->attempt_report_page_by_tab($tab, $adaptivequiz, $attempt, $user, $quba, $cm->id, $PAGE->url, $page);
+echo $renderer->attempt_report_page_by_tab($tab, $adaptivequiz, $attempt, $catmodelparams, $user, $quba, $cm->id, $PAGE->url,
+    $page);
 
 echo $renderer->print_footer();

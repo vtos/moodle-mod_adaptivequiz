@@ -14,18 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * A class to display a table with user's own attempts on the activity's view page.
- *
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\output;
 
+use mod_adaptivequiz\local\attempt\cat_model_params;
 use renderable;
 use stdClass;
 
+/**
+ * A renderable object to display information about a user attempt.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 final class user_attempt_summary implements renderable {
 
     /**
@@ -50,18 +51,18 @@ final class user_attempt_summary implements renderable {
     public $highestquestiondifficulty;
 
     /**
-     * @param stdClass $attempt A record from {adaptivequiz_attempt}. attemptstate, timemodified, measure are
-     * the expected fields.
+     * Instantiates an object by collecting the required data from the provided arguments.
+     *
+     * @param stdClass $attempt A record from {adaptivequiz_attempt}. attemptstate, timemodified are the expected fields.
+     * @param cat_model_params $catmodelparams
      * @param stdClass $adaptivequiz A record from {adaptivequiz}. lowestlevel, highestlevel, showabilitymeasure are
      * the expected fields.
      */
-    public static function from_db_records(stdClass $attempt, stdClass $adaptivequiz): self {
+    public static function collect(stdClass $attempt, cat_model_params $catmodelparams, stdClass $adaptivequiz): self {
         $return = new self();
         $return->attemptstate = !empty($attempt->attemptstate) ? $attempt->attemptstate : '';
         $return->timefinished = !empty($attempt->timemodified) ? $attempt->timemodified : 0;
-        $return->abilitymeasure = !empty($attempt->measure) && $adaptivequiz->showabilitymeasure
-            ? $attempt->measure
-            : 0;
+        $return->abilitymeasure = $adaptivequiz->showabilitymeasure ? $catmodelparams->get('measure') : 0;
         $return->lowestquestiondifficulty = !empty($adaptivequiz->lowestlevel) ? $adaptivequiz->lowestlevel : 0;
         $return->highestquestiondifficulty = !empty($adaptivequiz->highestlevel) ? $adaptivequiz->highestlevel : 0;
 

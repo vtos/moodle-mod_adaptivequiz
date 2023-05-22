@@ -52,7 +52,7 @@ class custom_completion_test extends advanced_testcase {
 
         $this->assertEquals(COMPLETION_INCOMPLETE, $completion->get_state('completionattemptcompleted'));
 
-        $attempt->complete(context_module::instance($cm->id), 1, 'php unit test', time());
+        $attempt->complete(context_module::instance($cm->id), 'php unit test', time());
 
         $this->assertEquals(COMPLETION_COMPLETE, $completion->get_state('completionattemptcompleted'));
     }

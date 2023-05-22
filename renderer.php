@@ -14,20 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Contains definition of the renderer class for the plugin.
- *
- * @package   mod_adaptivequiz
- * @copyright 2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright 2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 defined('MOODLE_INTERNAL') || die();
 
 use core\output\notification;
 use mod_adaptivequiz\form\requiredpassword;
 use mod_adaptivequiz\local\attempt\attempt_state;
+use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\output\ability_measure;
 use mod_adaptivequiz\output\attempt_progress;
@@ -36,9 +28,12 @@ use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_atte
 use mod_adaptivequiz\output\user_attempt_summary;
 
 /**
- * The renderer class for the plugin.
+ * The plugin's renderer.
  *
- * @package mod_adaptivequiz
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_adaptivequiz_renderer extends plugin_renderer_base {
     /** @var string $sortdir the sorting direction being used */
@@ -535,15 +530,20 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Answer the summery information about an attempt
+     * Outputs general information about the attempt.
      *
-     * @param stdClass $adaptivequiz See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab()}.
-     * @param stdClass $attempt See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab()}.
+     * @param stdClass $adaptivequiz See {@see mod_adaptivequiz_renderer::attempt_report_page_by_tab()}.
+     * @param stdClass $attempt See {@see mod_adaptivequiz_renderer::attempt_report_page_by_tab()}.
+     * @param cat_model_params $catmodelparams
      * @param stdClass $user The user who took the quiz that created the attempt.
      * @return string
-     * @throws coding_exception
      */
-    public function attempt_summary_listing(stdClass $adaptivequiz, stdClass $attempt, stdClass $user): string {
+    public function attempt_summary_listing(
+        stdClass $adaptivequiz,
+        stdClass $attempt,
+        cat_model_params $catmodelparams,
+        stdClass $user
+    ): string {
         $table = new html_table();
         $table->attributes['class'] = 'generaltable attemptsummarytable';
 
@@ -572,9 +572,9 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $headercell = new html_table_cell(get_string('score', 'adaptivequiz'));
         $headercell->header = true;
 
-        $abilityfraction = 1 / ( 1 + exp( (-1 * $attempt->measure) ) );
+        $abilityfraction = 1 / ( 1 + exp( (-1 * $catmodelparams->get('measure')) ) );
         $ability = (($adaptivequiz->highestlevel - $adaptivequiz->lowestlevel) * $abilityfraction) + $adaptivequiz->lowestlevel;
-        $stderror = catalgo::convert_logit_to_percent($attempt->standarderror);
+        $stderror = catalgo::convert_logit_to_percent($catmodelparams->get('standarderror'));
         $score = ($stderror > 0)
             ? round($ability, 2)." &nbsp; &plusmn; ".round($stderror * 100, 1)."%"
             : 'n/a';
@@ -659,10 +659,13 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
+     * Outputs content with attempt data for the requested tab.
+     *
      * @param string $tabid
      * @param stdClass $adaptivequiz A record from {adaptivequiz}. The expected fields are 'lowestlevel' and 'highestlevel'.
      * @param stdClass $attempt A record from {adaptivequiz_attempt}. The expected fields are: 'attemptstate', 'measure',
      *        'highestlevel', 'lowestlevel', 'standarderror', 'timecreated', 'timemodified', 'attemptstopcriteria' and 'uniqueid'.
+     * @param cat_model_params $catmodelparams
      * @param stdClass $user A record from {user}. The expected fields are: 'id', 'email' and those required for {@link fullname()}
      *        call.
      * @param question_usage_by_activity $quba
@@ -670,13 +673,12 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @param moodle_url $pageurl
      * @param int $page
      * @return string
-     * @throws coding_exception
-     * @throws moodle_exception
      */
     public function attempt_report_page_by_tab(
         string $tabid,
         stdClass $adaptivequiz,
         stdClass $attempt,
+        cat_model_params $catmodelparams,
         stdClass $user,
         question_usage_by_activity $quba,
         int $cmid,
@@ -701,7 +703,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             return $this->attempt_questions_review($quba, $pageurl, $page);
         }
 
-        return $this->attempt_summary_listing($adaptivequiz, $attempt, $user);
+        return $this->attempt_summary_listing($adaptivequiz, $attempt, $catmodelparams, $user);
     }
 
     public function reset_users_attempts_filter_action(moodle_url $url): string {

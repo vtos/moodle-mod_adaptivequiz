@@ -17,10 +17,10 @@
 /**
  * Define all the backup steps that will be used by the backup_adaptivequiz_activity_task.
  *
- * @package   mod_adaptivequiz
- * @copyright 2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright 2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_adaptivequiz
+ * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class backup_adaptivequiz_activity_structure_step extends backup_questions_activity_structure_step {
 
@@ -41,8 +41,8 @@ class backup_adaptivequiz_activity_structure_step extends backup_questions_activ
 
         // Attempts.
         $adaptiveattempts = new backup_nested_element('adaptiveattempts');
-        $nodes = ['userid', 'uniqueid', 'attemptstate', 'attemptstopcriteria', 'questionsattempted', 'difficultysum',
-            'standarderror', 'measure', 'timecreated', 'timemodified'];
+        $nodes = ['userid', 'uniqueid', 'attemptstate', 'attemptstopcriteria', 'questionsattempted', 'timecreated',
+            'timemodified'];
         $adaptiveattempt = new backup_nested_element('adaptiveattempt', ['id'], $nodes);
 
         // This module is using questions, so produce the related question states and sessions.

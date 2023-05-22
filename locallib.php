@@ -17,6 +17,7 @@
 /**
  * Some utility functions for the adaptive quiz activity.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -264,13 +265,12 @@ function adaptivequiz_get_user_grades($adaptivequiz, $userid = 0) {
         $params['userid'] = $userid;
         $userwhere = 'AND aa.userid = :userid';
     }
-    $sql = "SELECT aa.uniqueid, aa.userid, aa.measure, aa.timemodified, aa.timecreated, a.highestlevel,
-               a.lowestlevel
-          FROM {adaptivequiz_attempt} aa
-          JOIN {adaptivequiz} a ON aa.instance = a.id
-         WHERE aa.instance = :instance
-               AND aa.attemptstate = :attemptstate
-               $userwhere";
+    $sql = "SELECT aa.uniqueid, aa.userid, aa.timemodified, acp.measure, aa.timecreated, a.highestlevel, a.lowestlevel
+              FROM {adaptivequiz_attempt} aa
+              JOIN {adaptivequiz_cat_params} acp ON aa.id = acp.attempt
+              JOIN {adaptivequiz} a ON aa.instance = a.id
+             WHERE aa.instance = :instance AND aa.attemptstate = :attemptstate
+                   $userwhere";
     $records = $DB->get_records_sql($sql, $params);
 
     $grades = array();

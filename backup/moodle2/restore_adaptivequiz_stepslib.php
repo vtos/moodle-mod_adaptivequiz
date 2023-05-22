@@ -17,16 +17,17 @@
 /**
  * Structure step to restore one adaptivequiz activity.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class restore_adaptivequiz_activity_structure_step extends restore_questions_activity_structure_step {
 
     /**
-     * Define the a structure for restoring the activity
-     * @return backup_nested_element the $activitystructure wrapped by the common 'activity' element
+     * Define the structure for restoring the activity.
+     *
+     * @return backup_nested_element The $activitystructure wrapped by the common 'activity' element.
      */
     protected function define_structure() {
         $paths = array();
@@ -51,8 +52,9 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
     }
 
     /**
-     * Process the adaptivequiz element
-     * @param stdClass an object whose properties are nodes in the adatpviequiz structure
+     * Process the adaptivequiz element.
+     *
+     * @param stdClass $data An object whose properties are nodes in the adatpviequiz structure.
      */
     protected function process_adaptivequiz($data) {
         global $CFG, $DB;
@@ -70,8 +72,9 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
     }
 
     /**
-     * Process the activity instance to question categories relation structure\
-     * @param stdClass an object whose properties are nodes in the adatpviequiz_question structure
+     * Process the activity instance to question categories relation structure.
+     *
+     * @param stdClass $data An object whose properties are nodes in the adatpviequiz_question structure.
      */
     protected function process_adaptivequiz_question($data) {
         global $DB;
@@ -89,8 +92,9 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
     }
 
     /**
-     * Process the activity instance to question categories relation structure
-     * @param stdClass an object whose properties are nodes in the adatpviequiz_attempt structure
+     * Process the activity instance to question categories relation structure.
+     *
+     * @param stdClass $data An object whose properties are nodes in the adatpviequiz_attempt structure.
      */
     protected function process_adaptivequiz_attempt($data) {
         $data = (object)$data;
@@ -105,8 +109,9 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
     }
 
     /**
-     * This function assigns the new question usage by activity id to the attempt
-     * @param int $newusageid a new question usage by activity id
+     * This function assigns the new question usage by activity id to the attempt.
+     *
+     * @param int $newusageid A new question usage by activity id.
      */
     protected function inform_new_usage_id($newusageid) {
         global $DB;
@@ -123,7 +128,7 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
     }
 
     /**
-     * This function adds any files assocaited with the intro field after the restore process has run
+     * This function adds any files assocaited with the intro field after the restore process has run.
      */
     protected function after_execute() {
         parent::after_execute();

@@ -29,6 +29,7 @@ require_once($CFG->dirroot . '/tag/lib.php');
 
 use mod_adaptivequiz\local\adaptive_quiz_requires;
 use mod_adaptivequiz\local\attempt\attempt;
+use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\itemadministration\item_administration;
@@ -120,6 +121,7 @@ if (!empty($adaptivequiz->password)) {
 $adaptiveattempt = attempt::find_in_progress_for_user($adaptivequiz, $USER->id);
 if ($adaptiveattempt === null) {
     $adaptiveattempt = attempt::create($adaptivequiz, $USER->id);
+    cat_model_params::create_new_for_attempt($adaptiveattempt->read_attempt_data()->id);
 }
 
 $standarderror = 0.0;
@@ -200,8 +202,9 @@ if ($itemadministrationevaluation->item_administration_is_to_stop()) {
 
     // Set the attempt to complete, update the standard error and attempt message, then redirect the user to the attempt-finished
     // page.
-    $adaptiveattempt->complete($context, $itemadministration->standard_error_from_algorithm(),
-        $itemadministrationevaluation->stoppage_reason(), time());
+    $adaptiveattempt->complete($context, $itemadministrationevaluation->stoppage_reason(), time());
+    cat_model_params::for_attempt($adaptiveattempt->read_attempt_data()->id)
+        ->update_when_attempt_completed($itemadministration->standard_error_from_algorithm());
 
     redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
         ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]));

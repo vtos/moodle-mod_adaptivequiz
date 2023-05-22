@@ -17,6 +17,7 @@
 /**
  * Adaptive quiz view attempt report script.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -67,8 +68,7 @@ $attemptstable = new individual_user_attempts_table(
     $renderer,
     user_attempts_table::from_vars($cm->instance, $user->id),
     $PAGE->url,
-    questions_difficulty_range::from_activity_instance($adaptivequiz),
-    $cm->id
+    questions_difficulty_range::from_activity_instance($adaptivequiz)
 );
 $attemptstable->out(20, false);
 

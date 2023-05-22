@@ -20,7 +20,7 @@ use advanced_testcase;
 use context_course;
 use context_module;
 use mod_adaptivequiz\local\attempt\attempt;
-use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
+use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\question\difficulty_questions_mapping;
@@ -53,7 +53,9 @@ class item_administration_test extends advanced_testcase {
             ]);
 
         $user = $this->getDataGenerator()->create_user();
+
         $attempt = attempt::create($adaptivequiz, $user->id);
+        cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
         $context = context_module::instance($cm->id);
@@ -270,7 +272,9 @@ class item_administration_test extends advanced_testcase {
             ]);
 
         $user = $this->getDataGenerator()->create_user();
+
         $attempt = attempt::create($adaptivequiz, $user->id);
+        cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
         $context = context_module::instance($cm->id);
@@ -289,7 +293,7 @@ class item_administration_test extends advanced_testcase {
         $i = 1;
         do {
             // Set data randomly here, it does not matter.
-            $attempt->update_after_question_answered(cat_calculation_steps_result::from_floats(0.0, 0.0, 0.0), time());
+            $attempt->update_after_question_answered(time());
             $i++;
         } while ($i <= $maximumquestions);
 
@@ -331,7 +335,9 @@ class item_administration_test extends advanced_testcase {
             ]);
 
         $user = $this->getDataGenerator()->create_user();
+
         $attempt = attempt::create($adaptivequiz, $user->id);
+        cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
         $context = context_module::instance($cm->id);
@@ -347,7 +353,7 @@ class item_administration_test extends advanced_testcase {
 
         // Given the number of questions attempted is not zero.
         // The passed data does not matter.
-        $attempt->update_after_question_answered(cat_calculation_steps_result::from_floats(0.0, 0.0, 0.0), time());
+        $attempt->update_after_question_answered(time());
 
         // Initialize difficulty-questions mapping by setting a value directly in global session.
         // This is a bad practice and leads to fragile tests. Normally, operating on global session should be removed from
@@ -520,7 +526,9 @@ class item_administration_test extends advanced_testcase {
             ]);
 
         $user = $this->getDataGenerator()->create_user();
+
         $attempt = attempt::create($adaptivequiz, $user->id);
+        cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
         $context = context_module::instance($cm->id);
@@ -570,7 +578,7 @@ class item_administration_test extends advanced_testcase {
         $i = 1;
         do {
             // Set data randomly here, it does not matter.
-            $attempt->update_after_question_answered(cat_calculation_steps_result::from_floats(0.0, 0.0, 0.0), time());
+            $attempt->update_after_question_answered(time());
             $i++;
         } while ($i <= 3);
         $attempteddifficultylevel = 6;
@@ -661,7 +669,9 @@ class item_administration_test extends advanced_testcase {
             ]);
 
         $user = $this->getDataGenerator()->create_user();
+
         $attempt = attempt::create($adaptivequiz, $user->id);
+        cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
         $context = context_module::instance($cm->id);
@@ -706,7 +716,7 @@ class item_administration_test extends advanced_testcase {
         $i = 1;
         do {
             // Set data randomly here, it does not matter.
-            $attempt->update_after_question_answered(cat_calculation_steps_result::from_floats(0.0, 0.0, 0.0), time());
+            $attempt->update_after_question_answered(time());
             $i++;
         } while ($i <= 3);
         $attempteddifficultylevel = $attemptedquestion3difficulty;

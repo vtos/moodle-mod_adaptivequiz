@@ -17,10 +17,13 @@
 /**
  * Confirmation page to remove student attempts.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+use mod_adaptivequiz\local\attempt\cat_model_params;
 
 require_once(__DIR__ . '/../../config.php');
 
@@ -54,6 +57,9 @@ $a->timecompleted = userdate($attempt->timemodified);
 if ($confirm) {
     question_engine::delete_questions_usage_by_activity($attempt->uniqueid);
     $DB->delete_records('adaptivequiz_attempt', ['id' => $attempt->id]);
+
+    $catmodelparams = cat_model_params::for_attempt($attempt->id);
+    $catmodelparams->delete();
 
     adaptivequiz_update_grades($adaptivequiz, $user->id);
 

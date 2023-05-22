@@ -19,6 +19,7 @@ namespace mod_adaptivequiz\local\itemadministration;
 use Exception;
 use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
+use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\question\question_answer_evaluation_result;
@@ -95,9 +96,11 @@ final class item_administration {
 
         $determinenextdifficultyresult = null;
         if (!is_null($questionanswerevaluationresult)) {
+            $catmodelparams = cat_model_params::for_attempt($attempt->read_attempt_data()->id);
+
             // Determine the next difficulty level or whether there is an error.
             $determinenextdifficultyresult = $this->algorithm->determine_next_difficulty_level(
-                (float) $attempt->read_attempt_data()->difficultysum,
+                (float) $catmodelparams->get('difficultysum'),
                 (int) $questionsattempted,
                 questions_difficulty_range::from_activity_instance($adaptivequiz),
                 (float) $adaptivequiz->standarderror,
@@ -115,10 +118,12 @@ final class item_administration {
             }
 
             try {
-                $catcalculationresult = cat_calculation_steps_result::from_floats(
-                    $difflogit, $this->algorithm->get_standarderror(), $this->algorithm->get_measure()
+                $attempt->update_after_question_answered(time());
+                $catmodelparams->update_with_calculation_steps_result(
+                    cat_calculation_steps_result::from_floats(
+                        $difflogit, $this->algorithm->get_standarderror(), $this->algorithm->get_measure()
+                    )
                 );
-                $attempt->update_after_question_answered($catcalculationresult, time());
             } catch (Exception $exception) {
                 $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, 0, false, MUST_EXIST);
 

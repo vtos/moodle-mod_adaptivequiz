@@ -17,6 +17,7 @@
 /**
  * Adaptive testing main view page script.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,6 +29,7 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use core\output\notification;
 use mod_adaptivequiz\local\adaptive_quiz_requires;
+use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
@@ -176,15 +178,14 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
     $allattemptscount = $DB->count_records('adaptivequiz_attempt',
         ['instance' => $adaptivequiz->id, 'userid' => $USER->id]);
     if ($allattemptscount && $adaptivequiz->attempts == 1) {
-        $sql = 'SELECT id, attemptstate, measure, timemodified
-            FROM {adaptivequiz_attempt}
-            WHERE instance = ? AND userid = ?
-            ORDER BY timemodified DESC';
+        $sql = 'SELECT id, attemptstate, timemodified FROM {adaptivequiz_attempt}
+            WHERE instance = ? AND userid = ? ORDER BY timemodified DESC';
         if ($userattempts = $DB->get_records_sql($sql, [$adaptivequiz->id, $USER->id], 0, 1)) {
             $userattempt = $userattempts[array_key_first($userattempts)];
+            $catmodelparams = cat_model_params::for_attempt($userattempt->id);
 
             echo $renderer->heading(get_string('attempt_summary', 'adaptivequiz'), 3, 'text-center');
-            echo $renderer->render(user_attempt_summary::from_db_records($userattempt, $adaptivequiz));
+            echo $renderer->render(user_attempt_summary::collect($userattempt, $catmodelparams, $adaptivequiz));
         }
     }
     if ($allattemptscount && $adaptivequiz->attempts != 1) {

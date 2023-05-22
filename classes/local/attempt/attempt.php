@@ -114,22 +114,16 @@ class attempt {
     /**
      * Sets the appropriate state for the attempt when a question has been answered.
      *
-     * @param cat_calculation_steps_result $calcstepsresult
      * @param int $time Current timestamp.
      * @throws coding_exception
      */
-    public function update_after_question_answered(cat_calculation_steps_result $calcstepsresult, int $time): void {
+    public function update_after_question_answered(int $time): void {
         if ($this->adpqattempt === null) {
             throw new coding_exception('attempt record must be set already when updating an attempt with any data');
         }
 
         $record = $this->adpqattempt;
-
-        $record->difficultysum = (float) $record->difficultysum + $calcstepsresult->logit()->as_float();
         $record->questionsattempted = (int) $record->questionsattempted + 1;
-        $record->standarderror = $calcstepsresult->standard_error();
-        $record->measure = $calcstepsresult->measure();
-
         $this->adpqattempt = $record;
 
         $this->save($time);
@@ -139,19 +133,16 @@ class attempt {
      * Sets the attempt as complete.
      *
      * @param context_module $context
-     * @param float $standarderror
      * @param string $statusmessage
      * @param int $time Current timestamp.
      * @return void
      */
-    public function complete(context_module $context, float $standarderror, string $statusmessage, int $time): void {
+    public function complete(context_module $context, string $statusmessage, int $time): void {
         // Need to keep the record as it is before triggering the event below.
         $attemptrecordsnapshot = clone $this->adpqattempt;
 
         $this->adpqattempt->attemptstate = attempt_state::COMPLETED;
         $this->adpqattempt->attemptstopcriteria = $statusmessage;
-        $this->adpqattempt->standarderror = $standarderror;
-
         $this->save($time);
 
         adaptivequiz_update_grades($this->adaptivequiz, $this->userid);
@@ -244,9 +235,6 @@ class attempt {
         $record->attemptstate = attempt_state::IN_PROGRESS;
         $record->attemptstopcriteria = '';
         $record->questionsattempted = 0;
-        $record->difficultysum = 0;
-        $record->standarderror = 999;
-        $record->measure = 0;
         $record->timecreated = $time;
         $record->timemodified = $time;
 

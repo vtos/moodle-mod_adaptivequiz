@@ -36,7 +36,6 @@ use mod_adaptivequiz\local\itemadministration\item_administration;
 use mod_adaptivequiz\local\question\question_answer_evaluation;
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
-$uniqueid  = optional_param('uniqueid', 0, PARAM_INT);  // Unique id of the attempt.
 $attempteddifficultylevel  = optional_param('dl', 0, PARAM_INT);
 
 if (!$cm = get_coursemodule_from_id('adaptivequiz', $id)) {
@@ -128,19 +127,13 @@ $standarderror = 0.0;
 
 $questionanswerevaluationresult = null;
 
-// If uniqueid is not empty then process response.
-if (!empty($uniqueid) && confirm_sesskey()) {
-    // Check if the uniqueid belongs to the same attempt record the user is currently using.
-    if (!adaptivequiz_uniqueid_part_of_attempt($uniqueid, $cm->instance, $USER->id)) {
-        throw new moodle_exception('uniquenotpartofattempt', 'adaptivequiz');
-    }
-
+if (!empty($attempteddifficultylevel) && confirm_sesskey()) {
     // Process student's responses.
     try {
         // Set a time stamp for the actions below.
         $time = time();
         // Load the user's current usage from the DB.
-        $quba = question_engine::load_questions_usage_by_activity((int) $uniqueid);
+        $quba = question_engine::load_questions_usage_by_activity($adaptiveattempt->read_attempt_data()->uniqueid);
         // Update the actions done to the question.
         $quba->process_all_actions($time);
         // Finish the grade attempt at the question.
@@ -148,10 +141,8 @@ if (!empty($uniqueid) && confirm_sesskey()) {
         // Save the data about the usage to the DB.
         question_engine::save_questions_usage_by_activity($quba);
 
-        if (!empty($attempteddifficultylevel)) {
-            $questionanswerevaluation = new question_answer_evaluation($quba);
-            $questionanswerevaluationresult = $questionanswerevaluation->perform();
-        }
+        $questionanswerevaluation = new question_answer_evaluation($quba);
+        $questionanswerevaluationresult = $questionanswerevaluation->perform();
     } catch (question_out_of_sequence_exception $e) {
         $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $id));
         throw new moodle_exception('submissionoutofsequencefriendlymessage', 'question', $url);
@@ -180,8 +171,8 @@ if ($qubaid == 0) {
 $adaptivequiz->context = $context;
 $adaptivequiz->cm = $cm;
 
-// Check if the minimum number of attempts have been reached.
-$minattemptreached = adaptivequiz_min_attempts_reached($uniqueid, $cm->instance, $USER->id);
+$minattemptreached = adaptivequiz_min_number_of_questions_reached($adaptiveattempt->read_attempt_data()->id, $cm->instance,
+    $USER->id);
 
 $algorithm = new catalgo($minattemptreached);
 $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
@@ -192,14 +183,6 @@ $itemadministrationevaluation = $itemadministration->evaluate_ability_to_adminis
 
 // Check item administration evaluation.
 if ($itemadministrationevaluation->item_administration_is_to_stop()) {
-    $noquestionsfetchedforattempt = $uniqueid == 0;
-    if ($noquestionsfetchedforattempt) {
-        // The script will try to complete an 'empty' attempt as it couldn't fetch the first question for some reason.
-        // This is an invalid behaviour, which could be caused by a misconfigured questions pool. Stop it here.
-        throw new moodle_exception('attemptnofirstquestion', 'adaptivequiz',
-            (new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]))->out());
-    }
-
     // Set the attempt to complete, update the standard error and attempt message, then redirect the user to the attempt-finished
     // page.
     $adaptiveattempt->complete($context, $itemadministrationevaluation->stoppage_reason(), time());
@@ -207,7 +190,7 @@ if ($itemadministrationevaluation->item_administration_is_to_stop()) {
         ->update_when_attempt_completed($itemadministration->standard_error_from_algorithm());
 
     redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
-        ['cmid' => $cm->id, 'id' => $cm->instance, 'uattid' => $uniqueid]));
+        ['attempt' => $adaptiveattempt->read_attempt_data()->id, 'instance' => $adaptivequiz->id]));
 }
 
 // Retrieve the question slot id.

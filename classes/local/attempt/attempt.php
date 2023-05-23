@@ -192,7 +192,7 @@ class attempt {
     }
 
     /**
-     * Returns an in-progress attempt for the uer, returns null when no such attempt was found.
+     * Returns an in-progress attempt for the user, returns null when no such attempt was found.
      *
      * @param stdClass $adaptivequiz
      * @param int $userid
@@ -215,6 +215,23 @@ class attempt {
         return $attempt;
     }
 
+    /**
+     * Returns an attempt by its id.
+     *
+     * @param int $id
+     * @param stdClass $adaptivequiz
+     * @return self
+     */
+    public static function get_by_id(int $id, stdClass $adaptivequiz): self {
+        global $DB;
+
+        $record = $DB->get_record('adaptivequiz_attempt', ['id' => $id], '*', MUST_EXIST);
+
+        $attempt = new self($adaptivequiz, $record->userid);
+        $attempt->adpqattempt = $record;
+
+        return $attempt;
+    }
 
     /**
      * Created an instance of attempt, saves it in the database and returns as the result.

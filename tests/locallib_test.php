@@ -14,32 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Adaptive locallib.php PHPUnit tests
- *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use context_module;
-use mod_adaptivequiz\event\attempt_completed;
-use mod_adaptivequiz\local\attempt\attempt_state;
 
 /**
- * @group mod_adaptivequiz
+ * Adaptive locallib.php PHPUnit tests.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class locallib_test extends advanced_testcase {
 
+    /**
+     * @var context_module $activitycontext
+     */
     private $activitycontext;
 
     /**
@@ -236,35 +233,18 @@ class locallib_test extends advanced_testcase {
     }
 
     /**
-     * This function tests adaptivequiz_uniqueid_part_of_attempt().
-     *
-     * @covers ::adaptivequiz_uniqueid_part_of_attempt
-     */
-    public function test_adaptivequiz_uniqueid_part_of_attempt() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
-
-        // Assert that there exists a record where the uniqueid, activity instance and userid all match up.
-        $result = adaptivequiz_uniqueid_part_of_attempt(3, 1, 2);
-        $this->assertTrue($result);
-
-        $result = adaptivequiz_uniqueid_part_of_attempt(1, 1, 1);
-        $this->assertFalse($result);
-    }
-
-    /**
      * This function tests checking if the minimum number of questions have been attempted.
      *
-     * @covers ::adaptivequiz_min_attempts_reached
+     * @covers ::adaptivequiz_min_number_of_questions_reached
      */
-    public function test_adaptivequiz_min_attempts_reached() {
-        $this->resetAfterTest(true);
+    public function test_adaptivequiz_min_number_of_questions_reached() {
+        $this->resetAfterTest();
         $this->setup_test_data_xml();
 
-        $result = adaptivequiz_min_attempts_reached(3, 13, 3);
+        $result = adaptivequiz_min_number_of_questions_reached(3, 13, 3);
         $this->assertFalse($result);
 
-        $result = adaptivequiz_min_attempts_reached(4, 13, 4);
+        $result = adaptivequiz_min_number_of_questions_reached(3, 13, 4);
         $this->assertTrue($result);
     }
 }

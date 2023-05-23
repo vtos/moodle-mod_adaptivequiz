@@ -87,7 +87,6 @@ $string['leveloutofbounds'] = 'Le niveau requis {$a->level} n’est pas celui pr
 $string['errorattemptstate'] = 'Une erreur s’est produite en déterminant l’état de la session';
 $string['nopermission'] = 'Accès réservé';
 $string['maxquestattempted'] = 'Nombre maximum de items tentés';
-$string['notyourattempt'] = 'Cette tentative n’est pas la votre pour cette activité';
 $string['noattemptsallowed'] = 'Plus aucune tentative autorisée pour cette activité';
 $string['numofattemptshdr'] = 'Nombre de tentatives';
 $string['standarderrorhdr'] = 'Erreur standard';

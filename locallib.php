@@ -166,42 +166,24 @@ function adaptivequiz_allowed_attempt($maxattempts = 0, $attempts = 0) {
 }
 
 /**
- * This functions validates that the unique id belongs to a user attempt of the activity instance
- * @param int $uniqueid uniqueid value of the adaptivequiz_attempt record
- * @param int $instance instance value of the adaptivequiz_attempt record
- * @param int $userid unerid value of the adaptivequiz_attempt record
- * @return bool true if the unique is part of an attempt of the activity instance, otherwise false
+ * This function checks whether the minimum number of questions has been reached for the attempt.
+ *
+ * @param int $attemptid
+ * @param int $adaptivequizid
+ * @param int $userid
+ * @return bool
  */
-function adaptivequiz_uniqueid_part_of_attempt($uniqueid, $instance, $userid) {
-    global $DB;
-
-    $param = array('uniqueid' => $uniqueid, 'instance' => $instance, 'userid' => $userid);
-    return $DB->record_exists('adaptivequiz_attempt', $param);
-}
-
-/**
- * This function checks whether the minimum number of attmepts have been achieved for an attempt
- * @param int $uniqueid uniqueid value of the adaptivequiz_attempt record
- * @param int $instance instance value of the adaptivequiz_attempt record
- * @param int $userid unerid value of the adaptivequiz_attempt record
- * @return bool true of record exists, otherwise false
- */
-function adaptivequiz_min_attempts_reached($uniqueid, $instance, $userid) {
+function adaptivequiz_min_number_of_questions_reached(int $attemptid, int $adaptivequizid, int $userid): bool {
     global $DB;
 
     $sql = "SELECT adpq.id
              FROM {adaptivequiz} adpq
              JOIN {adaptivequiz_attempt} adpqa ON adpq.id = adpqa.instance
-            WHERE adpqa.uniqueid = :uniqueid
-                  AND adpqa.instance = :instance
-                  AND adpqa.userid = :userid
+            WHERE adpqa.id = :attemptid AND adpqa.instance = :adaptivequizid AND adpqa.userid = :userid
                   AND adpq.minimumquestions <= adpqa.questionsattempted
          ORDER BY adpq.id ASC";
 
-    $param = array('uniqueid' => $uniqueid, 'instance' => $instance, 'userid' => $userid);
-    $exists = $DB->record_exists_sql($sql, $param);
-
-    return $exists;
+    return $DB->record_exists_sql($sql, ['attemptid' => $attemptid, 'adaptivequizid' => $adaptivequizid, 'userid' => $userid]);
 }
 
 /**

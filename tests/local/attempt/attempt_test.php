@@ -23,6 +23,7 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use context_module;
+use dml_missing_record_exception;
 use mod_adaptivequiz\event\attempt_completed;
 use stdClass;
 
@@ -197,6 +198,33 @@ class attempt_test extends advanced_testcase {
         $attempt = attempt::create($adaptivequiz, $user->id);
 
         $this->assertEquals($attempt, attempt::find_in_progress_for_user($adaptivequiz, $user->id));
+    }
+
+    public function test_it_gets_an_attempt_by_its_id(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+
+        $attempt = attempt::create($adaptivequiz, $user->id);
+
+        self::assertEquals($attempt, attempt::get_by_id($attempt->read_attempt_data()->id, $adaptivequiz));
+    }
+
+    public function test_it_throws_an_exception_when_getting_an_attempt_with_unknown_id(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+
+        self::expectException(dml_missing_record_exception::class);
+        attempt::get_by_id(458, $adaptivequiz);
     }
 
     public function test_it_creates_an_attempt(): void {

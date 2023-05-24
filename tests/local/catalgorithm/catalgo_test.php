@@ -66,27 +66,64 @@ class catalgo_test extends advanced_testcase {
 
         // Test the next difficulty level shown to the student if the student got a level 30 question wrong,
         // having attempted 1 question.
-        $result = $catalgo->compute_next_difficulty(30, 1, false, $questionsdifficultyrange);
+        $questionsattempted = 1;
+
+        $lastdifficultylevel = 30;
+        $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
+        $logit = catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
+
+        $lastquestionansweredcorrectly = false;
+
+        $result = $catalgo->compute_next_difficulty($questionsattempted, $lastquestionansweredcorrectly, $questionsdifficultyrange,
+            $logit);
         $this->assertEquals(5, $result);
 
         // Test the next difficulty level shown to the student if the student got a level 30 question right,
         // having attempted 1 question.
-        $result = $catalgo->compute_next_difficulty(30, 1, true, $questionsdifficultyrange);
+        $questionsattempted = 1;
+
+        $lastdifficultylevel = 30;
+        $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
+        $logit = catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
+
+        $lastquestionansweredcorrectly = true;
+
+        $result = $catalgo->compute_next_difficulty($questionsattempted, $lastquestionansweredcorrectly, $questionsdifficultyrange,
+            $logit);
         $this->assertEquals(76, $result);
 
         // Test the next difficulty level shown to the student if the student got a level 80 question wrong,
         // having attempted 2 questions.
-        $result = $catalgo->compute_next_difficulty(80, 2, false, $questionsdifficultyrange);
+        $questionsattempted = 2;
+
+        $lastdifficultylevel = 80;
+        $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
+        $logit = catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
+
+        $lastquestionansweredcorrectly = false;
+
+        $result = $catalgo->compute_next_difficulty($questionsattempted, $lastquestionansweredcorrectly, $questionsdifficultyrange,
+            $logit);
         $this->assertEquals(60, $result);
 
         // Test the next difficulty level shown to the student if the student got a level 80 question right,
         // having attempted 2 question.
-        $result = $catalgo->compute_next_difficulty(80, 2, true, $questionsdifficultyrange);
+        $questionsattempted = 2;
+
+        $lastdifficultylevel = 80;
+        $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
+        $logit = catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
+
+        $lastquestionansweredcorrectly = true;
+
+        $result = $catalgo->compute_next_difficulty($questionsattempted, $lastquestionansweredcorrectly, $questionsdifficultyrange,
+            $logit);
         $this->assertEquals(92, $result);
     }
 
     /**
      * This function tests compute_next_difficulty().
+     *
      * Setting 1 as the lowest level and 10 as the highest level.
      */
     public function test_compute_next_difficulty_one_min_ten_max_compute_infinity() {
@@ -96,12 +133,28 @@ class catalgo_test extends advanced_testcase {
         $adaptivequiz->lowestlevel = 1;
         $adaptivequiz->highestlevel = 10;
 
-        $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
+        $questionsattempted = 2;
 
-        $result = $catalgo->compute_next_difficulty(1, 2, false, $questionsdifficultyrange);
+        $lastdifficultylevel = 1;
+        $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
+        $logit = catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
+
+        $lastquestionansweredcorrectly = false;
+
+        $result = $catalgo->compute_next_difficulty($questionsattempted, $lastquestionansweredcorrectly, $questionsdifficultyrange,
+            $logit);
         $this->assertEquals(1, $result);
 
-        $result = $catalgo->compute_next_difficulty(10, 2, true, $questionsdifficultyrange);
+        $questionsattempted = 2;
+
+        $lastdifficultylevel = 10;
+        $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
+        $logit = catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
+
+        $lastquestionansweredcorrectly = true;
+
+        $result = $catalgo->compute_next_difficulty($questionsattempted, $lastquestionansweredcorrectly, $questionsdifficultyrange,
+            $logit);
         $this->assertEquals(10, $result);
     }
 

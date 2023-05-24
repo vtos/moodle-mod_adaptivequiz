@@ -21,6 +21,7 @@ use mod_adaptivequiz\form\requiredpassword;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\output\ability_measure;
 use mod_adaptivequiz\output\attempt_progress;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_action;
@@ -824,8 +825,8 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             $tags = core_tag_tag::get_item_tags_array('core_question', 'question', $question->id);
 
             $qdifficulty = adaptivequiz_get_difficulty_from_tags($tags);
-            $qdifficultylogits = catalgo::convert_linear_to_logit($qdifficulty, $adaptivequiz->lowestlevel,
-                $adaptivequiz->highestlevel);
+            $qdifficultylogits = catalgo::convert_linear_to_logit($qdifficulty,
+                questions_difficulty_range::from_activity_instance($adaptivequiz));
             $correct = ($quba->get_question_mark($slot) > 0);
 
             $numattempted++;

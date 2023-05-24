@@ -21,6 +21,7 @@ use InvalidArgumentException;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\questionanalysis\statistics\question_statistic;
 use mod_adaptivequiz\local\questionanalysis\statistics\question_statistic_result;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 use question_definition;
 use stdClass;
 
@@ -128,10 +129,16 @@ class question_analyser {
     /**
      * Answer the question level for this question in logits.
      *
-     * @return int
+     * @return float
      */
-    public function get_question_level_in_logits () {
-        return catalgo::convert_linear_to_logit($this->level, $this->lowestlevel, $this->highestlevel);
+    public function get_question_level_in_logits(): float {
+        // Mock activity instance.
+        // TODO: must be replaced with proper refactoring to get difficulty range.
+        $mockedinstance = new stdClass();
+        $mockedinstance->lowestlevel = $this->lowestlevel;
+        $mockedinstance->highestlevel = $this->highestlevel;
+
+        return catalgo::convert_linear_to_logit($this->level, questions_difficulty_range::from_activity_instance($mockedinstance));
     }
 
     /**

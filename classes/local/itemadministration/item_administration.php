@@ -379,7 +379,9 @@ final class item_administration {
             }
 
             $questattempted++;
-            $currdiff = $algo->compute_next_difficulty($currdiff, $questattempted, $correct, $questionsdifficultyrange);
+
+            $logit = catalgo::convert_linear_to_logit($currdiff, $questionsdifficultyrange);
+            $currdiff = $algo->compute_next_difficulty($questattempted, $correct, $questionsdifficultyrange, $logit);
         }
 
         return $currdiff;

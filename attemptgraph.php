@@ -24,6 +24,7 @@
  */
 
 use mod_adaptivequiz\local\catalgorithm\catalgo;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 
 require_once(dirname(__FILE__).'/../../config.php');
 require_once($CFG->dirroot.'/tag/lib.php');
@@ -107,8 +108,8 @@ foreach ($quba->get_slots() as $i => $slot) {
     $question = $quba->get_question($slot);
     $tags = core_tag_tag::get_item_tags_array('core_question', 'question', $question->id);
     $qdifficulty = adaptivequiz_get_difficulty_from_tags($tags);
-    $qdifficultylogits = catalgo::convert_linear_to_logit($qdifficulty, $adaptivequiz->lowestlevel,
-        $adaptivequiz->highestlevel);
+    $qdifficultylogits = catalgo::convert_linear_to_logit($qdifficulty,
+        questions_difficulty_range::from_activity_instance($adaptivequiz));
     $questioncorrect = ($quba->get_question_mark($slot) > 0);
 
     $numattempted++;

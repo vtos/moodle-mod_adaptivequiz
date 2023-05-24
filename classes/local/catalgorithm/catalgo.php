@@ -128,11 +128,14 @@ class catalgo {
 
         $correct = $questionanswerevaluationresult->answer_is_correct();
 
+        // Map the linear scale to a logarithmic logit scale.
+        $logit = self::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
+
         $this->nextdifficulty = $this->compute_next_difficulty(
-            $lastdifficultylevel,
             $questionsattemptednum,
             $correct,
-            $questionsdifficultyrange
+            $questionsdifficultyrange,
+            $logit
         );
 
         // If he user hasn't met the minimum requirements to end the attempt, then return with the next difficulty level.
@@ -282,34 +285,27 @@ class catalgo {
     /**
      * This function does the work to determine the next difficulty level.
      *
-     * @param int $level The difficulty level of the last question attempted.
      * @param int $questattempted The sum of questions attempted.
      * @param bool $correct True if the user got the previous question correct, otherwise false.
      * @param questions_difficulty_range $questionsdifficultyrange
+     * @param float $logit The result of calling {@see self::convert_linear_to_logit()}.
      * @return int The next difficulty level.
      */
     public function compute_next_difficulty(
-        $level,
-        $questattempted,
-        $correct,
-        questions_difficulty_range $questionsdifficultyrange
+        int $questattempted,
+        bool $correct,
+        questions_difficulty_range $questionsdifficultyrange,
+        float $logit
     ): int {
-        // Map the linear scale to a logarithmic logit scale.
-        $ls = self::convert_linear_to_logit(
-            $level,
-            $questionsdifficultyrange->lowest_level(),
-            $questionsdifficultyrange->highest_level()
-        );
-
         // Set the logit value of the previously attempted question's difficulty level.
-        $this->levellogit = $ls;
+        $this->levellogit = $logit;
         $this->difficultysum = $this->difficultysum + $this->levellogit;
 
         // Check if the last question was marked correctly.
         if ($correct) {
-            $nextdifficulty = $ls + 2 / $questattempted;
+            $nextdifficulty = $logit + 2 / $questattempted;
         } else {
-            $nextdifficulty = $ls - 2 / $questattempted;
+            $nextdifficulty = $logit - 2 / $questattempted;
         }
 
         // Calculate the inverse to translate the value into a difficulty level.
@@ -323,14 +319,16 @@ class catalgo {
     }
 
     /**
-     * Map an linear-scale difficulty/ability level to a logit scale
+     * Map an linear-scale difficulty/ability level to a logit scale.
      *
      * @param int $level An integer level
-     * @param int $min The lower bound of the scale
-     * @param int $max The upper bound of the scale
+     * @param questions_difficulty_range $questionsdifficultyrange
      * @return float
      */
-    public static function convert_linear_to_logit($level, $min, $max) {
+    public static function convert_linear_to_logit($level, questions_difficulty_range $questionsdifficultyrange): float {
+        $min = $questionsdifficultyrange->lowest_level();
+        $max = $questionsdifficultyrange->highest_level();
+
         // Map the level on a linear percentage scale.
         $percent = ($level - $min) / ($max - $min);
 

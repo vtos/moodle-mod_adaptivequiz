@@ -98,18 +98,20 @@ final class item_administration {
         if (!is_null($questionanswerevaluationresult)) {
             $catmodelparams = cat_model_params::for_attempt($attempt->read_attempt_data()->id);
 
+            $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
+
             // Determine the next difficulty level or whether there is an error.
             $determinenextdifficultyresult = $this->algorithm->determine_next_difficulty_level(
                 (float) $catmodelparams->get('difficultysum'),
                 (int) $questionsattempted,
-                questions_difficulty_range::from_activity_instance($adaptivequiz),
+                $questionsdifficultyrange,
                 (float) $adaptivequiz->standarderror,
                 $questionanswerevaluationresult,
                 (new questions_answered_summary_provider($this->quba))->collect_summary(),
                 $lastdifficultylevel
             );
 
-            $difflogit = $this->algorithm->get_levellogit();
+            $difflogit = catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
             if (is_infinite($difflogit)) {
                 $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, 0, false, MUST_EXIST);
 

@@ -43,9 +43,6 @@ class catalgo {
     /** @var bool $readytostop flag to denote whether to assume the student has met the minimum requirements */
     protected $readytostop = true;
 
-    /** @var int $difficultysum the sum of the difficulty levels attempted */
-    protected $difficultysum = 0;
-
     /** @var int $nextdifficulty the next dificulty level to administer */
     protected $nextdifficulty = 0;
 
@@ -118,8 +115,6 @@ class catalgo {
             throw new coding_exception('last difficulty level must have a positive value');
         }
 
-        $this->difficultysum = $attemptdifficultysum;
-
         if (!$questionanswerevaluationresult->answer_was_given()) {
             return determine_next_difficulty_result::with_error(get_string('errorlastattpquest', 'adaptivequiz'));
         }
@@ -148,7 +143,9 @@ class catalgo {
             return determine_next_difficulty_result::with_error(get_string('errorsumrightwrong', 'adaptivequiz'));
         }
 
-        $this->measure = self::estimate_measure($this->difficultysum, $questionsattemptednum,
+        $difficultysum = $attemptdifficultysum + $logit;
+
+        $this->measure = self::estimate_measure($difficultysum, $questionsattemptednum,
             $answersummary->number_of_correct_answers(), $answersummary->number_of_wrong_answers());
 
         $this->standarderror = self::estimate_standard_error($questionsattemptednum, $answersummary->number_of_correct_answers(),
@@ -299,7 +296,6 @@ class catalgo {
     ): int {
         // Set the logit value of the previously attempted question's difficulty level.
         $this->levellogit = $logit;
-        $this->difficultysum = $this->difficultysum + $this->levellogit;
 
         // Check if the last question was marked correctly.
         if ($correct) {

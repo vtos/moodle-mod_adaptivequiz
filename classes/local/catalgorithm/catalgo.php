@@ -34,12 +34,6 @@ use stdClass;
  */
 class catalgo {
 
-    /**
-     * @var float $levelogit the logit value of the difficulty level represented as a percentage of the minimum and maximum
-     *                       difficulty, see {@see self::compute_next_difficulty()}.
-     */
-    protected $levellogit = 0.0;
-
     /** @var bool $readytostop flag to denote whether to assume the student has met the minimum requirements */
     protected $readytostop = true;
 
@@ -60,15 +54,6 @@ class catalgo {
      */
     public function __construct(bool $readytostop = true) {
         $this->readytostop = $readytostop;
-    }
-
-    /**
-     * This function returns the $levellogit property.
-     *
-     * @return float retuns the $levellogit property
-     */
-    public function get_levellogit() {
-        return $this->levellogit;
     }
 
     /**
@@ -294,9 +279,6 @@ class catalgo {
         questions_difficulty_range $questionsdifficultyrange,
         float $logit
     ): int {
-        // Set the logit value of the previously attempted question's difficulty level.
-        $this->levellogit = $logit;
-
         // Check if the last question was marked correctly.
         if ($correct) {
             $nextdifficulty = $logit + 2 / $questattempted;

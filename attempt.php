@@ -29,11 +29,15 @@ require_once($CFG->dirroot . '/tag/lib.php');
 
 use mod_adaptivequiz\local\adaptive_quiz_requires;
 use mod_adaptivequiz\local\attempt\attempt;
+use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
+use mod_adaptivequiz\local\catalgorithm\difficulty_logit;
 use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\itemadministration\item_administration;
 use mod_adaptivequiz\local\question\question_answer_evaluation;
+use mod_adaptivequiz\local\question\questions_answered_summary_provider;
+use mod_adaptivequiz\local\report\questions_difficulty_range;
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
 $attempteddifficultylevel  = optional_param('dl', 0, PARAM_INT);
@@ -132,6 +136,42 @@ if (!empty($attempteddifficultylevel) && confirm_sesskey()) {
     $quba->process_all_actions($time);
     $quba->finish_all_questions($time);
     question_engine::save_questions_usage_by_activity($quba);
+
+    $catmodelparams = cat_model_params::for_attempt($adaptiveattempt->read_attempt_data()->id);
+
+    $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
+
+    $answersummary = (new questions_answered_summary_provider($quba))->collect_summary();
+
+    // Map the linear scale to a logarithmic logit scale.
+    $logit = catalgo::convert_linear_to_logit($attempteddifficultylevel, $questionsdifficultyrange);
+
+    $questionsattempted = $adaptiveattempt->read_attempt_data()->questionsattempted + 1;
+    $standarderror = catalgo::estimate_standard_error($questionsattempted, $answersummary->number_of_correct_answers(),
+        $answersummary->number_of_wrong_answers());
+
+    $measure = catalgo::estimate_measure(
+        difficulty_logit::from_float($catmodelparams->get('difficultysum'))
+            ->summed_with_another_logit(difficulty_logit::from_float($logit))->as_float(),
+        $questionsattempted,
+        $answersummary->number_of_correct_answers(), $answersummary->number_of_wrong_answers());
+
+    try {
+        $adaptiveattempt->update_after_question_answered(time());
+        $catmodelparams->update_with_calculation_steps_result(
+            cat_calculation_steps_result::from_floats($logit, $standarderror, $measure)
+        );
+    } catch (Exception $exception) {
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, 0, false, MUST_EXIST);
+
+        throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
+            new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
+    }
+
+    // An answer was submitted, decrement the sum of questions for the attempted difficulty level.
+    fetchquestion::decrement_question_sum_for_difficulty_level($attempteddifficultylevel);
+
+    redirect(new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
 }
 
 // Initialize quba.
@@ -157,7 +197,7 @@ $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel,
 
 $itemadministration = new item_administration($quba, $algorithm, $fetchquestion);
 $itemadministrationevaluation = $itemadministration->evaluate_ability_to_administer_next_item($adaptiveattempt, $adaptivequiz,
-    $attempteddifficultylevel, $questionanswerevaluationresult);
+    $questionanswerevaluationresult);
 
 // Check item administration evaluation.
 if ($itemadministrationevaluation->item_administration_is_to_stop()) {

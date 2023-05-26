@@ -66,11 +66,9 @@ class item_administration_test extends advanced_testcase {
 
         $administration = new item_administration($quba, $algorithm, $fetchquestion);
 
-        // Random, doesn't matter.
-        $attempteddifficultylevel = 1;
-
         // Given the previous question was not answered.
         $questionanswerevaluationresult = question_answer_evaluation_result::when_answer_was_not_given();
+        $attempteddifficultylevel = 0;
 
         // When performing item administration evaluation.
         $result = $administration->evaluate_ability_to_administer_next_item(
@@ -257,9 +255,25 @@ class item_administration_test extends advanced_testcase {
 
         self::resetAfterTest();
 
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+
         $course = $this->getDataGenerator()->create_course();
 
+        $questioncategory = $questiongenerator->create_question_category(
+            ['contextid' => context_course::instance($course->id)->id]
+        );
+
         $maximumquestions = 5;
+
+        $i = 1;
+        do {
+            $questiongenerator->create_question('truefalse', null, [
+                'name' => 'True/false question 1',
+                'category' => $questioncategory->id,
+            ]);
+
+            $i++;
+        } while ($i < $maximumquestions);
 
         $adaptivequiz = $this->getDataGenerator()
             ->get_plugin_generator('mod_adaptivequiz')
@@ -280,13 +294,31 @@ class item_administration_test extends advanced_testcase {
         $context = context_module::instance($cm->id);
 
         $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
+        $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
+
         $algorithm = new catalgo(false);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
         $administration = new item_administration($quba, $algorithm, $fetchquestion);
 
-        // Given the last attempted difficulty is within the boundaries.
+        // Given certain amount of questions have been answered previously.
+        $questionids = question_bank::get_finder()->get_questions_from_categories($questioncategory->id, '');
+        foreach ($questionids as $questionid) {
+            $slot = $quba->add_question(question_bank::load_question($questionid));
+            $quba->start_question($slot);
+
+            $time = time();
+            $responses = [$slot => 'True'];
+            $quba->process_all_actions($time,
+                $questiongenerator->get_simulated_post_data_for_questions_in_usage($quba, $responses, false));
+            $quba->finish_all_questions($time);
+
+            question_engine::save_questions_usage_by_activity($quba);
+        }
+
+        // And the last attempted difficulty is within the boundaries.
         $attempteddifficultylevel = 8;
+
         // And the next question was answered.
         $questionanswerevaluationresult = question_answer_evaluation_result::when_answer_is_correct();
         // And the amount of questions attempted has reached the maximum.
@@ -316,67 +348,6 @@ class item_administration_test extends advanced_testcase {
         self::assertTrue($result->item_administration_is_to_stop());
         // And the stoppage reason is some specific message.
         self::assertEquals(get_string('maxquestattempted', 'adaptivequiz'), $result->stoppage_reason());
-    }
-
-    public function test_it_stops_administration_when_no_questions_were_attempted_but_the_number_provided_is_not_zero(): void {
-        global $SESSION;
-
-        self::resetAfterTest();
-
-        $course = $this->getDataGenerator()->create_course();
-        $adaptivequiz = $this->getDataGenerator()
-            ->get_plugin_generator('mod_adaptivequiz')
-            ->create_instance([
-                'highestlevel' => 10,
-                'lowestlevel' => 1,
-                'maximumquestions' => 10,
-                'standarderror' => 5,
-                'course' => $course->id,
-            ]);
-
-        $user = $this->getDataGenerator()->create_user();
-
-        $attempt = attempt::create($adaptivequiz, $user->id);
-        cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
-
-        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
-        $context = context_module::instance($cm->id);
-
-        $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
-        $algorithm = new catalgo(false);
-        $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
-
-        $administration = new item_administration($quba, $algorithm, $fetchquestion);
-
-        // Random, doesn't matter.
-        $attempteddifficultylevel = 1;
-
-        // Given the number of questions attempted is not zero.
-        // The passed data does not matter.
-        $attempt->update_after_question_answered(time());
-
-        // Initialize difficulty-questions mapping by setting a value directly in global session.
-        // This is a bad practice and leads to fragile tests. Normally, operating on global session should be removed from
-        // the fetching questions class.
-        $SESSION->adpqtagquestsum = difficulty_questions_mapping::create_empty()
-            ->add_to_questions_number_for_difficulty($attempteddifficultylevel, 1)
-            ->as_array();
-
-        // And an answer was submitted for the next question.
-        $questionanswerevaluationresult = question_answer_evaluation_result::when_answer_is_correct();
-
-        // When performing item administration evaluation.
-        $result = $administration->evaluate_ability_to_administer_next_item(
-            $attempt,
-            $adaptivequiz,
-            $attempteddifficultylevel,
-            $questionanswerevaluationresult
-        );
-
-        // Then the result of evaluation is to stop item administration.
-        self::assertTrue($result->item_administration_is_to_stop());
-        // And the stoppage reason is some specific message.
-        self::assertEquals(get_string('errorattemptstate', 'adaptivequiz'), $result->stoppage_reason());
     }
 
     public function test_it_approves_administering_next_item_when_question_was_viewed_by_user_previously_but_not_answered(): void {

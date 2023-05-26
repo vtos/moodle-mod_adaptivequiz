@@ -66,50 +66,32 @@ class catalgo {
     }
 
     /**
-     * This function returns the $measure property.
-     *
-     * @return float retuns the $measure property
-     */
-    public function get_measure() {
-        return $this->measure;
-    }
-
-    /**
      * This function performs the different steps in the CAT simple algorithm.
      *
-     * @param float $attemptdifficultysum
      * @param int $questionsattemptednum
      * @param questions_difficulty_range $questionsdifficultyrange
      * @param float $standarderrortostop
      * @param question_answer_evaluation_result $questionanswerevaluationresult
      * @param questions_answered_summary $answersummary
-     * @param int $lastdifficultylevel
+     * @param float $logit
+     * @param float $standarderror
      * @return determine_next_difficulty_result
      * @throws coding_exception
      */
     public function determine_next_difficulty_level(
-        float $attemptdifficultysum,
         int $questionsattemptednum,
         questions_difficulty_range $questionsdifficultyrange,
         float $standarderrortostop,
         question_answer_evaluation_result $questionanswerevaluationresult,
         questions_answered_summary $answersummary,
-        int $lastdifficultylevel
+        float $logit,
+        float $standarderror
     ): determine_next_difficulty_result {
-        if (0 >= $lastdifficultylevel) {
-            throw new coding_exception('last difficulty level must have a positive value');
-        }
-
         if (!$questionanswerevaluationresult->answer_was_given()) {
             return determine_next_difficulty_result::with_error(get_string('errorlastattpquest', 'adaptivequiz'));
         }
 
-        $questionsattemptednum++;
-
         $correct = $questionanswerevaluationresult->answer_is_correct();
-
-        // Map the linear scale to a logarithmic logit scale.
-        $logit = self::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
 
         $this->nextdifficulty = $this->compute_next_difficulty(
             $questionsattemptednum,
@@ -128,13 +110,9 @@ class catalgo {
             return determine_next_difficulty_result::with_error(get_string('errorsumrightwrong', 'adaptivequiz'));
         }
 
-        $difficultysum = $attemptdifficultysum + $logit;
-
-        $this->measure = self::estimate_measure($difficultysum, $questionsattemptednum,
-            $answersummary->number_of_correct_answers(), $answersummary->number_of_wrong_answers());
-
-        $this->standarderror = self::estimate_standard_error($questionsattemptednum, $answersummary->number_of_correct_answers(),
-            $answersummary->number_of_wrong_answers());
+        // This needs to be preserved, as there is some external code relying on that.
+        // Expected to be removed with further refactoring steps.
+        $this->standarderror = $standarderror;
 
         // Convert the standard error (as a percent) set for the activity into a decimal percent, then
         // convert it to a logit.
@@ -142,10 +120,10 @@ class catalgo {
         $quizdefinederror = self::convert_percent_to_logit($quizdefinederror);
 
         // If the calculated standard error is within the parameters of the attempt then populate the status message.
-        if ($this->standard_error_within_parameters($this->standarderror, $quizdefinederror)) {
+        if ($this->standard_error_within_parameters($standarderror, $quizdefinederror)) {
             // Convert logits to percent for display.
             $val = new stdClass();
-            $val->calerror = self::convert_logit_to_percent($this->standarderror);
+            $val->calerror = self::convert_logit_to_percent($standarderror);
             $val->calerror = 100 * round($val->calerror, 2);
             $val->definederror = self::convert_logit_to_percent($quizdefinederror);
             $val->definederror = 100 * round($val->definederror, 2);

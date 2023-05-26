@@ -97,10 +97,6 @@ final class item_administration {
 
         $determinenextdifficultyresult = null;
         if (!is_null($questionanswerevaluationresult)) {
-            if (!$questionanswerevaluationresult->answer_was_given()) {
-                return item_administration_evaluation::with_stoppage_reason(get_string('errorlastattpquest', 'adaptivequiz'));
-            }
-
             $catmodelparams = cat_model_params::for_attempt($attempt->read_attempt_data()->id);
 
             $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
@@ -141,6 +137,8 @@ final class item_administration {
                 $logit,
                 $standarderror
             );
+
+            $questionsattempted++;
         }
 
         if (!is_null($determinenextdifficultyresult)) {

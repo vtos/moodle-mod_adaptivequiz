@@ -39,49 +39,6 @@ use question_engine;
  */
 class item_administration_test extends advanced_testcase {
 
-    public function test_it_stops_administering_items_when_no_answer_was_given_for_question(): void {
-        self::resetAfterTest();
-
-        $course = $this->getDataGenerator()->create_course();
-        $adaptivequiz = $this->getDataGenerator()
-            ->get_plugin_generator('mod_adaptivequiz')
-            ->create_instance([
-                'highestlevel' => 10,
-                'lowestlevel' => 1,
-                'standarderror' => 5,
-                'course' => $course->id,
-            ]);
-
-        $user = $this->getDataGenerator()->create_user();
-
-        $attempt = attempt::create($adaptivequiz, $user->id);
-        cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
-
-        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
-        $context = context_module::instance($cm->id);
-
-        $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
-        $algorithm = new catalgo(false);
-        $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
-
-        $administration = new item_administration($quba, $algorithm, $fetchquestion);
-
-        // Given the previous question was not answered.
-        $questionanswerevaluationresult = question_answer_evaluation_result::when_answer_was_not_given();
-        $attempteddifficultylevel = 0;
-
-        // When performing item administration evaluation.
-        $result = $administration->evaluate_ability_to_administer_next_item(
-            $attempt,
-            $adaptivequiz,
-            $attempteddifficultylevel,
-            $questionanswerevaluationresult
-        );
-
-        // Then the result of evaluation is to stop item administration.
-        self::assertTrue($result->item_administration_is_to_stop());
-    }
-
     public function test_it_can_perform_evaluation_when_fresh_attempt_has_started(): void {
         self::resetAfterTest();
 

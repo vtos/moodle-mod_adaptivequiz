@@ -125,38 +125,13 @@ if ($adaptiveattempt === null) {
 
 $standarderror = 0.0;
 
-$questionanswerevaluationresult = null;
-
 if (!empty($attempteddifficultylevel) && confirm_sesskey()) {
     // Process student's responses.
-    try {
-        // Set a time stamp for the actions below.
-        $time = time();
-        // Load the user's current usage from the DB.
-        $quba = question_engine::load_questions_usage_by_activity($adaptiveattempt->read_attempt_data()->uniqueid);
-        // Update the actions done to the question.
-        $quba->process_all_actions($time);
-        // Finish the grade attempt at the question.
-        $quba->finish_all_questions($time);
-        // Save the data about the usage to the DB.
-        question_engine::save_questions_usage_by_activity($quba);
-
-        $questionanswerevaluation = new question_answer_evaluation($quba);
-        $questionanswerevaluationresult = $questionanswerevaluation->perform();
-    } catch (question_out_of_sequence_exception $e) {
-        $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $id));
-        throw new moodle_exception('submissionoutofsequencefriendlymessage', 'question', $url);
-
-    } catch (Exception $e) {
-        $url = new moodle_url('/mod/adaptivequiz/attempt.php', array('cmid' => $id));
-        $debuginfo = '';
-
-        if (!empty($e->debuginfo)) {
-            $debuginfo = $e->debuginfo;
-        }
-
-        throw new moodle_exception('errorprocessingresponses', 'question', $url, $e->getMessage(), $debuginfo);
-    }
+    $time = time();
+    $quba = question_engine::load_questions_usage_by_activity($adaptiveattempt->read_attempt_data()->uniqueid);
+    $quba->process_all_actions($time);
+    $quba->finish_all_questions($time);
+    question_engine::save_questions_usage_by_activity($quba);
 }
 
 // Initialize quba.
@@ -167,6 +142,9 @@ $quba = ($qubaid == 0)
 if ($qubaid == 0) {
     $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 }
+
+$questionanswerevaluation = new question_answer_evaluation($quba);
+$questionanswerevaluationresult = $questionanswerevaluation->perform();
 
 $adaptivequiz->context = $context;
 $adaptivequiz->cm = $cm;

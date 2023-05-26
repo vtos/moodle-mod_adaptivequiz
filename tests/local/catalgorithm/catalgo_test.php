@@ -181,40 +181,6 @@ class catalgo_test extends advanced_testcase {
         $this->assertEquals(0.69007, $result);
     }
 
-    public function test_it_determines_next_difficulty_as_with_error_when_question_was_not_answered(): void {
-        self::resetAfterTest();
-
-        $course = $this->getDataGenerator()->create_course();
-        $adaptivequiz = $this->getDataGenerator()
-            ->get_plugin_generator('mod_adaptivequiz')
-            ->create_instance([
-                'highestlevel' => 10,
-                'lowestlevel' => 1,
-                'standarderror' => 5,
-                'course' => $course->id
-            ]);
-
-        $catalgo = new catalgo(false);
-
-        // Random, does not matter in this test.
-        $lastdifficultylevel = 1;
-
-        $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
-            5,
-            questions_difficulty_range::from_activity_instance($adaptivequiz),
-            $adaptivequiz->standarderror,
-            question_answer_evaluation_result::when_answer_was_not_given(),
-            questions_answered_summary::from_integers(2, 4),
-            0,
-            0
-        );
-
-        self::assertEquals(
-            determine_next_difficulty_result::with_error(get_string('errorlastattpquest', 'adaptivequiz')),
-            $determinenextdifficultylevelresult
-        );
-    }
-
     public function test_it_determines_next_difficulty_as_with_error_when_number_of_questions_attempted_is_not_valid(): void {
         self::resetAfterTest();
 

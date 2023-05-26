@@ -46,21 +46,22 @@ final class question_answer_evaluation {
     /**
      * Runs the evaluation and produces a result.
      *
-     * @return question_answer_evaluation_result
+     * @return question_answer_evaluation_result|null
      */
-    public function perform(): question_answer_evaluation_result {
+    public function perform(): ?question_answer_evaluation_result {
         $slot = $this->find_last_question_slot();
         if ($slot === null) {
-            return question_answer_evaluation_result::when_answer_was_not_given();
+            // No questions were either shown or answered yet.
+            return null;
         }
 
         if (!$this->answer_was_given($slot)) {
-            return question_answer_evaluation_result::when_answer_was_not_given();
+            return null;
         }
 
         $mark = $this->quba->get_question_mark($slot);
         if ($mark === null) {
-            return question_answer_evaluation_result::when_answer_was_not_given();
+            return null;
         }
 
         if ($mark > 0.0) {

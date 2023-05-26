@@ -87,10 +87,6 @@ class catalgo {
         float $logit,
         float $standarderror
     ): determine_next_difficulty_result {
-        if (!$questionanswerevaluationresult->answer_was_given()) {
-            return determine_next_difficulty_result::with_error(get_string('errorlastattpquest', 'adaptivequiz'));
-        }
-
         $correct = $questionanswerevaluationresult->answer_is_correct();
 
         $this->nextdifficulty = $this->compute_next_difficulty(

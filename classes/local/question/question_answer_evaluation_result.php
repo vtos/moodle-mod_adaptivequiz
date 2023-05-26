@@ -28,28 +28,16 @@ namespace mod_adaptivequiz\local\question;
 final class question_answer_evaluation_result {
 
     /**
-     * @var bool $wasanswered
-     */
-    private $answerwasgiven;
-
-    /**
      * @var bool $answeriscorrect
      */
     private $answeriscorrect;
 
     /**
-     * The constructor. Closed, named constructors must be used instead.
+     * The constructor.
+     *
+     * Closed, named constructors must be used instead.
      */
     private function __construct() {
-    }
-
-    /**
-     * Tells whether an answer was given to the question
-     *
-     * @return bool
-     */
-    public function answer_was_given(): bool {
-        return $this->answerwasgiven;
     }
 
     /**
@@ -62,28 +50,12 @@ final class question_answer_evaluation_result {
     }
 
     /**
-     * Quickly instantiates the result object when no answer was given for the question.
-     *
-     * Assumes the answer is incorrect when no answer was actually given.
-     *
-     * @return self
-     */
-    public static function when_answer_was_not_given(): self {
-        $result = new self;
-        $result->answerwasgiven = false;
-        $result->answeriscorrect = false;
-
-        return $result;
-    }
-
-    /**
      * Quickly instantiates the result object when the question was answered correctly.
      *
      * @return self
      */
     public static function when_answer_is_correct(): self {
         $result = new self;
-        $result->answerwasgiven = true;
         $result->answeriscorrect = true;
 
         return $result;
@@ -96,7 +68,6 @@ final class question_answer_evaluation_result {
      */
     public static function when_answer_is_incorrect(): self {
         $result = new self;
-        $result->answerwasgiven = true;
         $result->answeriscorrect = false;
 
         return $result;

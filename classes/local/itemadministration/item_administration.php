@@ -21,6 +21,7 @@ use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
+use mod_adaptivequiz\local\catalgorithm\difficulty_logit;
 use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use mod_adaptivequiz\local\question\questions_answered_summary_provider;
@@ -96,35 +97,32 @@ final class item_administration {
 
         $determinenextdifficultyresult = null;
         if (!is_null($questionanswerevaluationresult)) {
+            if (!$questionanswerevaluationresult->answer_was_given()) {
+                return item_administration_evaluation::with_stoppage_reason(get_string('errorlastattpquest', 'adaptivequiz'));
+            }
+
             $catmodelparams = cat_model_params::for_attempt($attempt->read_attempt_data()->id);
 
             $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
 
-            // Determine the next difficulty level or whether there is an error.
-            $determinenextdifficultyresult = $this->algorithm->determine_next_difficulty_level(
-                (float) $catmodelparams->get('difficultysum'),
-                (int) $questionsattempted,
-                $questionsdifficultyrange,
-                (float) $adaptivequiz->standarderror,
-                $questionanswerevaluationresult,
-                (new questions_answered_summary_provider($this->quba))->collect_summary(),
-                $lastdifficultylevel
-            );
+            $answersummary = (new questions_answered_summary_provider($this->quba))->collect_summary();
 
-            $difflogit = catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
-            if (is_infinite($difflogit)) {
-                $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, 0, false, MUST_EXIST);
+            // Map the linear scale to a logarithmic logit scale.
+            $logit = catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
 
-                throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
-                    new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
-            }
+            $standarderror = catalgo::estimate_standard_error($questionsattempted + 1, $answersummary->number_of_correct_answers(),
+                $answersummary->number_of_wrong_answers());
+
+            $measure = catalgo::estimate_measure(
+                difficulty_logit::from_float($catmodelparams->get('difficultysum'))
+                    ->summed_with_another_logit(difficulty_logit::from_float($logit))->as_float(),
+                $questionsattempted + 1,
+                $answersummary->number_of_correct_answers(), $answersummary->number_of_wrong_answers());
 
             try {
                 $attempt->update_after_question_answered(time());
                 $catmodelparams->update_with_calculation_steps_result(
-                    cat_calculation_steps_result::from_floats(
-                        $difflogit, $this->algorithm->get_standarderror(), $this->algorithm->get_measure()
-                    )
+                    cat_calculation_steps_result::from_floats($logit, $standarderror, $measure)
                 );
             } catch (Exception $exception) {
                 $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, 0, false, MUST_EXIST);
@@ -132,6 +130,17 @@ final class item_administration {
                 throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
                     new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
             }
+
+            // Determine the next difficulty level or whether there is an error.
+            $determinenextdifficultyresult = $this->algorithm->determine_next_difficulty_level(
+                $questionsattempted + 1,
+                $questionsdifficultyrange,
+                $adaptivequiz->standarderror,
+                $questionanswerevaluationresult,
+                $answersummary,
+                $logit,
+                $standarderror
+            );
         }
 
         if (!is_null($determinenextdifficultyresult)) {
@@ -216,6 +225,8 @@ final class item_administration {
 
             // If this condition is met, then something went wrong because the slot id is empty BUT the questions attempted is
             // greater than zero. Stop the attempt.
+            // Note: this is only possible when the database is severely out of sync. For example, an attempt has been updated
+            // after answering a question, but quba data was not saved. Possibly, a coding exception should be thrown instead.
             return item_administration_evaluation::with_stoppage_reason(get_string('errorattemptstate', 'adaptivequiz'));
         }
 

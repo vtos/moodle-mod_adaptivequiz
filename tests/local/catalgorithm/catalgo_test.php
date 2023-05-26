@@ -200,13 +200,13 @@ class catalgo_test extends advanced_testcase {
         $lastdifficultylevel = 1;
 
         $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
-            1,
             5,
             questions_difficulty_range::from_activity_instance($adaptivequiz),
             $adaptivequiz->standarderror,
             question_answer_evaluation_result::when_answer_was_not_given(),
             questions_answered_summary::from_integers(2, 4),
-            $lastdifficultylevel
+            0,
+            0
         );
 
         self::assertEquals(
@@ -230,17 +230,14 @@ class catalgo_test extends advanced_testcase {
 
         $catalgo = new catalgo(true);
 
-        // Random, does not matter in this test.
-        $lastdifficultylevel = 1;
-
         $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
-            20,
             10,
             questions_difficulty_range::from_activity_instance($adaptivequiz),
             $adaptivequiz->standarderror,
             question_answer_evaluation_result::when_answer_is_correct(),
             questions_answered_summary::from_integers(1, 1),
-            $lastdifficultylevel
+            0,
+            0
         );
 
         $this->assertEquals(
@@ -264,37 +261,35 @@ class catalgo_test extends advanced_testcase {
 
         $catalgo = new catalgo(false);
 
-        $lastdifficultylevel = 5;
-
         // When answer is correct.
         $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
-            1,
             5,
             questions_difficulty_range::from_activity_instance($adaptivequiz),
             $adaptivequiz->standarderror,
             question_answer_evaluation_result::when_answer_is_correct(),
-            questions_answered_summary::from_integers(2, 4),
-            $lastdifficultylevel
+            questions_answered_summary::from_integers(3, 2),
+            -10.8052819,
+            0
         );
 
         self::assertEquals(
-            determine_next_difficulty_result::with_next_difficulty_level_determined(6),
+            determine_next_difficulty_result::with_next_difficulty_level_determined(1),
             $determinenextdifficultylevelresult
         );
 
         // When answer is not correct.
         $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
-            1,
-            5,
+            6,
             questions_difficulty_range::from_activity_instance($adaptivequiz),
             $adaptivequiz->standarderror,
             question_answer_evaluation_result::when_answer_is_incorrect(),
-            questions_answered_summary::from_integers(2, 4),
-            $lastdifficultylevel
+            questions_answered_summary::from_integers(4, 1),
+            -13.3702313,
+            0
         );
 
         self::assertEquals(
-            determine_next_difficulty_result::with_next_difficulty_level_determined(4),
+            determine_next_difficulty_result::with_next_difficulty_level_determined(1),
             $determinenextdifficultylevelresult
         );
     }
@@ -312,22 +307,59 @@ class catalgo_test extends advanced_testcase {
                 'course' => $course->id
             ]);
 
-        $catalgo = new catalgo(false);
-
-        $lastdifficultylevel = 5;
+        $catalgo = new catalgo(true);
 
         $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
-            50,
-            2,
+            5,
             questions_difficulty_range::from_activity_instance($adaptivequiz),
             $adaptivequiz->standarderror,
             question_answer_evaluation_result::when_answer_is_incorrect(),
-            questions_answered_summary::from_integers(1, 2),
-            $lastdifficultylevel
+            questions_answered_summary::from_integers(3, 2),
+            -10.8052819,
+            0.86603
         );
 
         self::assertEquals(
-            determine_next_difficulty_result::with_next_difficulty_level_determined(4),
+            determine_next_difficulty_result::with_next_difficulty_level_determined(1),
+            $determinenextdifficultylevelresult
+        );
+    }
+
+    public function test_it_determines_next_difficulty_as_with_error_standard_error_is_within_configured_parameters(): void {
+        self::resetAfterTest();
+
+        $settingsstandarderror = 14;
+
+        $course = $this->getDataGenerator()->create_course();
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'highestlevel' => 10,
+                'lowestlevel' => 1,
+                'standarderror' => $settingsstandarderror,
+                'course' => $course->id
+            ]);
+
+        $catalgo = new catalgo(true);
+
+        $determinenextdifficultylevelresult = $catalgo->determine_next_difficulty_level(
+            5,
+            questions_difficulty_range::from_activity_instance($adaptivequiz),
+            $adaptivequiz->standarderror,
+            question_answer_evaluation_result::when_answer_is_incorrect(),
+            questions_answered_summary::from_integers(3, 2),
+            -14.4012234,
+            0.53229
+        );
+
+        $expectedstringplaceholder = new stdClass();
+        $expectedstringplaceholder->calerror = 13;
+        $expectedstringplaceholder->definederror = $settingsstandarderror;
+
+        $this->assertEquals(
+            determine_next_difficulty_result::with_error(
+                get_string('calcerrorwithinlimits', 'adaptivequiz', $expectedstringplaceholder)
+            ),
             $determinenextdifficultylevelresult
         );
     }

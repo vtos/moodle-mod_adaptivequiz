@@ -16,18 +16,15 @@
 
 namespace mod_adaptivequiz\local\itemadministration;
 
-use Exception;
+use core_tag_tag;
 use mod_adaptivequiz\local\attempt\attempt;
-use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
 use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
-use mod_adaptivequiz\local\catalgorithm\difficulty_logit;
 use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use mod_adaptivequiz\local\question\questions_answered_summary_provider;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use moodle_exception;
-use moodle_url;
 use question_bank;
 use question_engine;
 use question_state_gaveup;
@@ -82,7 +79,6 @@ final class item_administration {
      *
      * @param attempt $attempt
      * @param stdClass $adaptivequiz
-     * @param int $lastdifficultylevel The last difficulty level used in the attempt.
      * @param question_answer_evaluation_result|null $questionanswerevaluationresult
      * @return item_administration_evaluation
      * @throws moodle_exception
@@ -90,64 +86,46 @@ final class item_administration {
     public function evaluate_ability_to_administer_next_item(
         attempt $attempt,
         stdClass $adaptivequiz,
-        int $lastdifficultylevel,
         ?question_answer_evaluation_result $questionanswerevaluationresult
     ): item_administration_evaluation {
+        // TODO: wrap this into some service/method.
+        $lastdifficultylevel = 0;
+        if ($slots = $this->quba->get_slots()) {
+            $question = $this->quba->get_question(array_pop($slots));
+
+            $questiontags = core_tag_tag::get_item_tags('core_question', 'question', $question->id);
+            $questiontags = array_filter($questiontags, function (core_tag_tag $tag): bool {
+                return substr($tag->name, 0, strlen(ADAPTIVEQUIZ_QUESTION_TAG)) === ADAPTIVEQUIZ_QUESTION_TAG;
+            });
+            $questiontag = array_shift($questiontags);
+
+            $lastdifficultylevel = substr($questiontag->name, strlen(ADAPTIVEQUIZ_QUESTION_TAG));
+        }
+
         $questionsattempted = $attempt->read_attempt_data()->questionsattempted;
 
         $determinenextdifficultyresult = null;
         if (!is_null($questionanswerevaluationresult)) {
-            $catmodelparams = cat_model_params::for_attempt($attempt->read_attempt_data()->id);
-
             $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
-
             $answersummary = (new questions_answered_summary_provider($this->quba))->collect_summary();
-
-            // Map the linear scale to a logarithmic logit scale.
-            $logit = catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange);
-
-            $standarderror = catalgo::estimate_standard_error($questionsattempted + 1, $answersummary->number_of_correct_answers(),
-                $answersummary->number_of_wrong_answers());
-
-            $measure = catalgo::estimate_measure(
-                difficulty_logit::from_float($catmodelparams->get('difficultysum'))
-                    ->summed_with_another_logit(difficulty_logit::from_float($logit))->as_float(),
-                $questionsattempted + 1,
-                $answersummary->number_of_correct_answers(), $answersummary->number_of_wrong_answers());
-
-            try {
-                $attempt->update_after_question_answered(time());
-                $catmodelparams->update_with_calculation_steps_result(
-                    cat_calculation_steps_result::from_floats($logit, $standarderror, $measure)
-                );
-            } catch (Exception $exception) {
-                $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, 0, false, MUST_EXIST);
-
-                throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
-                    new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
-            }
+            $catmodelparams = cat_model_params::for_attempt($attempt->read_attempt_data()->id);
 
             // Determine the next difficulty level or whether there is an error.
             $determinenextdifficultyresult = $this->algorithm->determine_next_difficulty_level(
-                $questionsattempted + 1,
+                $questionsattempted,
                 $questionsdifficultyrange,
                 $adaptivequiz->standarderror,
                 $questionanswerevaluationresult,
                 $answersummary,
-                $logit,
-                $standarderror
+                catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange),
+                $catmodelparams->get('standarderror')
             );
-
-            $questionsattempted++;
         }
 
         if (!is_null($determinenextdifficultyresult)) {
             if ($determinenextdifficultyresult->is_with_error()) {
                 return item_administration_evaluation::with_stoppage_reason($determinenextdifficultyresult->error_message());
             }
-
-            // An answer was submitted, decrement the sum of questions for the attempted difficulty level.
-            fetchquestion::decrement_question_sum_for_difficulty_level($lastdifficultylevel);
         }
 
         $nextdifficultylevel = is_null($determinenextdifficultyresult)

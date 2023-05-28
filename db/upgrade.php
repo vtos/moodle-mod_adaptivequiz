@@ -123,7 +123,17 @@ function xmldb_adaptivequiz_upgrade($oldversion) {
             $limitfrom += $limitnum;
         }
 
-        // Don't remove the original fields yet.
+        // Remove fields from the attempts table.
+        $table = new xmldb_table('adaptivequiz_attempt');
+
+        $filedstodrop = ['difficultysum', 'standarderror', 'measure'];
+        foreach ($filedstodrop as $fieldname) {
+            $field = new xmldb_field($fieldname);
+
+            if ($dbman->field_exists($table, $field)) {
+                $dbman->drop_field($table, $field);
+            }
+        }
 
         upgrade_mod_savepoint(true, 2023051800, 'adaptivequiz');
     }

@@ -35,9 +35,9 @@ use question_engine;
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
- * @covers \mod_adaptivequiz\local\itemadministration\item_administration
+ * @covers \mod_adaptivequiz\local\itemadministration\item_administration_using_default_algorithm
  */
-class item_administration_test extends advanced_testcase {
+class item_administration_using_default_algorithm_test extends advanced_testcase {
 
     public function test_it_can_perform_evaluation_when_fresh_attempt_has_started(): void {
         self::resetAfterTest();
@@ -86,7 +86,8 @@ class item_administration_test extends advanced_testcase {
 
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
+            $adaptivequiz);
 
         // Given no questions had been answered previously.
 
@@ -162,7 +163,8 @@ class item_administration_test extends advanced_testcase {
 
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
+            $adaptivequiz);
 
         // Given the starting question was previously attempted.
         $slot = $quba->add_question(question_bank::load_question($attemptedquestion->id));
@@ -248,7 +250,8 @@ class item_administration_test extends advanced_testcase {
         $algorithm = new catalgo(false);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
+            $adaptivequiz);
 
         // Given certain amount of questions have been answered previously.
         $questionids = question_bank::get_finder()->get_questions_from_categories($questioncategory->id, '');
@@ -340,7 +343,8 @@ class item_administration_test extends advanced_testcase {
 
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
+            $adaptivequiz);
 
         // Given no questions were attempted.
         // And a question has been displayed previously to the user, but not submitted.
@@ -506,7 +510,8 @@ class item_administration_test extends advanced_testcase {
         // When performing item administration evaluation.
         $algorithm = new catalgo(false);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
-        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
+            $adaptivequiz);
 
         $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
@@ -638,7 +643,8 @@ class item_administration_test extends advanced_testcase {
         // When performing item administration evaluation.
         $algorithm = new catalgo(false);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
-        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
+            $adaptivequiz);
 
         $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 

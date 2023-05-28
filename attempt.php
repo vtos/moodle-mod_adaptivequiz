@@ -34,7 +34,7 @@ use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\catalgorithm\difficulty_logit;
 use mod_adaptivequiz\local\fetchquestion;
-use mod_adaptivequiz\local\itemadministration\item_administration;
+use mod_adaptivequiz\local\itemadministration\item_administration_using_default_algorithm;
 use mod_adaptivequiz\local\question\question_answer_evaluation;
 use mod_adaptivequiz\local\question\questions_answered_summary_provider;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
@@ -195,7 +195,8 @@ $minattemptreached = adaptivequiz_min_number_of_questions_reached($adaptiveattem
 $algorithm = new catalgo($minattemptreached);
 $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-$itemadministration = new item_administration($quba, $algorithm, $fetchquestion, $adaptiveattempt, $adaptivequiz);
+$itemadministration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $adaptiveattempt,
+    $adaptivequiz);
 $itemadministrationevaluation = $itemadministration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
 // Check item administration evaluation.

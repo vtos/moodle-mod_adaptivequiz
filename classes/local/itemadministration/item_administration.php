@@ -226,17 +226,6 @@ final class item_administration {
     }
 
     /**
-     * Gets standard error parameter from the algorithm.
-     *
-     * This method should not be there normally, it's used to support refactoring. Must be removed as soon as possible.
-     *
-     * @return float
-     */
-    public function standard_error_from_algorithm(): float {
-        return $this->algorithm->get_standarderror();
-    }
-
-    /**
      * This function checks to see if the difficulty level is out of the boundaries set for the attempt.
      *
      * @param int $level The difficulty level requested.

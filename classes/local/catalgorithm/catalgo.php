@@ -43,9 +43,6 @@ class catalgo {
     /** @var float $measure the ability measure */
     protected $measure = 0.0;
 
-    /** @var float $standarderror the standard error of the measure */
-    protected $standarderror = 0.0;
-
     /**
      * The constructor.
      *
@@ -54,15 +51,6 @@ class catalgo {
      */
     public function __construct(bool $readytostop = true) {
         $this->readytostop = $readytostop;
-    }
-
-    /**
-     * This function returns the $standarderror property.
-     *
-     * @return float retuns the $standarderror property
-     */
-    public function get_standarderror() {
-        return $this->standarderror;
     }
 
     /**
@@ -105,10 +93,6 @@ class catalgo {
         if ($answersummary->sum_of_answers() != $questionsattemptednum) {
             return determine_next_difficulty_result::with_error(get_string('errorsumrightwrong', 'adaptivequiz'));
         }
-
-        // This needs to be preserved, as there is some external code relying on that.
-        // Expected to be removed with further refactoring steps.
-        $this->standarderror = $standarderror;
 
         // Convert the standard error (as a percent) set for the activity into a decimal percent, then
         // convert it to a logit.

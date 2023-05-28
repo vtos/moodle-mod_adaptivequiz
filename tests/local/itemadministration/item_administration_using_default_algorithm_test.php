@@ -98,7 +98,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is next item with particular properties will be administered.
-        $expectation = new next_item($startinglevel, 1);
+        $expectation = new next_item(1);
         self::assertEquals($expectation, $result->next_item());
     }
 
@@ -193,7 +193,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is next item with particular properties will be administered.
-        $expectation = new next_item($itemtoadministerlevel, 2);
+        $expectation = new next_item(2);
         self::assertEquals($expectation, $result->next_item());
     }
 
@@ -357,7 +357,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is next item is the previously displayed question.
-        $expectation = new next_item($itemtoadministerdifficulty, $slot);
+        $expectation = new next_item($slot);
         self::assertEquals($expectation, $result->next_item());
     }
 
@@ -516,7 +516,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is next item with particular properties will be administered.
-        $expectation = new next_item($notattemptedquestion2difficulty, count($slots) + 1);
+        $expectation = new next_item(count($slots) + 1);
         self::assertEquals($expectation, $result->next_item());
     }
 

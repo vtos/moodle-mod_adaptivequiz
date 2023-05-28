@@ -108,10 +108,10 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @param int $cmid
      * @param question_usage_by_activity $quba
      * @param int $slot Slot number of the question to be displayed.
-     * @param int $level Difficulty level of question.
      * @param int $questionnumber The order number of question in the quiz.
+     * @return string
      */
-    public function question_submit_form($cmid, $quba, $slot, $level, int $questionnumber): string {
+    public function question_submit_form(int $cmid, question_usage_by_activity $quba, int $slot, int $questionnumber): string {
         $output = '';
 
         $processurl = new moodle_url('/mod/adaptivequiz/attempt.php');
@@ -141,8 +141,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
 
         $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'slots', 'value' => $slot));
-
-        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'dl', 'value' => $level));
 
         // Finish the form.
         $output .= html_writer::end_tag('div');

@@ -225,7 +225,7 @@ final class item_administration_using_default_algorithm implements item_administ
         // If the slot property is set, then we have a question that is ready to be attempted.  No more process is required.
         if (!empty($slot)) {
 
-            return item_administration_evaluation::with_next_item(new next_item($nextdifficultylevel, $slot));
+            return item_administration_evaluation::with_next_item(new next_item($slot));
         }
 
         // If we are here, then the slot property was unset and a new question needs to prepared for display.
@@ -319,10 +319,7 @@ final class item_administration_using_default_algorithm implements item_administ
         // Update the attempt unique id.
         $this->attempt->set_quba_id($this->quba->get_id());
 
-        // Set class level property to the difficulty level of the question returned from fetchquestion class.
-        $nextdifficultylevel = $this->fetchquestion->get_level();
-
-        return item_administration_evaluation::with_next_item(new next_item($nextdifficultylevel, $slot));
+        return item_administration_evaluation::with_next_item(new next_item($slot));
     }
 
     /**

@@ -26,11 +26,6 @@ namespace mod_adaptivequiz\local\itemadministration;
 final class next_item {
 
     /**
-     * @var int $difficultylevel
-     */
-    private $difficultylevel;
-
-    /**
      * @var int $slot Slot of the next question (that is the item), a quba's thing.
      */
     private $slot;
@@ -38,19 +33,10 @@ final class next_item {
     /**
      * The constructor.
      *
-     * @param int $difficultylevel
      * @param int $slot
      */
-    public function __construct(int $difficultylevel, int $slot) {
-        $this->difficultylevel = $difficultylevel;
+    public function __construct(int $slot) {
         $this->slot = $slot;
-    }
-
-    /**
-     * Queries for the difficulty level property.
-     */
-    public function difficulty_level(): int {
-        return $this->difficultylevel;
     }
 
     /**

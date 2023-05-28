@@ -40,7 +40,7 @@ use mod_adaptivequiz\local\question\questions_answered_summary_provider;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
-$attempteddifficultylevel  = optional_param('dl', 0, PARAM_INT);
+$attemptedqubaslot  = optional_param('slots', 0, PARAM_INT);
 
 if (!$cm = get_coursemodule_from_id('adaptivequiz', $id)) {
     throw new moodle_exception('invalidcoursemodule');
@@ -127,7 +127,8 @@ if ($adaptiveattempt === null) {
     cat_model_params::create_new_for_attempt($adaptiveattempt->read_attempt_data()->id);
 }
 
-if (!empty($attempteddifficultylevel) && confirm_sesskey()) {
+// TODO: consider a better flag of whether a question answer was submitted.
+if ($attemptedqubaslot && confirm_sesskey()) {
     // Process student's responses.
     $time = time();
     $quba = question_engine::load_questions_usage_by_activity($adaptiveattempt->read_attempt_data()->uniqueid);
@@ -136,6 +137,18 @@ if (!empty($attempteddifficultylevel) && confirm_sesskey()) {
     question_engine::save_questions_usage_by_activity($quba);
 
     $adaptiveattempt->update_after_question_answered(time());
+
+    // Obtain difficulty level of the answered question.
+    // TODO: wrap it into some service call.
+    $question = $quba->get_question($attemptedqubaslot);
+
+    $questiontags = core_tag_tag::get_item_tags('core_question', 'question', $question->id);
+    $questiontags = array_filter($questiontags, function (core_tag_tag $tag): bool {
+        return substr($tag->name, 0, strlen(ADAPTIVEQUIZ_QUESTION_TAG)) === ADAPTIVEQUIZ_QUESTION_TAG;
+    });
+    $questiontag = array_shift($questiontags);
+
+    $attempteddifficultylevel = substr($questiontag->name, strlen(ADAPTIVEQUIZ_QUESTION_TAG));
 
     $catmodelparams = cat_model_params::for_attempt($adaptiveattempt->read_attempt_data()->id);
 
@@ -206,8 +219,6 @@ if ($itemadministrationevaluation->item_administration_is_to_stop()) {
 // Retrieve the question slot id.
 $slot = $itemadministrationevaluation->next_item()->slot();
 
-$level = $itemadministrationevaluation->next_item()->difficulty_level();
-
 $headtags = $output->init_metadata($quba, $slot);
 $PAGE->requires->js_init_call('M.mod_adaptivequiz.init_attempt_form', array($viewurl->out(), $adaptivequiz->browsersecurity),
     false, $output->adaptivequiz_get_js_module());
@@ -240,7 +251,7 @@ if (!empty($adaptivequiz->password) && empty($condition)) {
         echo $output->container_end();
     }
 
-    echo $output->question_submit_form($id, $quba, $slot, $level, $attemptdata->questionsattempted + 1);
+    echo $output->question_submit_form($id, $quba, $slot, $attemptdata->questionsattempted + 1);
 }
 
 echo $output->print_footer();

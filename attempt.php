@@ -127,8 +127,6 @@ if ($adaptiveattempt === null) {
     cat_model_params::create_new_for_attempt($adaptiveattempt->read_attempt_data()->id);
 }
 
-$standarderror = 0.0;
-
 if (!empty($attempteddifficultylevel) && confirm_sesskey()) {
     // Process student's responses.
     $time = time();
@@ -136,6 +134,8 @@ if (!empty($attempteddifficultylevel) && confirm_sesskey()) {
     $quba->process_all_actions($time);
     $quba->finish_all_questions($time);
     question_engine::save_questions_usage_by_activity($quba);
+
+    $adaptiveattempt->update_after_question_answered(time());
 
     $catmodelparams = cat_model_params::for_attempt($adaptiveattempt->read_attempt_data()->id);
 
@@ -146,7 +146,7 @@ if (!empty($attempteddifficultylevel) && confirm_sesskey()) {
     // Map the linear scale to a logarithmic logit scale.
     $logit = catalgo::convert_linear_to_logit($attempteddifficultylevel, $questionsdifficultyrange);
 
-    $questionsattempted = $adaptiveattempt->read_attempt_data()->questionsattempted + 1;
+    $questionsattempted = $adaptiveattempt->read_attempt_data()->questionsattempted;
     $standarderror = catalgo::estimate_standard_error($questionsattempted, $answersummary->number_of_correct_answers(),
         $answersummary->number_of_wrong_answers());
 
@@ -154,19 +154,13 @@ if (!empty($attempteddifficultylevel) && confirm_sesskey()) {
         difficulty_logit::from_float($catmodelparams->get('difficultysum'))
             ->summed_with_another_logit(difficulty_logit::from_float($logit))->as_float(),
         $questionsattempted,
-        $answersummary->number_of_correct_answers(), $answersummary->number_of_wrong_answers());
+        $answersummary->number_of_correct_answers(),
+        $answersummary->number_of_wrong_answers()
+    );
 
-    try {
-        $adaptiveattempt->update_after_question_answered(time());
-        $catmodelparams->update_with_calculation_steps_result(
-            cat_calculation_steps_result::from_floats($logit, $standarderror, $measure)
-        );
-    } catch (Exception $exception) {
-        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, 0, false, MUST_EXIST);
-
-        throw new moodle_exception('unableupdatediffsum', 'adaptivequiz',
-            new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
-    }
+    $catmodelparams->update_with_calculation_steps_result(
+        cat_calculation_steps_result::from_floats($logit, $standarderror, $measure)
+    );
 
     // An answer was submitted, decrement the sum of questions for the attempted difficulty level.
     fetchquestion::decrement_question_sum_for_difficulty_level($attempteddifficultylevel);

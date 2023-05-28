@@ -86,7 +86,7 @@ class item_administration_test extends advanced_testcase {
 
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration($quba, $algorithm, $fetchquestion);
+        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
 
         // Given no questions had been answered previously.
 
@@ -94,11 +94,7 @@ class item_administration_test extends advanced_testcase {
         $questionanswerevaluationresult = null;
 
         // When performing item administration evaluation.
-        $result = $administration->evaluate_ability_to_administer_next_item(
-            $attempt,
-            $adaptivequiz,
-            $questionanswerevaluationresult
-        );
+        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is next item with particular properties will be administered.
         $expectation = new next_item($startinglevel, 1);
@@ -166,7 +162,7 @@ class item_administration_test extends advanced_testcase {
 
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration($quba, $algorithm, $fetchquestion);
+        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
 
         // Given the starting question was previously attempted.
         $slot = $quba->add_question(question_bank::load_question($attemptedquestion->id));
@@ -192,11 +188,7 @@ class item_administration_test extends advanced_testcase {
         $questionanswerevaluationresult = null;
 
         // When performing item administration evaluation.
-        $result = $administration->evaluate_ability_to_administer_next_item(
-            $attempt,
-            $adaptivequiz,
-            $questionanswerevaluationresult
-        );
+        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is next item with particular properties will be administered.
         $expectation = new next_item($itemtoadministerlevel, 2);
@@ -256,7 +248,7 @@ class item_administration_test extends advanced_testcase {
         $algorithm = new catalgo(false);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration($quba, $algorithm, $fetchquestion);
+        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
 
         // Given certain amount of questions have been answered previously.
         $questionids = question_bank::get_finder()->get_questions_from_categories($questioncategory->id, '');
@@ -294,11 +286,7 @@ class item_administration_test extends advanced_testcase {
             ->as_array();
 
         // When performing item administration evaluation.
-        $result = $administration->evaluate_ability_to_administer_next_item(
-            $attempt,
-            $adaptivequiz,
-            $questionanswerevaluationresult
-        );
+        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is to stop item administration.
         self::assertTrue($result->item_administration_is_to_stop());
@@ -352,7 +340,7 @@ class item_administration_test extends advanced_testcase {
 
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration($quba, $algorithm, $fetchquestion);
+        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
 
         // Given no questions were attempted.
         // And a question has been displayed previously to the user, but not submitted.
@@ -362,11 +350,7 @@ class item_administration_test extends advanced_testcase {
         $questionanswerevaluationresult = null;
 
         // When performing item administration evaluation.
-        $result = $administration->evaluate_ability_to_administer_next_item(
-            $attempt,
-            $adaptivequiz,
-            $questionanswerevaluationresult
-        );
+        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is next item is the previously displayed question.
         $expectation = new next_item($itemtoadministerdifficulty, $slot);
@@ -522,13 +506,9 @@ class item_administration_test extends advanced_testcase {
         // When performing item administration evaluation.
         $algorithm = new catalgo(false);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
-        $administration = new item_administration($quba, $algorithm, $fetchquestion);
+        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
 
-        $result = $administration->evaluate_ability_to_administer_next_item(
-            $attempt,
-            $adaptivequiz,
-            $questionanswerevaluationresult
-        );
+        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is next item with particular properties will be administered.
         $expectation = new next_item($notattemptedquestion2difficulty, count($slots) + 1);
@@ -658,13 +638,9 @@ class item_administration_test extends advanced_testcase {
         // When performing item administration evaluation.
         $algorithm = new catalgo(false);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
-        $administration = new item_administration($quba, $algorithm, $fetchquestion);
+        $administration = new item_administration($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
 
-        $result = $administration->evaluate_ability_to_administer_next_item(
-            $attempt,
-            $adaptivequiz,
-            $questionanswerevaluationresult
-        );
+        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is to stop the attempt due to no questions for the next difficulty level.
         $expectation = item_administration_evaluation::with_stoppage_reason(

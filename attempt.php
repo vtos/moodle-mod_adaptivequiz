@@ -195,9 +195,8 @@ $minattemptreached = adaptivequiz_min_number_of_questions_reached($adaptiveattem
 $algorithm = new catalgo($minattemptreached);
 $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-$itemadministration = new item_administration($quba, $algorithm, $fetchquestion);
-$itemadministrationevaluation = $itemadministration->evaluate_ability_to_administer_next_item($adaptiveattempt, $adaptivequiz,
-    $questionanswerevaluationresult);
+$itemadministration = new item_administration($quba, $algorithm, $fetchquestion, $adaptiveattempt, $adaptivequiz);
+$itemadministrationevaluation = $itemadministration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
 // Check item administration evaluation.
 if ($itemadministrationevaluation->item_administration_is_to_stop()) {

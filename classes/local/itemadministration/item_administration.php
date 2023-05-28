@@ -62,30 +62,46 @@ final class item_administration {
     private $fetchquestion;
 
     /**
+     * @var attempt $attempt
+     */
+    private $attempt;
+
+    /**
+     * @var stdClass $adaptivequiz A record from {adaptivequiz}.
+     */
+    private $adaptivequiz;
+
+    /**
      * The constructor.
      *
      * @param question_usage_by_activity $quba
      * @param catalgo $algorithm
      * @param fetchquestion $fetchquestion
+     * @param attempt $attempt
+     * @param stdClass $adaptivequiz
      */
-    public function __construct(question_usage_by_activity $quba, catalgo $algorithm, fetchquestion $fetchquestion) {
+    public function __construct(
+        question_usage_by_activity $quba,
+        catalgo $algorithm,
+        fetchquestion $fetchquestion,
+        attempt $attempt,
+        stdClass $adaptivequiz
+    ) {
         $this->quba = $quba;
         $this->algorithm = $algorithm;
         $this->fetchquestion = $fetchquestion;
+        $this->attempt = $attempt;
+        $this->adaptivequiz = $adaptivequiz;
     }
 
     /**
      * Assesses the ability to administer next question during the quiz.
      *
-     * @param attempt $attempt
-     * @param stdClass $adaptivequiz
      * @param question_answer_evaluation_result|null $questionanswerevaluationresult
      * @return item_administration_evaluation
      * @throws moodle_exception
      */
     public function evaluate_ability_to_administer_next_item(
-        attempt $attempt,
-        stdClass $adaptivequiz,
         ?question_answer_evaluation_result $questionanswerevaluationresult
     ): item_administration_evaluation {
         // TODO: wrap this into some service/method.
@@ -102,19 +118,19 @@ final class item_administration {
             $lastdifficultylevel = substr($questiontag->name, strlen(ADAPTIVEQUIZ_QUESTION_TAG));
         }
 
-        $questionsattempted = $attempt->read_attempt_data()->questionsattempted;
+        $questionsattempted = $this->attempt->read_attempt_data()->questionsattempted;
 
         $determinenextdifficultyresult = null;
         if (!is_null($questionanswerevaluationresult)) {
-            $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
+            $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($this->adaptivequiz);
             $answersummary = (new questions_answered_summary_provider($this->quba))->collect_summary();
-            $catmodelparams = cat_model_params::for_attempt($attempt->read_attempt_data()->id);
+            $catmodelparams = cat_model_params::for_attempt($this->attempt->read_attempt_data()->id);
 
             // Determine the next difficulty level or whether there is an error.
             $determinenextdifficultyresult = $this->algorithm->determine_next_difficulty_level(
                 $questionsattempted,
                 $questionsdifficultyrange,
-                $adaptivequiz->standarderror,
+                $this->adaptivequiz->standarderror,
                 $questionanswerevaluationresult,
                 $answersummary,
                 catalgo::convert_linear_to_logit($lastdifficultylevel, $questionsdifficultyrange),
@@ -130,14 +146,14 @@ final class item_administration {
 
         $nextdifficultylevel = is_null($determinenextdifficultyresult)
             ? $this->get_next_difficulty_level_from_quba(
-                $adaptivequiz->startinglevel,
-                questions_difficulty_range::from_activity_instance($adaptivequiz)
+                $this->adaptivequiz->startinglevel,
+                questions_difficulty_range::from_activity_instance($this->adaptivequiz)
             )
             : $determinenextdifficultyresult->next_difficulty_level();
 
         // Check if the level requested is out of the minimum/maximum boundaries for the attempt.
         // Note: this seems to be unreachable, as the algorithm seems to never produce difficulty which exceeds the maximum.
-        if (!$this->level_in_bounds($nextdifficultylevel, $adaptivequiz)) {
+        if (!$this->level_in_bounds($nextdifficultylevel, $this->adaptivequiz)) {
 
             return item_administration_evaluation::with_stoppage_reason(
                 get_string('leveloutofbounds', 'adaptivequiz', $nextdifficultylevel)
@@ -145,7 +161,7 @@ final class item_administration {
         }
 
         // Check if the attempt has reached the maximum number of questions attempted.
-        if ($questionsattempted >= $adaptivequiz->maximumquestions) {
+        if ($questionsattempted >= $this->adaptivequiz->maximumquestions) {
 
             return item_administration_evaluation::with_stoppage_reason(get_string('maxquestattempted', 'adaptivequiz'));
         }
@@ -159,9 +175,9 @@ final class item_administration {
         // Check if this is the beginning of an attempt (and pass the starting level) or the continuation of an attempt.
         if (empty($slot) && 0 == $questionsattempted) {
             // Set the starting difficulty level.
-            $this->fetchquestion->set_level((int) $adaptivequiz->startinglevel);
+            $this->fetchquestion->set_level((int) $this->adaptivequiz->startinglevel);
             // Sets the level class property.
-            $nextdifficultylevel = $adaptivequiz->startinglevel;
+            $nextdifficultylevel = $this->adaptivequiz->startinglevel;
             // Set the rebuild flag for fetchquestion class.
             $this->fetchquestion->rebuild = true;
 
@@ -173,7 +189,7 @@ final class item_administration {
             // If the last question was correct...
             if ($this->quba->get_question_mark($slot) > 0) {
                 // Only ask questions harder than the last question unless we are already at the top of the ability scale.
-                if ($lastdifficultylevel < $adaptivequiz->highestlevel) {
+                if ($lastdifficultylevel < $this->adaptivequiz->highestlevel) {
                     $this->fetchquestion->set_minimum_level($lastdifficultylevel + 1);
                     // Do not ask a question of the same level unless we are already at the max.
                     if ($lastdifficultylevel == $nextdifficultylevel) {
@@ -183,7 +199,7 @@ final class item_administration {
             } else {
                 // If the last question was wrong...
                 // Only ask questions easier than the last question unless we are already at the bottom of the ability scale.
-                if ($lastdifficultylevel > $adaptivequiz->lowestlevel) {
+                if ($lastdifficultylevel > $this->adaptivequiz->lowestlevel) {
                     $this->fetchquestion->set_maximum_level($lastdifficultylevel - 1);
                     // Do not ask a question of the same level unless we are already at the min.
                     if ($lastdifficultylevel == $nextdifficultylevel) {
@@ -213,7 +229,7 @@ final class item_administration {
         }
 
         // If we are here, then the slot property was unset and a new question needs to prepared for display.
-        $status = $this->get_question_ready($attempt, $nextdifficultylevel);
+        $status = $this->get_question_ready($nextdifficultylevel);
 
         if (empty($status)) {
 
@@ -229,11 +245,10 @@ final class item_administration {
      * This function checks to see if the difficulty level is out of the boundaries set for the attempt.
      *
      * @param int $level The difficulty level requested.
-     * @param stdClass $adaptivequiz An {adaptivequiz} record.
      * @return bool
      */
-    private function level_in_bounds(int $level, stdClass $adaptivequiz): bool {
-        if ($adaptivequiz->lowestlevel <= $level && $adaptivequiz->highestlevel >= $level) {
+    private function level_in_bounds(int $level): bool {
+        if ($this->adaptivequiz->lowestlevel <= $level && $this->adaptivequiz->highestlevel >= $level) {
             return true;
         }
 
@@ -263,16 +278,15 @@ final class item_administration {
     /**
      * This function gets the question ready for display to the user.
      *
-     * @param attempt $attempt
      * @param int $nextdifficultylevel
      * @return item_administration_evaluation
      */
-    private function get_question_ready(attempt $attempt, int $nextdifficultylevel): item_administration_evaluation {
+    private function get_question_ready(int $nextdifficultylevel): item_administration_evaluation {
         global $DB;
 
         // Fetch questions already attempted.
-        $exclude = $DB->get_records_menu('question_attempts', ['questionusageid' => $attempt->read_attempt_data()->uniqueid],
-            'id ASC', 'id,questionid');
+        $exclude = $DB->get_records_menu('question_attempts',
+            ['questionusageid' => $this->attempt->read_attempt_data()->uniqueid], 'id ASC', 'id,questionid');
         // Fetch questions for display.
         $questionids = $this->fetchquestion->fetch_questions($exclude);
 
@@ -303,7 +317,7 @@ final class item_administration {
         // Save the question usage and question attempt state to the DB.
         question_engine::save_questions_usage_by_activity($this->quba);
         // Update the attempt unique id.
-        $attempt->set_quba_id($this->quba->get_id());
+        $this->attempt->set_quba_id($this->quba->get_id());
 
         // Set class level property to the difficulty level of the question returned from fetchquestion class.
         $nextdifficultylevel = $this->fetchquestion->get_level();

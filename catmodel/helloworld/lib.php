@@ -27,6 +27,8 @@ use mod_adaptivequiz\local\attempt\attempt;
 /**
  * Callback to execute when a fresh attempt on adaptive quiz has been created.
  *
+ * Picked up by mod_adaptivequiz component only.
+ *
  * @param stdClass $adaptivequiz
  * @param attempt $attempt
  */
@@ -39,4 +41,24 @@ function adaptivequizcatmodel_helloworld_post_create_attempt_callback(stdClass $
     $record->stateparam1 = 5.6;
     $record->stateparam2 = 124.54;
     $DB->insert_record('catmodel_helloworld_state', $record);
+}
+
+/**
+ * Callback to execute when a question answer is processed.
+ *
+ * Picked up by mod_adaptivequiz component only.
+ *
+ * @param stdClass $adaptivequiz
+ * @param attempt $attempt
+ */
+function adaptivequizcatmodel_helloworld_post_process_item_result_callback(stdClass $adaptivequiz, attempt $attempt): void {
+    global $DB;
+
+    // Randomly update some parameters.
+    $staterecord = $DB->get_record('catmodel_helloworld_state', ['adaptivequizattempt' => $attempt->read_attempt_data()->id], '*',
+        MUST_EXIST);
+
+    $staterecord->stateparam1 = $staterecord->stateparam1 * 2;
+    $staterecord->stateparam2 = $staterecord->stateparam2 * 1.78;
+    $DB->update_record('catmodel_helloworld_state', $staterecord);
 }

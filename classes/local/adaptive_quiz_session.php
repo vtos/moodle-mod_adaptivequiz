@@ -16,6 +16,8 @@
 
 namespace mod_adaptivequiz\local;
 
+use coding_exception;
+use core_component;
 use core_tag_tag;
 use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
@@ -25,7 +27,6 @@ use mod_adaptivequiz\local\catalgorithm\difficulty_logit;
 use mod_adaptivequiz\local\itemadministration\default_item_administration_factory;
 use mod_adaptivequiz\local\itemadministration\item_administration_evaluation;
 use mod_adaptivequiz\local\itemadministration\item_administration_factory;
-use mod_adaptivequiz\local\itemadministration\item_administration_using_default_algorithm;
 use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use mod_adaptivequiz\local\question\questions_answered_summary_provider;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
@@ -80,9 +81,10 @@ final class adaptive_quiz_session {
      * Runs when answer was submitted to a question (item).
      *
      * @param attempt $attempt
+     * @param stdClass $adaptivequiz
      * @param int $attemptedslot Quba slot.
      */
-    public function process_item_result(attempt $attempt, int $attemptedslot): void {
+    public function process_item_result(attempt $attempt, stdClass $adaptivequiz, int $attemptedslot): void {
         $currenttime = time();
 
         $this->quba->process_all_actions($currenttime);
@@ -90,6 +92,10 @@ final class adaptive_quiz_session {
         question_engine::save_questions_usage_by_activity($this->quba);
 
         $attempt->update_after_question_answered($currenttime);
+
+        if ($adaptivequiz->catmodel) {
+            return;
+        }
 
         $attempteddifficultylevel = $this->obtain_difficulty_level_of_question($attemptedslot);
 
@@ -135,21 +141,31 @@ final class adaptive_quiz_session {
         attempt $attempt,
         ?question_answer_evaluation_result $previousanswerevaluation
     ): item_administration_evaluation {
-        return $this->itemadministrationfactory->item_administration_implementation($this->quba, $attempt, $this->adaptivequiz)
+        $evaluationresult = $this->itemadministrationfactory->item_administration_implementation($this->quba, $attempt, $this->adaptivequiz)
             ->evaluate_ability_to_administer_next_item($previousanswerevaluation);
+
+        $attempt->set_quba_id($this->quba->get_id());
+
+        return $evaluationresult;
     }
 
     /**
      * Instantiates an object with proper dependencies.
+     *
+     * Searches for implementation of the item administration factory when a custom CAT model is chose for the quiz.
      *
      * @param question_usage_by_activity $quba
      * @param stdClass $adaptivequiz
      * @return self
      */
     public static function init(question_usage_by_activity $quba, stdClass $adaptivequiz): self {
-        $itemadministrationfactory = new default_item_administration_factory();
+        if ($adaptivequiz->catmodel) {
+            $itemadministrationfactory = self::catmodel_item_administration_factory($adaptivequiz);
 
-        return new self($itemadministrationfactory, $quba, $adaptivequiz);
+            return new self($itemadministrationfactory, $quba, $adaptivequiz);
+        }
+
+        return new self(new default_item_administration_factory(), $quba, $adaptivequiz);
     }
 
     /**
@@ -168,6 +184,43 @@ final class adaptive_quiz_session {
         }
 
         return $attempt;
+    }
+
+    /**
+     * Tries to instantiate implementation of the factory for the CAT model selected.
+     *
+     * @param stdClass $adaptivequiz
+     * @return item_administration_factory
+     * @throws coding_exception
+     */
+    private static function catmodel_item_administration_factory(stdClass $adaptivequiz): item_administration_factory {
+        $implementations = core_component::get_component_classes_in_namespace(
+            "adaptivequizcatmodel_$adaptivequiz->catmodel",
+            'local\catmodel\itemadministration'
+        );
+        if (empty($implementations)) {
+            throw new coding_exception(
+                'implementations of the item_administration_factory interface could not be found for the selected CAT model'
+            );
+        }
+
+        $classnames = array_filter(array_keys($implementations), function (string $classname): bool {
+            return is_subclass_of($classname, '\mod_adaptivequiz\local\itemadministration\item_administration_factory');
+        });
+
+        if (empty($classnames)) {
+            throw new coding_exception(
+                'implementations of the item_administration_factory interface could not be found for the selected CAT model'
+            );
+        }
+
+        if (count($classnames) > 1) {
+            throw new coding_exception('only one implementation of the item_administration_factory interface is expected');
+        }
+
+        $classname = array_shift($classnames);
+
+        return new $classname();
     }
 
     /**

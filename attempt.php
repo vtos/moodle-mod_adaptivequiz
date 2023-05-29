@@ -134,7 +134,7 @@ $adaptivequizsession = adaptive_quiz_session::init($quba, $adaptivequiz);
 // Process answer to previous question if submitted.
 // TODO: consider a better flag of whether a question answer was submitted.
 if ($attemptedqubaslot && confirm_sesskey()) {
-    $adaptivequizsession->process_item_result($attempt, $attemptedqubaslot);
+    $adaptivequizsession->process_item_result($attempt, $adaptivequiz, $attemptedqubaslot);
 
     redirect(new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
 }

@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['itemadministration:stopbecauseincorrectanswer'] = 'You have answered incorrectly, so we stopped the attempt, sorry :P';
+$string['itemadministration:stopbecausenomorequestions'] = 'We have run out of questions, you won!';
 $string['modform:entervalidcatinteger'] = 'Please, enter a positive integer value greater than 0.';
 $string['modform:param1mustbelessthanparam2'] = 'Parameter 1 must be less than parameter 2.';
 $string['param1'] = 'Parameter 1';

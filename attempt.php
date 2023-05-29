@@ -28,16 +28,10 @@ require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 
 use mod_adaptivequiz\local\adaptive_quiz_requires;
+use mod_adaptivequiz\local\adaptive_quiz_session;
 use mod_adaptivequiz\local\attempt\attempt;
-use mod_adaptivequiz\local\attempt\cat_calculation_steps_result;
-use mod_adaptivequiz\local\attempt\cat_model_params;
-use mod_adaptivequiz\local\catalgorithm\catalgo;
-use mod_adaptivequiz\local\catalgorithm\difficulty_logit;
-use mod_adaptivequiz\local\fetchquestion;
-use mod_adaptivequiz\local\itemadministration\item_administration_using_default_algorithm;
 use mod_adaptivequiz\local\question\question_answer_evaluation;
-use mod_adaptivequiz\local\question\questions_answered_summary_provider;
-use mod_adaptivequiz\local\report\questions_difficulty_range;
+
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
 $attemptedqubaslot  = optional_param('slots', 0, PARAM_INT);
@@ -67,6 +61,9 @@ try {
 
     throw new moodle_exception('invalidmodule', 'error', $url, $e->getMessage(), $debuginfo);
 }
+
+$adaptivequiz->context = $context;
+$adaptivequiz->cm = $cm;
 
 // Setup page global for standard viewing.
 $viewurl = new moodle_url('/mod/adaptivequiz/view.php', array('id' => $cm->id));
@@ -121,68 +118,10 @@ if (!empty($adaptivequiz->password)) {
     }
 }
 
-$adaptiveattempt = attempt::find_in_progress_for_user($adaptivequiz, $USER->id);
-if ($adaptiveattempt === null) {
-    $adaptiveattempt = attempt::create($adaptivequiz, $USER->id);
-    cat_model_params::create_new_for_attempt($adaptiveattempt->read_attempt_data()->id);
-}
-
-// TODO: consider a better flag of whether a question answer was submitted.
-if ($attemptedqubaslot && confirm_sesskey()) {
-    // Process student's responses.
-    $time = time();
-    $quba = question_engine::load_questions_usage_by_activity($adaptiveattempt->read_attempt_data()->uniqueid);
-    $quba->process_all_actions($time);
-    $quba->finish_all_questions($time);
-    question_engine::save_questions_usage_by_activity($quba);
-
-    $adaptiveattempt->update_after_question_answered(time());
-
-    // Obtain difficulty level of the answered question.
-    // TODO: wrap it into some service call.
-    $question = $quba->get_question($attemptedqubaslot);
-
-    $questiontags = core_tag_tag::get_item_tags('core_question', 'question', $question->id);
-    $questiontags = array_filter($questiontags, function (core_tag_tag $tag): bool {
-        return substr($tag->name, 0, strlen(ADAPTIVEQUIZ_QUESTION_TAG)) === ADAPTIVEQUIZ_QUESTION_TAG;
-    });
-    $questiontag = array_shift($questiontags);
-
-    $attempteddifficultylevel = substr($questiontag->name, strlen(ADAPTIVEQUIZ_QUESTION_TAG));
-
-    $catmodelparams = cat_model_params::for_attempt($adaptiveattempt->read_attempt_data()->id);
-
-    $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
-
-    $answersummary = (new questions_answered_summary_provider($quba))->collect_summary();
-
-    // Map the linear scale to a logarithmic logit scale.
-    $logit = catalgo::convert_linear_to_logit($attempteddifficultylevel, $questionsdifficultyrange);
-
-    $questionsattempted = $adaptiveattempt->read_attempt_data()->questionsattempted;
-    $standarderror = catalgo::estimate_standard_error($questionsattempted, $answersummary->number_of_correct_answers(),
-        $answersummary->number_of_wrong_answers());
-
-    $measure = catalgo::estimate_measure(
-        difficulty_logit::from_float($catmodelparams->get('difficultysum'))
-            ->summed_with_another_logit(difficulty_logit::from_float($logit))->as_float(),
-        $questionsattempted,
-        $answersummary->number_of_correct_answers(),
-        $answersummary->number_of_wrong_answers()
-    );
-
-    $catmodelparams->update_with_calculation_steps_result(
-        cat_calculation_steps_result::from_floats($logit, $standarderror, $measure)
-    );
-
-    // An answer was submitted, decrement the sum of questions for the attempted difficulty level.
-    fetchquestion::decrement_question_sum_for_difficulty_level($attempteddifficultylevel);
-
-    redirect(new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
-}
+$attempt = adaptive_quiz_session::initialize_attempt($adaptivequiz);
 
 // Initialize quba.
-$qubaid = $adaptiveattempt->read_attempt_data()->uniqueid;
+$qubaid = $attempt->read_attempt_data()->uniqueid;
 $quba = ($qubaid == 0)
     ? question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context)
     : question_engine::load_questions_usage_by_activity($qubaid);
@@ -190,30 +129,30 @@ if ($qubaid == 0) {
     $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 }
 
+$adaptivequizsession = adaptive_quiz_session::init($quba, $adaptivequiz);
+
+// Process answer to previous question if submitted.
+// TODO: consider a better flag of whether a question answer was submitted.
+if ($attemptedqubaslot && confirm_sesskey()) {
+    $adaptivequizsession->process_item_result($attempt, $attemptedqubaslot);
+
+    redirect(new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
+}
+
 $questionanswerevaluation = new question_answer_evaluation($quba);
-$questionanswerevaluationresult = $questionanswerevaluation->perform();
+$previousanswerevaluationresult = $questionanswerevaluation->perform();
 
-$adaptivequiz->context = $context;
-$adaptivequiz->cm = $cm;
-
-$minattemptreached = adaptivequiz_min_number_of_questions_reached($adaptiveattempt->read_attempt_data()->id, $cm->instance,
-    $USER->id);
-
-$algorithm = new catalgo($minattemptreached);
-$fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
-
-$itemadministration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $adaptiveattempt,
-    $adaptivequiz);
-$itemadministrationevaluation = $itemadministration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
+$itemadministrationevaluation = $adaptivequizsession->run_item_administration_evaluation($attempt,
+    $previousanswerevaluationresult);
 
 // Check item administration evaluation.
 if ($itemadministrationevaluation->item_administration_is_to_stop()) {
     // Set the attempt to complete, update the standard error and attempt message, then redirect the user to the attempt-finished
     // page.
-    $adaptiveattempt->complete($context, $itemadministrationevaluation->stoppage_reason(), time());
+    $attempt->complete($context, $itemadministrationevaluation->stoppage_reason(), time());
 
     redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
-        ['attempt' => $adaptiveattempt->read_attempt_data()->id, 'instance' => $adaptivequiz->id]));
+        ['attempt' => $attempt->read_attempt_data()->id, 'instance' => $adaptivequiz->id]));
 }
 
 // Retrieve the question slot id.
@@ -243,7 +182,7 @@ if (!empty($adaptivequiz->password) && empty($condition)) {
 
     $mform->display();
 } else {
-    $attemptdata = $adaptiveattempt->read_attempt_data();
+    $attemptdata = $attempt->read_attempt_data();
 
     if ($adaptivequiz->showattemptprogress) {
         echo $output->container_start('attempt-progress-container');

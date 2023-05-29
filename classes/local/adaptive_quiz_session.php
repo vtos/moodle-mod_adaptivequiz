@@ -81,10 +81,9 @@ final class adaptive_quiz_session {
      * Runs when answer was submitted to a question (item).
      *
      * @param attempt $attempt
-     * @param stdClass $adaptivequiz
      * @param int $attemptedslot Quba slot.
      */
-    public function process_item_result(attempt $attempt, stdClass $adaptivequiz, int $attemptedslot): void {
+    public function process_item_result(attempt $attempt, int $attemptedslot): void {
         $currenttime = time();
 
         $this->quba->process_all_actions($currenttime);
@@ -93,39 +92,7 @@ final class adaptive_quiz_session {
 
         $attempt->update_after_question_answered($currenttime);
 
-        if ($adaptivequiz->catmodel) {
-            return;
-        }
-
-        $attempteddifficultylevel = $this->obtain_difficulty_level_of_question($attemptedslot);
-
-        $catmodelparams = cat_model_params::for_attempt($attempt->read_attempt_data()->id);
-
-        $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($this->adaptivequiz);
-
-        $answersummary = (new questions_answered_summary_provider($this->quba))->collect_summary();
-
-        // Map the linear scale to a logarithmic logit scale.
-        $logit = catalgo::convert_linear_to_logit($attempteddifficultylevel, $questionsdifficultyrange);
-
-        $questionsattempted = $attempt->read_attempt_data()->questionsattempted;
-        $standarderror = catalgo::estimate_standard_error($questionsattempted, $answersummary->number_of_correct_answers(),
-            $answersummary->number_of_wrong_answers());
-
-        $measure = catalgo::estimate_measure(
-            difficulty_logit::from_float($catmodelparams->get('difficultysum'))
-                ->summed_with_another_logit(difficulty_logit::from_float($logit))->as_float(),
-            $questionsattempted,
-            $answersummary->number_of_correct_answers(),
-            $answersummary->number_of_wrong_answers()
-        );
-
-        $catmodelparams->update_with_calculation_steps_result(
-            cat_calculation_steps_result::from_floats($logit, $standarderror, $measure)
-        );
-
-        // An answer was submitted, decrement the sum of questions for the attempted difficulty level.
-        fetchquestion::decrement_question_sum_for_difficulty_level($attempteddifficultylevel);
+        $this->post_process_item_result($attempt, $attemptedslot);
     }
 
     /**
@@ -224,7 +191,7 @@ final class adaptive_quiz_session {
     }
 
     /**
-     * Runs actions, which need o be run when a new attempt is created.
+     * Runs actions, which need to be run when a new attempt is created.
      *
      * In case of using a custom CAT model wires up its callback (if defined). Otherwise, runs initialization for the default
      * CAT algorithm.
@@ -259,6 +226,71 @@ final class adaptive_quiz_session {
 
         $functionname = $pluginswithfunction[$catmodelcomponentname];
         $functionname($adaptivequiz, $attempt);
+    }
+
+    /**
+     * Runs actions, which need to be run when answer to the previously administered item is processed.
+     *
+     * In case of using a custom CAT model wires up its callback (if defined). Otherwise, runs logic for the default
+     * CAT algorithm.
+     *
+     * @param attempt $attempt
+     * @param int $attemptedslot
+     */
+    private function post_process_item_result(attempt $attempt, int $attemptedslot): void {
+        if ($this->adaptivequiz->catmodel) {
+            $this->call_catmodel_post_process_item_result($attempt);
+
+            return;
+        }
+
+        $attempteddifficultylevel = $this->obtain_difficulty_level_of_question($attemptedslot);
+
+        $catmodelparams = cat_model_params::for_attempt($attempt->read_attempt_data()->id);
+
+        $questionsdifficultyrange = questions_difficulty_range::from_activity_instance($this->adaptivequiz);
+
+        $answersummary = (new questions_answered_summary_provider($this->quba))->collect_summary();
+
+        // Map the linear scale to a logarithmic logit scale.
+        $logit = catalgo::convert_linear_to_logit($attempteddifficultylevel, $questionsdifficultyrange);
+
+        $questionsattempted = $attempt->read_attempt_data()->questionsattempted;
+        $standarderror = catalgo::estimate_standard_error($questionsattempted, $answersummary->number_of_correct_answers(),
+            $answersummary->number_of_wrong_answers());
+
+        $measure = catalgo::estimate_measure(
+            difficulty_logit::from_float($catmodelparams->get('difficultysum'))
+                ->summed_with_another_logit(difficulty_logit::from_float($logit))->as_float(),
+            $questionsattempted,
+            $answersummary->number_of_correct_answers(),
+            $answersummary->number_of_wrong_answers()
+        );
+
+        $catmodelparams->update_with_calculation_steps_result(
+            cat_calculation_steps_result::from_floats($logit, $standarderror, $measure)
+        );
+
+        // An answer was submitted, decrement the sum of questions for the attempted difficulty level.
+        fetchquestion::decrement_question_sum_for_difficulty_level($attempteddifficultylevel);
+    }
+
+    /**
+     * Calls custom CAT model's callback if it could be found.
+     *
+     * When the callback cannot be executed the method silently exits.
+     *
+     * @param attempt $attempt
+     */
+    private function call_catmodel_post_process_item_result(attempt $attempt): void {
+        $catmodelcomponentname = 'adaptivequizcatmodel_' . $this->adaptivequiz->catmodel;
+        $pluginswithfunction = get_plugin_list_with_function('adaptivequizcatmodel', 'post_process_item_result_callback');
+        if (!array_key_exists($catmodelcomponentname, $pluginswithfunction)) {
+            return;
+        }
+
+        $functionname = $pluginswithfunction[$catmodelcomponentname];
+        $functionname($this->adaptivequiz, $attempt);
     }
 
     /**

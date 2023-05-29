@@ -17,9 +17,9 @@
 /**
  * Contains function with the definition of upgrade steps for the plugin.
  *
- * @package   adaptivequizcatmodel_helloworld
- * @copyright 2023 Vitaly Potenko <potenkov@gmail.com>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    adaptivequizcatmodel_helloworld
+ * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
@@ -58,6 +58,23 @@ function xmldb_adaptivequizcatmodel_helloworld_upgrade($oldversion): bool {
         if ($dbman->field_exists($table, $field)) {
             $dbman->rename_field($table, $field, 'param2');
         }
+    }
+
+    if ($oldversion < 2023052800) {
+        $table = new xmldb_table('catmodel_helloworld_state');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+        $table->add_field('adaptivequizattempt', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+        $table->add_field('stateparam1', XMLDB_TYPE_NUMBER, '10, 5', null, XMLDB_NOTNULL, null, '0.0');
+        $table->add_field('stateparam2', XMLDB_TYPE_NUMBER, '10, 5', null, XMLDB_NOTNULL, null, '0.0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('adaptivequizattempt', XMLDB_KEY_FOREIGN, ['adaptivequizattempt'], 'adaptivequiz_attempt', ['id']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_plugin_savepoint(true, 2023052800, 'adaptivequizcatmodel', 'helloworld');
     }
 
     return true;

@@ -164,11 +164,48 @@ final class adaptive_quiz_session {
         $attempt = attempt::find_in_progress_for_user($adaptivequiz, $USER->id);
         if ($attempt === null) {
             $attempt = attempt::create($adaptivequiz, $USER->id);
-            // TODO: decouple this algorithm-specific logic.
-            cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
+            self::post_create_attempt($adaptivequiz, $attempt);
         }
 
         return $attempt;
+    }
+
+    /**
+     * Runs actions, which need o be run when a new attempt is created.
+     *
+     * In case of using a custom CAT model wires up its callback (if defined). Otherwise, runs initialization for the default
+     * CAT algorithm.
+     *
+     * @param stdClass $adaptivequiz
+     * @param attempt $attempt
+     */
+    private static function post_create_attempt(stdClass $adaptivequiz, attempt $attempt): void {
+        if ($adaptivequiz->catmodel) {
+            self::call_catmodel_post_create_attempt($adaptivequiz, $attempt);
+
+            return;
+        }
+
+        cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
+    }
+
+    /**
+     * Calls custom CAT model's callback if it could be found.
+     *
+     * When the callback cannot be executed the method silently exits.
+     *
+     * @param stdClass $adaptivequiz
+     * @param attempt $attempt
+     */
+    private static function call_catmodel_post_create_attempt(stdClass $adaptivequiz, attempt $attempt): void {
+        $catmodelcomponentname = 'adaptivequizcatmodel_' . $adaptivequiz->catmodel;
+        $pluginswithfunction = get_plugin_list_with_function('adaptivequizcatmodel', 'post_create_attempt_callback');
+        if (!array_key_exists($catmodelcomponentname, $pluginswithfunction)) {
+            return;
+        }
+
+        $functionname = $pluginswithfunction[$catmodelcomponentname];
+        $functionname($adaptivequiz, $attempt);
     }
 
     /**

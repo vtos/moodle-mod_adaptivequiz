@@ -15,17 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin basic info.
+ * Definition of plugin's system functions.
  *
  * @package    adaptivequizcatmodel_helloworld
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+use mod_adaptivequiz\local\attempt\attempt;
 
-$plugin->version = 2023052800;
-$plugin->release = '1.0.3dev';
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->requires = 2022041900;
-$plugin->component = 'adaptivequizcatmodel_helloworld';
+/**
+ * Callback to execute when a fresh attempt on adaptive quiz has been created.
+ *
+ * @param stdClass $adaptivequiz
+ * @param attempt $attempt
+ */
+function adaptivequizcatmodel_helloworld_post_create_attempt_callback(stdClass $adaptivequiz, attempt $attempt): void {
+    global $DB;
+
+    // Set some parameters in the database.
+    $record = new stdClass();
+    $record->adaptivequizattempt = $attempt->read_attempt_data()->id;
+    $record->stateparam1 = 5.6;
+    $record->stateparam2 = 124.54;
+    $DB->insert_record('catmodel_helloworld_state', $record);
+}

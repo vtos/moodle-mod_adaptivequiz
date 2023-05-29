@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/adaptivequiz/catmodel/helloworld/db" VERSION="20230310" COMMENT="XMLDB file for Moodle mod/adaptivequiz/catmodel/helloworld"
+<XMLDB PATH="mod/adaptivequiz/catmodel/helloworld/db" VERSION="20230529" COMMENT="XMLDB file for Moodle mod/adaptivequiz/catmodel/helloworld"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="../../../../../lib/xmldb/xmldb.xsd"
 >
@@ -13,6 +13,19 @@
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
+
+        <TABLE NAME="catmodel_helloworld_state" COMMENT="parameters to track while performing an adaptive quiz attempt">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="adaptivequizattempt" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="link with adaptive quiz attempt"/>
+                <FIELD NAME="stateparam1" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT=""/>
+                <FIELD NAME="stateparam2" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT=""/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="adaptivequizattempt" TYPE="foreign" FIELDS="adaptivequizattempt" REFTABLE="adaptivequiz_attempts" REFFIELDS="id"/>
             </KEYS>
         </TABLE>
     </TABLES>

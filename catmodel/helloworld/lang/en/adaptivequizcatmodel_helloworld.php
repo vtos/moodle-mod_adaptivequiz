@@ -26,6 +26,8 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['formelementnegative'] = 'Input a positive number from 1 to 999';
 $string['formlowlevelgreaterthan'] = 'Parameter 1 must be less than parameter 2';
+$string['itemadministration:stopbecauseincorrectanswer'] = 'You have answered incorrectly, so we stopped the attempt, sorry :P';
+$string['itemadministration:stopbecausenomorequestions'] = 'We have run out of questions, you won!';
 $string['param1'] = 'Parameter 1';
 $string['param1_help'] = 'An example parameter for the CAT model. The value must be less than the value of parameter 2 (just for the demo validation purposes).';
 $string['param2'] = 'Parameter 2';

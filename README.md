@@ -201,19 +201,21 @@ and select questions when running a quiz. At this moment, this is an experimenta
 This section describes the ongoing work for those who are interested in this functionality to be present in
 the adaptive quiz activity.
 
-The plugin now supports sub-plugins placed under `/mod/adaptivequiz/catmodel` directory. Each sub-plugin of such type
-is implementation of a custom CAT model. Currently, such sub-plugins are enabled to modify the activity form by adding
+The plugin supports sub-plugins placed under `/mod/adaptivequiz/catmodel` directory. Each sub-plugin of such type
+is implementation of a custom CAT model. Such sub-plugins are enabled to modify the activity form by adding
 custom fields there, validation for those fields and specifying the way those fields are populated when the form is initialized.
-Also, a sub-plugin can inject custom logic to be called when an adaptive quiz is created, updated and deleted.
-Basically, this allows for processing the custom form fields added by a sub-plugin. The ways a sub-plugin injects such
-functionality are described in detail below.
+Sub-plugin can inject custom logic to be called when an adaptive quiz is created, updated and deleted. Basically, this allows for
+processing the custom form fields added by a sub-plugin. Finally, sub-plugins can implement certain hooks to replace the default
+logic of administering items (questions) during the quiz and inject their own logic based on some custom algorithms. The ways
+a sub-plugin injects such functionality are described in detail below.
 
 ## Technical implementation
 
 This section makes the most interest for those who would like to implement certain interfaces to add their custom
-CAT models to get used by the adaptive quiz activity. At this point there are two parts of such extension: `mod_form`
-customization and hooking up to the mod's lib functions, particularly, `adaptivequiz_add_instance()`,
-`adaptivequiz_update_instance()` and `adaptivequiz_delete_instance()`.
+CAT models to get used by the adaptive quiz activity. At this point there are three parts of such extension: `mod_form`
+customization, hooking up to the mod's lib functions, particularly, `adaptivequiz_add_instance()`,
+`adaptivequiz_update_instance()` and `adaptivequiz_delete_instance()`, and the most powerful one - implementing of item
+administration interface and a couple of callbacks with specific names placed in sub-plugin's `lib.php`.
 
 ### Customization of `mod_form`
 
@@ -330,10 +332,125 @@ In a sub-plugin, the implementations of the interfaces listed above are expected
 `adaptivequizcatmodel_{your sub-plugin name}\local\catmodel\instance` namespace
 and `/mod/adaptivequiz/catmodel/{your sub-plugin name}/classes/local/catmodel/instance` directory.
 
-### Future plans
-At this point after developing a CAT model sub-plugin and successfully implementing the available interfaces, an instance of adaptive
-quiz using such sub-plugin will be entirely broken and unusable, because custom CAT models aren't yet supported in
-the adaptive quiz's backend. More work is expected to follow in this direction based on the feedback on initial implementation
-described here.
+### Item administration interface
 
-So, any feedback on the current sub-plugins structure is always welcome!
+In the process of CAT item administration is basically presenting questions to the test-taker. On the technical level, in
+the adaptive quiz activity this is an interface, which has one public method:
+
+```
+item_administration::evaluate_ability_to_administer_next_item(
+    ?question_answer_evaluation_result $questionanswerevaluationresult
+): item_administration_evaluation;
+```
+
+The method accepts one typed parameter - the result of question answer evaluation. This is an assessment of whether
+the previous administered question was answered correctly/incorrectly. Thus, an instance of `question_answer_evaluation_result`
+has one public method to call - `answer_is_correct()`, which returns a boolean value.
+
+The `$questionanswerevaluationresult` parameter may also be null. This is the case when attempt has just started and no question
+has been administered yet. Implementations of the interface must handle such value as well.
+
+`item_administration::evaluate_ability_to_administer_next_item()` returns an object of specific type -
+`item_administration_evaluation`. It has two properties which must be populated depending on the result of evaluating ability
+to administer next question:
+1. `nextitem` - in case the next item (question) should be administered, this should acquire a value of the `next_item` type.
+`next_item` is a very simple value object, containing just a **slot** number of the next question to administer. This slot
+number is produced by Moodle's `question_usage_by_activity` class, see the important note on this below.
+2. `stoppagereason` - in case item administration must stop, this property is populated with the string value of the reason
+to stop administering questions.
+
+Of course normally only one property should be populated while another one must be null. The class contains a couple of
+convenience factory methods to quickly instantiate a corresponding object, check the class' definition. If by any chance both
+properties are populated, the `stoppagereason` has the priority and the attempt will be stopped even if `nextitem` is populated
+as well.
+
+**Important note on providing a slot value for `next_item` object:** to have the slot value for a question you normally run
+several actions with Moodle's `question_usage_by_activity` instance. When possessing some question id, the sequence may look
+like this:
+
+```
+$question = question_bank::load_question($questionid);
+$slot = $quba->add_question($question);
+$quba->start_question($slot);
+question_engine::save_questions_usage_by_activity($quba);
+```
+
+After that you have a valid slot number (that `$slot` variable) to use as a question reference. In the current implementation,
+a sub-plugin is fully responsible for running this sequence each time it fetches a question to administer. As always, take
+a look at how it's done in the example `helloworld` sub-plugin. In future versions this `quba` management will be a part of
+adaptive quiz engine and a sub-plugin will provide just id of the question it wants to administer, but for now a sub-plugin
+does some `quba` management alongside with returning a valid question's slot number.
+
+### Item administration factory
+
+To provide an implementation of item administration described above a sub-plugin is required to implement the following
+factory interface:
+
+```
+item_administration_factory::item_administration_implementation(
+        question_usage_by_activity $quba,
+        attempt $attempt,
+        stdClass $adaptivequiz
+    ): item_administration;
+```
+
+The purpose for this interface is to give sub-plugins an ability to instantiate an item administration object with some
+constructor parameters, basically, its dependencies. The only public method accepts several arguments - this is the most
+general data, which may be required when instantiating an item administration object. Perhaps, it may require more,
+suggestions on extending this range of provided data are always welcome! Below is a quick summary of the arguments:
+1. `question_usage_by_activity $quba` - a well-known Moodle's part of the question engine
+2. `attempt $attempt` - the attempt entity, normally should be used to just read data from using
+the `read_attempt_data()->{property}` statement, where `{property}` is a field name from the attempts database table.
+3. `stdClass $adaptivequiz` - an activity instance record, but with a couple of extra properties - `context` and `cm` - also 
+are well-known Moodle objects.
+
+This data should be sufficient to run item administration, as with its help a sub-plugin may fetch its own data linked to
+the attempt, for example (and which normally should be the case).
+
+The returned value is an instance of the class implementing the `item_administration` interface, described in the previous
+section.
+
+### Callbacks
+The adaptive quiz engine supports two callbacks, which may be implemented by sub-plugins to run some specific logic:
+1. `post_create_attempt_callback` - can be run when a new attempt has just been created. This may be used by a sub-plugin
+to initialize its own data in some way, etc.
+2. `post_process_item_result_callback` - can be run when a question answer has been submitted. Please, do not confuse it with
+item administration interface, which should decide what next question should be ot stop the attempt. This callback instead
+allows a sub-plugin run some intermediate logic between answering questions by the test-taker. For example, update some
+calculations in its database, even trigger its own events and whatever. Deciding what the next question should be or whether 
+the attempt will stop must still be inside implementation of the item administration interface.
+
+How to define those callback in a sub-plugin and where to place them to be picked up by the adaptive quiz engine?
+The mechanism is absolutely the same as for any other callback in Moodle. Callbacks in sub-plugins are expected to be in
+`lib.php` file. Each callback is a function, starting with sub-plugin's `{component name}`, and ending with `_callback`.
+For the `helloworld` sub-plugin it looks like this:
+
+```
+function adaptivequizcatmodel_helloworld_post_create_attempt_callback(stdClass $adaptivequiz, attempt $attempt): void
+```
+
+```
+function adaptivequizcatmodel_helloworld_post_process_item_result_callback(stdClass $adaptivequiz, attempt $attempt): void`
+```
+
+As you can see, callbacks return nothing (they're expected to simply run some logic, no flow control like redirects or output
+is expected, just some background actions) and accept two arguments:
+1. `stdClass $adaptivequiz` - an activity instance record, but with a couple of extra properties - `context` and `cm` - are
+well-known Moodle objects.
+2. `attempt $attempt` - the attempt entity, normally should be used to just read data from using
+the `read_attempt_data()->{property}` statement, where `{property}` is a field name from the attempts database table.
+
+A callback is supposed to fetch all the required data by using the attempt data passed as an argument and then act on its own way.
+
+### Hooking to attempt completion
+If some actions (also in background) should be done by a sub-plugin once an attempt is completed, it may handle the adaptive quiz
+plugin's even, which is available site-wide - `\mod_adaptivequiz\event\attempt_completed`.
+
+### Future plans
+At this point after developing a CAT model sub-plugin and successfully implementing the available interfaces, the reporting pages
+will not display any sensible data on the attempts made using custom CAT models. It's to be decided how to handle reporting when
+using sub*plugins. Obviously, a sub-plugin should be responsible for displaying the reporting data on its own, and
+the adaptive quiz activity should somehow redirect to that reporting. The drawback of the existing visual design of
+the adaptive quiz activity is displaying some piece of reporting on its view.php page.
+
+Any feedback on the current sub-plugins structure is always welcome!

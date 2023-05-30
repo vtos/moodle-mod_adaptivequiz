@@ -100,9 +100,10 @@ final class mod_form_extension implements
      * Fetches id of the custom CAT model's record to enable using it in the form when updating the model's parameters.
      *
      * @param array $formdefaultvalues
+     * @param MoodleQuickForm|null $form
      * @return array
      */
-    public function data_preprocessing_callback(array $formdefaultvalues): array {
+    public function data_preprocessing_callback(array $formdefaultvalues, $form = null): array {
         global $DB;
 
         $formdefaultvalues['catmodelinstanceid'] = $DB->get_field('catmodel_helloworld', 'id',

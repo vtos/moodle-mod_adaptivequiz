@@ -24,7 +24,7 @@ use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
 use mod_adaptivequiz\local\question\difficulty_questions_mapping;
-use mod_adaptivequiz\local\question\question_answer_evaluation_result;
+use mod_adaptivequiz\local\question\question_answer_evaluation;
 use question_bank;
 use question_engine;
 
@@ -82,12 +82,14 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
         $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 
+        $questionanswerevaluation = new question_answer_evaluation($quba);
+
         $algorithm = new catalgo(false);
 
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
-            $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($questionanswerevaluation, $quba, $algorithm,
+            $fetchquestion, $attempt, $adaptivequiz);
 
         // Given no questions had been answered previously.
 
@@ -159,12 +161,14 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
         $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 
+        $questionanswerevaluation = new question_answer_evaluation($quba);
+
         $algorithm = new catalgo(false);
 
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
-            $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($questionanswerevaluation, $quba, $algorithm,
+            $fetchquestion, $attempt, $adaptivequiz);
 
         // Given the starting question was previously attempted.
         $slot = $quba->add_question(question_bank::load_question($attemptedquestion->id));
@@ -187,10 +191,10 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
             ->as_array();
 
         // And no answer was submitted during the current attempt.
-        $questionanswerevaluationresult = null;
+        $lastattemptedslot = null;
 
         // When performing item administration evaluation.
-        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
+        $result = $administration->evaluate_ability_to_administer_next_item($lastattemptedslot);
 
         // Then the result of evaluation is next item with particular properties will be administered.
         $expectation = new next_item(2);
@@ -247,11 +251,13 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
         $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 
+        $questionanswerevaluation = new question_answer_evaluation($quba);
+
         $algorithm = new catalgo(false);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
-            $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($questionanswerevaluation, $quba, $algorithm,
+            $fetchquestion, $attempt, $adaptivequiz);
 
         // Given certain amount of questions have been answered previously.
         $questionids = question_bank::get_finder()->get_questions_from_categories($questioncategory->id, '');
@@ -271,8 +277,6 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         // And the last attempted difficulty is within the boundaries.
         $attempteddifficultylevel = 8;
 
-        // And the next question was answered.
-        $questionanswerevaluationresult = question_answer_evaluation_result::when_answer_is_correct();
         // And the amount of questions attempted has reached the maximum.
         $i = 1;
         do {
@@ -289,7 +293,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
             ->as_array();
 
         // When performing item administration evaluation.
-        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
+        $result = $administration->evaluate_ability_to_administer_next_item($slot);
 
         // Then the result of evaluation is to stop item administration.
         self::assertTrue($result->item_administration_is_to_stop());
@@ -339,22 +343,24 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
         $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 
+        $questionanswerevaluation = new question_answer_evaluation($quba);
+
         $algorithm = new catalgo(false);
 
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
-            $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($questionanswerevaluation, $quba, $algorithm,
+            $fetchquestion, $attempt, $adaptivequiz);
 
         // Given no questions were attempted.
         // And a question has been displayed previously to the user, but not submitted.
         $slot = $quba->add_question(question_bank::load_question($displayedquestion->id));
         $quba->start_question($slot);
 
-        $questionanswerevaluationresult = null;
+        $lastattemptedslot = null;
 
         // When performing item administration evaluation.
-        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
+        $result = $administration->evaluate_ability_to_administer_next_item($lastattemptedslot);
 
         // Then the result of evaluation is next item is the previously displayed question.
         $expectation = new next_item($slot);
@@ -504,16 +510,14 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
             ->add_to_questions_number_for_difficulty($notattemptedquestion2difficulty, 1)
             ->as_array();
 
-        // And an answer was submitted for the next question.
-        $questionanswerevaluationresult = question_answer_evaluation_result::when_answer_is_correct();
-
         // When performing item administration evaluation.
+        $questionanswerevaluation = new question_answer_evaluation($quba);
         $algorithm = new catalgo(false);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
-        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
-            $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($questionanswerevaluation, $quba, $algorithm,
+            $fetchquestion, $attempt, $adaptivequiz);
 
-        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
+        $result = $administration->evaluate_ability_to_administer_next_item($slot);
 
         // Then the result of evaluation is next item with particular properties will be administered.
         $expectation = new next_item(count($slots) + 1);
@@ -637,16 +641,14 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
             ->add_to_questions_number_for_difficulty($attemptedquestion3difficulty, 1)
             ->as_array();
 
-        // And an answer was submitted for the next question.
-        $questionanswerevaluationresult = question_answer_evaluation_result::when_answer_is_correct();
-
         // When performing item administration evaluation.
+        $questionanswerevaluation = new question_answer_evaluation($quba);
         $algorithm = new catalgo(false);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
-        $administration = new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt,
-            $adaptivequiz);
+        $administration = new item_administration_using_default_algorithm($questionanswerevaluation, $quba, $algorithm,
+            $fetchquestion, $attempt, $adaptivequiz);
 
-        $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
+        $result = $administration->evaluate_ability_to_administer_next_item($slot);
 
         // Then the result of evaluation is to stop the attempt due to no questions for the next difficulty level.
         $expectation = item_administration_evaluation::with_stoppage_reason(

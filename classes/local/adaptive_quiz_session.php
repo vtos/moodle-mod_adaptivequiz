@@ -27,7 +27,6 @@ use mod_adaptivequiz\local\catalgorithm\difficulty_logit;
 use mod_adaptivequiz\local\itemadministration\default_item_administration_factory;
 use mod_adaptivequiz\local\itemadministration\item_administration_evaluation;
 use mod_adaptivequiz\local\itemadministration\item_administration_factory;
-use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use mod_adaptivequiz\local\question\questions_answered_summary_provider;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use question_engine;
@@ -96,24 +95,19 @@ final class adaptive_quiz_session {
     }
 
     /**
-     * A wrapper around item administration service.
-     *
-     * Obtains implementation of item administration from the factory and runs its evaluating method.
+     * A wrapper around certain actions required for item administration.
      *
      * @param attempt $attempt
-     * @param question_answer_evaluation_result|null $previousanswerevaluation
      * @return item_administration_evaluation
      */
-    public function run_item_administration_evaluation(
-        attempt $attempt,
-        ?question_answer_evaluation_result $previousanswerevaluation
-    ): item_administration_evaluation {
-        $evaluationresult = $this->itemadministrationfactory->item_administration_implementation($this->quba, $attempt, $this->adaptivequiz)
-            ->evaluate_ability_to_administer_next_item($previousanswerevaluation);
+    public function run_item_administration_evaluation(attempt $attempt): item_administration_evaluation {
+        $itemadministrationevaluationresult = $this->itemadministrationfactory
+            ->item_administration_implementation($this->quba, $attempt, $this->adaptivequiz)
+            ->evaluate_ability_to_administer_next_item($this->find_last_question_slot());
 
         $attempt->set_quba_id($this->quba->get_id());
 
-        return $evaluationresult;
+        return $itemadministrationevaluationresult;
     }
 
     /**
@@ -126,13 +120,11 @@ final class adaptive_quiz_session {
      * @return self
      */
     public static function init(question_usage_by_activity $quba, stdClass $adaptivequiz): self {
-        if ($adaptivequiz->catmodel) {
-            $itemadministrationfactory = self::catmodel_item_administration_factory($adaptivequiz);
+        $itemadministrationfactory = $adaptivequiz->catmodel
+            ? self::catmodel_item_administration_factory($adaptivequiz)
+            : new default_item_administration_factory();
 
-            return new self($itemadministrationfactory, $quba, $adaptivequiz);
-        }
-
-        return new self(new default_item_administration_factory(), $quba, $adaptivequiz);
+        return new self($itemadministrationfactory, $quba, $adaptivequiz);
     }
 
     /**
@@ -309,5 +301,21 @@ final class adaptive_quiz_session {
         $questiontag = array_shift($questiontags);
 
         return substr($questiontag->name, strlen(ADAPTIVEQUIZ_QUESTION_TAG));
+    }
+
+    /**
+     * Searches for slot of the last question used by the adaptive quiz activity for the current attempt.
+     *
+     * @return int|null
+     */
+    private function find_last_question_slot(): ?int {
+        // The last slot in the array should be the last question that was attempted (meaning it was either shown to the user or the
+        // user submitted an answer to it).
+        $slots = $this->quba->get_slots();
+        if (empty($slots)) {
+            return null;
+        }
+
+        return array_pop($slots);
     }
 }

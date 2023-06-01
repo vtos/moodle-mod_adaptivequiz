@@ -30,7 +30,6 @@ require_once($CFG->dirroot . '/tag/lib.php');
 use mod_adaptivequiz\local\adaptive_quiz_requires;
 use mod_adaptivequiz\local\adaptive_quiz_session;
 use mod_adaptivequiz\local\attempt\attempt;
-use mod_adaptivequiz\local\question\question_answer_evaluation;
 
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
@@ -139,11 +138,7 @@ if ($attemptedqubaslot && confirm_sesskey()) {
     redirect(new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
 }
 
-$questionanswerevaluation = new question_answer_evaluation($quba);
-$previousanswerevaluationresult = $questionanswerevaluation->perform();
-
-$itemadministrationevaluation = $adaptivequizsession->run_item_administration_evaluation($attempt,
-    $previousanswerevaluationresult);
+$itemadministrationevaluation = $adaptivequizsession->run_item_administration_evaluation($attempt);
 
 // Check item administration evaluation.
 if ($itemadministrationevaluation->item_administration_is_to_stop()) {

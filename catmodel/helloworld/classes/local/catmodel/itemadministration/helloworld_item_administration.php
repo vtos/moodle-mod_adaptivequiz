@@ -19,6 +19,7 @@ namespace adaptivequizcatmodel_helloworld\local\catmodel\itemadministration;
 use mod_adaptivequiz\local\itemadministration\item_administration;
 use mod_adaptivequiz\local\itemadministration\item_administration_evaluation;
 use mod_adaptivequiz\local\itemadministration\next_item;
+use mod_adaptivequiz\local\question\question_answer_evaluation;
 use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use question_bank;
 use question_engine;
@@ -35,6 +36,11 @@ use stdClass;
 final class helloworld_item_administration implements item_administration {
 
     /**
+     * @var question_answer_evaluation $questionanswerevaluation
+     */
+    private $questionanswerevaluation;
+
+    /**
      * @var question_usage_by_activity $quba
      */
     private $quba;
@@ -47,10 +53,16 @@ final class helloworld_item_administration implements item_administration {
     /**
      * The constructor.
      *
+     * @param question_answer_evaluation $questionanswerevaluation
      * @param question_usage_by_activity $quba
      * @param stdClass $adaptivequiz
      */
-    public function __construct(question_usage_by_activity $quba, stdClass $adaptivequiz) {
+    public function __construct(
+        question_answer_evaluation $questionanswerevaluation,
+        question_usage_by_activity $quba,
+        stdClass $adaptivequiz
+    ) {
+        $this->questionanswerevaluation = $questionanswerevaluation;
         $this->quba = $quba;
         $this->adaptivequiz = $adaptivequiz;
     }
@@ -61,13 +73,11 @@ final class helloworld_item_administration implements item_administration {
      * The example logic is to stop the attempt if the question is answered incorrectly, in case of a correct answer just fetch
      * any random question from the configured pool.
      *
-     * @param question_answer_evaluation_result|null $questionanswerevaluationresult
+     * @param int|null $previousquestionslot
      * @return item_administration_evaluation
      */
-    public function evaluate_ability_to_administer_next_item(
-        ?question_answer_evaluation_result $questionanswerevaluationresult
-    ): item_administration_evaluation {
-        if (is_null($questionanswerevaluationresult)) {
+    public function evaluate_ability_to_administer_next_item(?int $previousquestionslot): item_administration_evaluation {
+        if (is_null($previousquestionslot)) {
             // This means no answer has been given yet, it's a fresh attempt.
             if (!$questionid = $this->fetch_question_id()) {
                 return item_administration_evaluation::with_stoppage_reason(
@@ -79,6 +89,8 @@ final class helloworld_item_administration implements item_administration {
 
             return item_administration_evaluation::with_next_item(new next_item($slot));
         }
+
+        $questionanswerevaluationresult = $this->questionanswerevaluation->perform($previousquestionslot);
 
         if (!$questionanswerevaluationresult->answer_is_correct()) {
             return item_administration_evaluation::with_stoppage_reason(

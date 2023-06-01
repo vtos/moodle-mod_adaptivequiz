@@ -21,7 +21,7 @@ use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
-use mod_adaptivequiz\local\question\question_answer_evaluation_result;
+use mod_adaptivequiz\local\question\question_answer_evaluation;
 use mod_adaptivequiz\local\question\questions_answered_summary_provider;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use moodle_exception;
@@ -38,13 +38,18 @@ use stdClass;
 /**
  * The class is responsible for administering an item (a question) during a CAT session.
  *
- * At first step this is mainly extraction of some code from the irrelevant class.
+ * Brings lots of legacy code together and still is a good candidate for refactoring.
  *
  * @package    mod_adaptivequiz
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class item_administration_using_default_algorithm implements item_administration {
+
+    /**
+     * @var question_answer_evaluation $questionanswerevaluation
+     */
+    private $questionanswerevaluation;
 
     /**
      * @var question_usage_by_activity $quba
@@ -74,6 +79,7 @@ final class item_administration_using_default_algorithm implements item_administ
     /**
      * The constructor.
      *
+     * @param question_answer_evaluation $questionanswerevaluation
      * @param question_usage_by_activity $quba
      * @param catalgo $algorithm
      * @param fetchquestion $fetchquestion
@@ -81,12 +87,14 @@ final class item_administration_using_default_algorithm implements item_administ
      * @param stdClass $adaptivequiz
      */
     public function __construct(
+        question_answer_evaluation $questionanswerevaluation,
         question_usage_by_activity $quba,
         catalgo $algorithm,
         fetchquestion $fetchquestion,
         attempt $attempt,
         stdClass $adaptivequiz
     ) {
+        $this->questionanswerevaluation = $questionanswerevaluation;
         $this->quba = $quba;
         $this->algorithm = $algorithm;
         $this->fetchquestion = $fetchquestion;
@@ -97,17 +105,19 @@ final class item_administration_using_default_algorithm implements item_administ
     /**
      * Assesses the ability to administer next question during the quiz.
      *
-     * @param question_answer_evaluation_result|null $questionanswerevaluationresult
+     * @param int|null $previousquestionslot
      * @return item_administration_evaluation
      * @throws moodle_exception
      */
-    public function evaluate_ability_to_administer_next_item(
-        ?question_answer_evaluation_result $questionanswerevaluationresult
-    ): item_administration_evaluation {
+    public function evaluate_ability_to_administer_next_item(?int $previousquestionslot): item_administration_evaluation {
+        $questionanswerevaluationresult = is_null($previousquestionslot)
+            ? null
+            : $this->questionanswerevaluation->perform($previousquestionslot);
+
         // TODO: wrap this into some service/method.
         $lastdifficultylevel = 0;
-        if ($slots = $this->quba->get_slots()) {
-            $question = $this->quba->get_question(array_pop($slots));
+        if (!is_null($previousquestionslot)) {
+            $question = $this->quba->get_question($previousquestionslot);
 
             $questiontags = core_tag_tag::get_item_tags('core_question', 'question', $question->id);
             $questiontags = array_filter($questiontags, function (core_tag_tag $tag): bool {

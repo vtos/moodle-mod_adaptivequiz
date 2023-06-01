@@ -34,29 +34,6 @@ use question_engine;
  */
 class question_answer_evaluation_test extends advanced_testcase {
 
-    public function test_it_gives_no_evaluation_when_no_answer_was_given_to_question(): void {
-        self::resetAfterTest();
-
-        $course = $this->getDataGenerator()->create_course();
-
-        $adaptivequiz = $this->getDataGenerator()
-            ->get_plugin_generator('mod_adaptivequiz')
-            ->create_instance([
-                'highestlevel' => 10,
-                'lowestlevel' => 1,
-                'standarderror' => 14,
-                'course' => $course->id,
-            ]);
-
-        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
-        $context = context_module::instance($cm->id);
-
-        $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
-
-        $questionanswerevaluation = new question_answer_evaluation($quba);
-        self::assertNull($questionanswerevaluation->perform());
-    }
-
     public function test_it_gives_proper_answer_evaluation(): void {
         self::resetAfterTest();
 
@@ -102,7 +79,7 @@ class question_answer_evaluation_test extends advanced_testcase {
 
         // When performing answer evaluation.
         $questionanswerevaluation = new question_answer_evaluation($quba);
-        $evaluationresult = $questionanswerevaluation->perform();
+        $evaluationresult = $questionanswerevaluation->perform($slot);
 
         // Then no evaluation is expected.
         self::assertNull($evaluationresult);
@@ -118,7 +95,7 @@ class question_answer_evaluation_test extends advanced_testcase {
 
         // When performing answer evaluation.
         $questionanswerevaluation = new question_answer_evaluation($quba);
-        $evaluationresult = $questionanswerevaluation->perform();
+        $evaluationresult = $questionanswerevaluation->perform($slot);
 
         // Then the evaluation result should match the one expected for a correct question answer.
         self::assertEquals($evaluationresult, question_answer_evaluation_result::when_answer_is_correct());
@@ -134,7 +111,7 @@ class question_answer_evaluation_test extends advanced_testcase {
 
         // When performing answer evaluation.
         $questionanswerevaluation = new question_answer_evaluation($quba);
-        $evaluationresult = $questionanswerevaluation->perform();
+        $evaluationresult = $questionanswerevaluation->perform($slot);
 
         // Then the evaluation result should match the one expected for a incorrect question answer.
         self::assertEquals($evaluationresult, question_answer_evaluation_result::when_answer_is_incorrect());

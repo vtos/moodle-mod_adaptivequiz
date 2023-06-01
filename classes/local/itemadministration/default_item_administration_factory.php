@@ -19,6 +19,7 @@ namespace mod_adaptivequiz\local\itemadministration;
 use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
+use mod_adaptivequiz\local\question\question_answer_evaluation;
 use question_usage_by_activity;
 use stdClass;
 
@@ -46,12 +47,15 @@ final class default_item_administration_factory implements item_administration_f
     ): item_administration {
         global $USER;
 
+        $questionanswerevaluation = new question_answer_evaluation($quba);
+
         $minattemptreached = adaptivequiz_min_number_of_questions_reached($attempt->read_attempt_data()->id, $adaptivequiz->id,
             $USER->id);
 
         $algorithm = new catalgo($minattemptreached);
         $fetchquestion = new fetchquestion($adaptivequiz, 1, $adaptivequiz->lowestlevel, $adaptivequiz->highestlevel);
 
-        return new item_administration_using_default_algorithm($quba, $algorithm, $fetchquestion, $attempt, $adaptivequiz);
+        return new item_administration_using_default_algorithm($questionanswerevaluation, $quba, $algorithm, $fetchquestion,
+            $attempt, $adaptivequiz);
     }
 }

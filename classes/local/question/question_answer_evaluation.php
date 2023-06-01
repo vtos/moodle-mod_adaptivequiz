@@ -46,15 +46,10 @@ final class question_answer_evaluation {
     /**
      * Runs the evaluation and produces a result.
      *
+     * @param int $slot
      * @return question_answer_evaluation_result|null
      */
-    public function perform(): ?question_answer_evaluation_result {
-        $slot = $this->find_last_question_slot();
-        if ($slot === null) {
-            // No questions were either shown or answered yet.
-            return null;
-        }
-
+    public function perform(int $slot): ?question_answer_evaluation_result {
         if (!$this->answer_was_given($slot)) {
             return null;
         }
@@ -69,22 +64,6 @@ final class question_answer_evaluation {
         }
 
         return question_answer_evaluation_result::when_answer_is_incorrect();
-    }
-
-    /**
-     * Searches for slot of the last question used by the adaptive quiz activity.
-     *
-     * @return int|null
-     */
-    private function find_last_question_slot(): ?int {
-        // The last slot in the array should be the last question that was attempted (meaning it was either shown to the user or the
-        // user submitted an answer to it).
-        $slots = $this->quba->get_slots();
-        if (empty($slots)) {
-            return null;
-        }
-
-        return array_pop($slots);
     }
 
     /**

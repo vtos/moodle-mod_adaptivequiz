@@ -26,6 +26,8 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['formelementnegative'] = 'Input a positive number from 1 to 999';
 $string['formlowlevelgreaterthan'] = 'Lowest level must be less than highest level';
+$string['itemadministration:stopbecauseincorrectanswer'] = 'You have answered incorrectly, so we stopped the attempt, sorry :P';
+$string['itemadministration:stopbecausenomorequestions'] = 'We have run out of questions, you won!';
 $string['highestlevel'] = 'Highest level of difficulty';
 $string['highestlevel_help'] = 'The highest or most difficult level the assessment can select questions from.  During an attempt the activity will not go beyond this level of difficulty';
 $string['lowestlevel'] = 'Lowest level of difficulty';

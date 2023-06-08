@@ -18,8 +18,6 @@ declare(strict_types=1);
 
 namespace mod_adaptivequiz\local\itemadministration;
 
-use coding_exception;
-
 /**
  * A value object representing result of assessing whether the next item (question) can be administered during a CAT session.
  *
@@ -40,17 +38,12 @@ final class item_administration_evaluation {
     private $stoppagereason;
 
     /**
-     * The constructor.
+     * The constructor, closed, names constructors must be used instead.
      *
      * @param next_item|null $nextitem
      * @param string|null $stoppagereason
-     * @throws coding_exception
      */
-    public function __construct(?next_item $nextitem, ?string $stoppagereason) {
-        if ($nextitem === null && $stoppagereason === null) {
-            throw new coding_exception('next item and stoppage reason cannot be both null');
-        }
-
+    private function __construct(?next_item $nextitem, ?string $stoppagereason) {
         $this->nextitem = $nextitem;
         $this->stoppagereason = $stoppagereason;
     }

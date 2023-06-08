@@ -138,22 +138,13 @@ if ($attemptedqubaslot && confirm_sesskey()) {
     redirect(new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]));
 }
 
-$itemadministrationevaluation = $adaptivequizsession->run_item_administration_evaluation($attempt);
+$nextquestionslot = $adaptivequizsession->administer_next_item_or_stop($attempt);
 
-// Check item administration evaluation.
-if ($itemadministrationevaluation->item_administration_is_to_stop()) {
-    // Set the attempt to complete, update the standard error and attempt message, then redirect the user to the attempt-finished
-    // page.
-    $attempt->complete($context, $itemadministrationevaluation->stoppage_reason(), time());
-
+if ($attempt->is_completed()) {
     redirect(new moodle_url('/mod/adaptivequiz/attemptfinished.php',
         ['attempt' => $attempt->read_attempt_data()->id, 'instance' => $adaptivequiz->id]));
 }
 
-// Retrieve the question slot id.
-$slot = $itemadministrationevaluation->next_item()->slot();
-
-$headtags = $output->init_metadata($quba, $slot);
 $PAGE->requires->js_init_call('M.mod_adaptivequiz.init_attempt_form', array($viewurl->out(), $adaptivequiz->browsersecurity),
     false, $output->adaptivequiz_get_js_module());
 
@@ -185,7 +176,7 @@ if (!empty($adaptivequiz->password) && empty($condition)) {
         echo $output->container_end();
     }
 
-    echo $output->question_submit_form($id, $quba, $slot, $attemptdata->questionsattempted + 1);
+    echo $output->question_submit_form($id, $quba, $nextquestionslot, $attemptdata->questionsattempted + 1);
 }
 
 echo $output->print_footer();

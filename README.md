@@ -346,48 +346,27 @@ In the process of CAT item administration is basically presenting questions to t
 the adaptive quiz activity this is an interface, which has one public method:
 
 ```
-item_administration::evaluate_ability_to_administer_next_item(
-    ?question_answer_evaluation_result $questionanswerevaluationresult
-): item_administration_evaluation;
+item_administration::evaluate_ability_to_administer_next_item(?int $previousquestionslot): item_administration_evaluation;
 ```
 
-The method accepts one typed parameter - the result of question answer evaluation. This is an assessment of whether
-the previous administered question was answered correctly/incorrectly. Thus, an instance of `question_answer_evaluation_result`
-has one public method to call - `answer_is_correct()`, which returns a boolean value.
-
-The `$questionanswerevaluationresult` parameter may also be null. This is the case when attempt has just started and no question
-has been administered yet. Implementations of the interface must handle such value as well.
+The method accepts slot number of the previous administered question. By this slot number an implementation may reach out to
+the question engine to evaluate the result (correct/incorrect, fraction, etc.). The `$previousquestionslot` parameter may also be
+null. This is the case when attempt has just started and no question has been administered yet. An implementations of
+the interface must handle such value as well.
 
 `item_administration::evaluate_ability_to_administer_next_item()` returns an object of specific type -
 `item_administration_evaluation`. It has two properties which must be populated depending on the result of evaluating ability
 to administer next question:
 1. `nextitem` - in case the next item (question) should be administered, this should acquire a value of the `next_item` type.
-`next_item` is a very simple value object, containing just a **slot** number of the next question to administer. This slot
-number is produced by Moodle's `question_usage_by_activity` class, see the important note on this below.
+`next_item` is a very simple value object, containing either an id of the next question to be administered, or a **slot** number
+of the next question to be administered. In some case you may already have a slot number of the next question at hand, thus,
+with care about performance you pass it instead of question id, because later on the adaptive quiz engine will anyway try to fetch
+the slot number from that id, as it operates on slots internally.
 2. `stoppagereason` - in case item administration must stop, this property is populated with the string value of the reason
 to stop administering questions.
 
 Of course normally only one property should be populated while another one must be null. The class contains a couple of
-convenience factory methods to quickly instantiate a corresponding object, check the class' definition. If by any chance both
-properties are populated, the `stoppagereason` has the priority and the attempt will be stopped even if `nextitem` is populated
-as well.
-
-**Important note on providing a slot value for `next_item` object:** to have the slot value for a question you normally run
-several actions with Moodle's `question_usage_by_activity` instance. When possessing some question id, the sequence may look
-like this:
-
-```
-$question = question_bank::load_question($questionid);
-$slot = $quba->add_question($question);
-$quba->start_question($slot);
-question_engine::save_questions_usage_by_activity($quba);
-```
-
-After that you have a valid slot number (that `$slot` variable) to use as a question reference. In the current implementation,
-a sub-plugin is fully responsible for running this sequence each time it fetches a question to administer. As always, take
-a look at how it's done in the example `helloworld` sub-plugin. In future versions this `quba` management will be a part of
-adaptive quiz engine and a sub-plugin will provide just id of the question it wants to administer, but for now a sub-plugin
-does some `quba` management alongside with returning a valid question's slot number.
+convenience factory methods to quickly instantiate a corresponding object, check the class' definition.
 
 ### Item administration factory
 

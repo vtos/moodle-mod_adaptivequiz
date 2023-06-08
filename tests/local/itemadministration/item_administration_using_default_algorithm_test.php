@@ -100,7 +100,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $result = $administration->evaluate_ability_to_administer_next_item($questionanswerevaluationresult);
 
         // Then the result of evaluation is next item with particular properties will be administered.
-        $expectation = new next_item(1);
+        $expectation = next_item::from_question_id($itemtoadminister->id);
         self::assertEquals($expectation, $result->next_item());
     }
 
@@ -197,7 +197,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $result = $administration->evaluate_ability_to_administer_next_item($lastattemptedslot);
 
         // Then the result of evaluation is next item with particular properties will be administered.
-        $expectation = new next_item(2);
+        $expectation = next_item::from_question_id($itemtoadminister->id);
         self::assertEquals($expectation, $result->next_item());
     }
 
@@ -363,7 +363,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $result = $administration->evaluate_ability_to_administer_next_item($lastattemptedslot);
 
         // Then the result of evaluation is next item is the previously displayed question.
-        $expectation = new next_item($slot);
+        $expectation = next_item::from_quba_slot($slot);
         self::assertEquals($expectation, $result->next_item());
     }
 
@@ -454,10 +454,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
 
         // Given several questions were attempted previously.
-        $slots = [];
-
         $slot = $quba->add_question(question_bank::load_question($attemptedquestion1->id));
-        $slots[] = $slot;
         $quba->start_question($slot);
 
         $time = time();
@@ -469,7 +466,6 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         question_engine::save_questions_usage_by_activity($quba);
 
         $slot = $quba->add_question(question_bank::load_question($attemptedquestion2->id));
-        $slots[] = $slot;
         $quba->start_question($slot);
 
         $time = time();
@@ -481,7 +477,6 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         question_engine::save_questions_usage_by_activity($quba);
 
         $slot = $quba->add_question(question_bank::load_question($attemptedquestion3->id));
-        $slots[] = $slot;
         $quba->start_question($slot);
 
         $time = time();
@@ -498,7 +493,6 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
             $attempt->update_after_question_answered(time());
             $i++;
         } while ($i <= 3);
-        $attempteddifficultylevel = 6;
 
         // Initialize difficulty-questions mapping by setting a value directly in global session.
         // This is a bad practice and leads to fragile tests. Normally, operating on global session should be removed from
@@ -520,7 +514,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
         $result = $administration->evaluate_ability_to_administer_next_item($slot);
 
         // Then the result of evaluation is next item with particular properties will be administered.
-        $expectation = new next_item(count($slots) + 1);
+        $expectation = next_item::from_question_id($notattemptedquestion2->id);
         self::assertEquals($expectation, $result->next_item());
     }
 

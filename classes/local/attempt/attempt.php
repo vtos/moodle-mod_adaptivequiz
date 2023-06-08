@@ -161,10 +161,14 @@ class attempt {
      * Sets quba id for the attempt.
      *
      * @param int $id
+     * @throws coding_exception
      */
     public function set_quba_id(int $id): void {
-        $this->adpqattempt->uniqueid = $id;
+        if ($this->adpqattempt->uniqueid != 0) {
+            throw new coding_exception('quba id is already set for the attempt');
+        }
 
+        $this->adpqattempt->uniqueid = $id;
         $this->save(time());
     }
 
@@ -175,6 +179,15 @@ class attempt {
      */
     public function read_attempt_data(): stdClass {
         return $this->adpqattempt;
+    }
+
+    /**
+     * Tells whether the attempt is completed.
+     *
+     * @return bool
+     */
+    public function is_completed(): bool {
+        return $this->adpqattempt->attemptstate == attempt_state::COMPLETED;
     }
 
     /**

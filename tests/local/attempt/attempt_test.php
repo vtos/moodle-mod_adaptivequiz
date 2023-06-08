@@ -22,6 +22,7 @@ global $CFG;
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
+use coding_exception;
 use context_module;
 use dml_missing_record_exception;
 use mod_adaptivequiz\event\attempt_completed;
@@ -315,8 +316,12 @@ class attempt_test extends advanced_testcase {
 
         $attempt = attempt::create($adaptivequiz, $user->id);
 
+        self::assertFalse($attempt->is_completed());
+
         $message = '_some_reason_to_stop_the_attempt';
         $attempt->complete(context_module::instance($cm->id), $message, time());
+
+        self::assertTrue($attempt->is_completed());
 
         $expectedfields = new stdClass();
         $expectedfields->attemptstate = attempt_state::COMPLETED;
@@ -364,5 +369,21 @@ class attempt_test extends advanced_testcase {
         $this->assertEquals($attempt->read_attempt_data()->id, $attemptcompletedevent->objectid);
         $this->assertEquals($context, $attemptcompletedevent->get_context());
         $this->assertEquals($user->id, $attemptcompletedevent->userid);
+    }
+
+    public function test_quba_id_can_be_set_only_once(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+
+        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt->set_quba_id(1);
+
+        self::expectException(coding_exception::class);
+        $attempt->set_quba_id(2);
     }
 }

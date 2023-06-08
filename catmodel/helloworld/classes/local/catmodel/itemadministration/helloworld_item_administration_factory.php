@@ -45,6 +45,6 @@ final class helloworld_item_administration_factory implements item_administratio
         attempt $attempt,
         stdClass $adaptivequiz
     ): item_administration {
-        return new helloworld_item_administration(new question_answer_evaluation($quba), $quba, $adaptivequiz);
+        return new helloworld_item_administration(new question_answer_evaluation($quba), $adaptivequiz);
     }
 }

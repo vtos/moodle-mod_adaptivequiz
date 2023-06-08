@@ -25,10 +25,10 @@ use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\catalgorithm\difficulty_logit;
 use mod_adaptivequiz\local\itemadministration\default_item_administration_factory;
-use mod_adaptivequiz\local\itemadministration\item_administration_evaluation;
 use mod_adaptivequiz\local\itemadministration\item_administration_factory;
 use mod_adaptivequiz\local\question\questions_answered_summary_provider;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
+use question_bank;
 use question_engine;
 use question_usage_by_activity;
 use stdClass;
@@ -98,16 +98,38 @@ final class adaptive_quiz_session {
      * A wrapper around certain actions required for item administration.
      *
      * @param attempt $attempt
-     * @return item_administration_evaluation
+     * @return int|null Slot number of the next question or null when the attempt should be stopped.
      */
-    public function run_item_administration_evaluation(attempt $attempt): item_administration_evaluation {
+    public function administer_next_item_or_stop(attempt $attempt): ?int {
         $itemadministrationevaluationresult = $this->itemadministrationfactory
             ->item_administration_implementation($this->quba, $attempt, $this->adaptivequiz)
             ->evaluate_ability_to_administer_next_item($this->find_last_question_slot());
 
-        $attempt->set_quba_id($this->quba->get_id());
+        if ($itemadministrationevaluationresult->item_administration_is_to_stop()) {
+            /** @var \context_module $modcontext */
+            $modcontext = $this->quba->get_owning_context();
+            $attempt->complete($modcontext, $itemadministrationevaluationresult->stoppage_reason(), time());
 
-        return $itemadministrationevaluationresult;
+            return null;
+        }
+
+        $slot = $itemadministrationevaluationresult->next_item()->quba_slot();
+        if (is_null($slot)) {
+            $question = question_bank::load_question($itemadministrationevaluationresult->next_item()->question_id());
+            $slot = $this->quba->add_question($question);
+        }
+
+        if (!$this->quba->get_question_state($slot)->is_active()) {
+            $this->quba->start_question($slot);
+            question_engine::save_questions_usage_by_activity($this->quba);
+
+            // If this is the first question, set quba id for the attempt.
+            if (count($this->quba->get_slots()) == 1) {
+                $attempt->set_quba_id($this->quba->get_id());
+            }
+        }
+
+        return $slot;
     }
 
     /**

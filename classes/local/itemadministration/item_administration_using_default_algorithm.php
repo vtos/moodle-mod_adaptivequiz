@@ -25,8 +25,6 @@ use mod_adaptivequiz\local\question\question_answer_evaluation;
 use mod_adaptivequiz\local\question\questions_answered_summary_provider;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use moodle_exception;
-use question_bank;
-use question_engine;
 use question_state_gaveup;
 use question_state_gradedpartial;
 use question_state_gradedright;
@@ -235,7 +233,7 @@ final class item_administration_using_default_algorithm implements item_administ
         // If the slot property is set, then we have a question that is ready to be attempted.  No more process is required.
         if (!empty($slot)) {
 
-            return item_administration_evaluation::with_next_item(new next_item($slot));
+            return item_administration_evaluation::with_next_item(next_item::from_quba_slot($slot));
         }
 
         // If we are here, then the slot property was unset and a new question needs to prepared for display.
@@ -318,18 +316,7 @@ final class item_administration_using_default_algorithm implements item_administ
         $quest = $questionobj;
         $quest = array_pop($quest);
 
-        // Create the question_definition object.
-        $question = question_bank::load_question($quest->id);
-        // Add the question to the usage question_usable_by_activity object.
-        $slot = $this->quba->add_question($question);
-        // Start the question attempt.
-        $this->quba->start_question($slot);
-        // Save the question usage and question attempt state to the DB.
-        question_engine::save_questions_usage_by_activity($this->quba);
-        // Update the attempt unique id.
-        $this->attempt->set_quba_id($this->quba->get_id());
-
-        return item_administration_evaluation::with_next_item(new next_item($slot));
+        return item_administration_evaluation::with_next_item(next_item::from_question_id($quest->id));
     }
 
     /**

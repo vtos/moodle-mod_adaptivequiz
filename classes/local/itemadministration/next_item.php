@@ -16,6 +16,8 @@
 
 namespace mod_adaptivequiz\local\itemadministration;
 
+use coding_exception;
+
 /**
  * A value object containing info about the next item (question) to be administered during a CAT session.
  *
@@ -26,23 +28,66 @@ namespace mod_adaptivequiz\local\itemadministration;
 final class next_item {
 
     /**
-     * @var int $slot Slot of the next question (that is the item), a quba's thing.
+     * @var int $questionid
      */
-    private $slot;
+    private $questionid;
 
     /**
-     * The constructor.
-     *
-     * @param int $slot
+     * @var int $qubaslot
      */
-    public function __construct(int $slot) {
-        $this->slot = $slot;
+    private $qubaslot;
+
+    /**
+     * The constructor, closed, names constructors must be used instead.
+     *
+     * @param int|null $questionid
+     * @param int|null $qubaslot
+     * @throws coding_exception
+     */
+    private function __construct(?int $questionid, ?int $qubaslot) {
+        if (!is_null($questionid) && $questionid <= 0) {
+            throw new coding_exception('a positive integer is expected for the question id');
+        }
+
+        if (!is_null($qubaslot) && $qubaslot <= 0) {
+            throw new coding_exception('a positive integer is expected for the slot number');
+        }
+
+        $this->questionid = $questionid;
+        $this->qubaslot = $qubaslot;
     }
 
     /**
-     * Queries for the slot property.
+     * Property getter.
      */
-    public function slot(): int {
-        return $this->slot;
+    public function question_id(): ?int {
+        return $this->questionid;
+    }
+
+    /**
+     * Property getter.
+     */
+    public function quba_slot(): ?int {
+        return $this->qubaslot;
+    }
+
+    /**
+     * A named constructor.
+     *
+     * @param int $questionid
+     * @return self
+     */
+    public static function from_question_id(int $questionid): self {
+        return new self($questionid, null);
+    }
+
+    /**
+     * A named constructor.
+     *
+     * @param int $qubaslot
+     * @return self
+     */
+    public static function from_quba_slot(int $qubaslot): self {
+        return new self(null, $qubaslot);
     }
 }

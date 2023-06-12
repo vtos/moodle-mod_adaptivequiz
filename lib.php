@@ -106,6 +106,12 @@ function adaptivequiz_add_instance(stdClass $adaptivequiz, mod_adaptivequiz_mod_
     $adaptivequiz->timemodified = $time;
     $adaptivequiz->attemptfeedbackformat = 0;
 
+    // When a custom CAT model is submitted, some settings should strictly acquire default values as they make sense only when
+    // using the default CAT algorithm.
+    if (!empty($adaptivequiz->catmodel)) {
+        $adaptivequiz->showabilitymeasure = 0;
+    }
+
     $instance = $DB->insert_record('adaptivequiz', $adaptivequiz);
 
     if (empty($instance) && is_int($instance)) {
@@ -211,6 +217,12 @@ function adaptivequiz_update_instance(stdClass $adaptivequiz, mod_adaptivequiz_m
 
     // Get the current value, so we can see what changed.
     $oldquiz = $DB->get_record('adaptivequiz', array('id' => $adaptivequiz->instance));
+
+    // When a custom CAT model is submitted, some settings should strictly acquire default values as they make sense only when
+    // using the default CAT algorithm.
+    if (!empty($adaptivequiz->catmodel)) {
+        $adaptivequiz->showabilitymeasure = 0;
+    }
 
     $instanceid = $DB->update_record('adaptivequiz', $adaptivequiz);
 

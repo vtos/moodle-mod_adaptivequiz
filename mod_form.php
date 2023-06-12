@@ -94,6 +94,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
             [get_string('no'), get_string('yes')]);
         $mform->addHelpButton('showabilitymeasure', 'showabilitymeasure', 'adaptivequiz');
         $mform->setDefault('showabilitymeasure', 0);
+        $mform->hideIf('showabilitymeasure', 'catmodel', 'neq', '');
 
         $mform->addElement('select', 'showattemptprogress', get_string('modformshowattemptprogress', 'adaptivequiz'),
             [get_string('no'), get_string('yes')]);

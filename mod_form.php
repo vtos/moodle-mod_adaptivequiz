@@ -251,6 +251,9 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
             return;
         }
 
+        // Remove fields, which relate to the default algorithm and do not make sense with a custom CAT model.
+        $form->removeElement('showabilitymeasure');
+
         $catmodel = $catmodelvalue[0];
 
         $formmodifierclasses = core_component::get_component_classes_in_namespace(

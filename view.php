@@ -31,6 +31,8 @@ use core\output\notification;
 use mod_adaptivequiz\local\adaptive_quiz_requires;
 use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
+use mod_adaptivequiz\local\report\user_own_attempts_sql_resolver;
+use mod_adaptivequiz\local\report\user_own_attempts_table;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
@@ -39,7 +41,6 @@ use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferenc
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_form;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_repository;
 use mod_adaptivequiz\local\report\users_attempts\users_attempts_table;
-use mod_adaptivequiz\local\user_attempts_table;
 use mod_adaptivequiz\output\user_attempt_summary;
 
 $id = optional_param('id', 0, PARAM_INT);
@@ -191,8 +192,7 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
     if ($allattemptscount && $adaptivequiz->attempts != 1) {
         echo $renderer->heading(get_string('attemptsuserprevious', 'adaptivequiz'), 3);
 
-        $attemptstable = new user_attempts_table($renderer);
-        $attemptstable->init($PAGE->url, $adaptivequiz, $USER->id);
+        $attemptstable = user_own_attempts_table::init($renderer, $PAGE->url, $adaptivequiz);
         $attemptstable->out(10, false);
     }
     if (!$allattemptscount) {

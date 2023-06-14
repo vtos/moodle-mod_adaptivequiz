@@ -77,17 +77,22 @@ final class catquiz_item_administration implements item_administration {
             return item_administration_evaluation::with_next_item(next_item::from_question_id($questionid));
         }
 
-        // TODO: check if answer was correct
-        $questionanswerevaluationresult = question_answer_evaluation_result::when_answer_is_correct();
-        if (!$questionanswerevaluationresult->answer_is_correct()) {
-            return item_administration_evaluation::with_stoppage_reason(
-                get_string('itemadministration:stopbecauseincorrectanswer', 'adaptivequizcatmodel_catquiz')
-            );
-        }
+        // An incorrect answer is no reason to abort.
+        // if (!$questionanswerevaluationresult->answer_is_correct()) {
+        //     return item_administration_evaluation::with_stoppage_reason(
+        //         get_string('itemadministration:stopbecauseincorrectanswer', 'adaptivequizcatmodel_catquiz')
+        //     );
+        // }
 
+        if (!$questionid = $this->fetch_question_id()) {
             return item_administration_evaluation::with_stoppage_reason(
                 get_string('itemadministration:stopbecausenomorequestions', 'adaptivequizcatmodel_catquiz')
             );
+        }
+
+        $slot = $this->get_slot_for_question($questionid);
+
+        return item_administration_evaluation::with_next_item(new next_item($slot));
     }
 
     /**
@@ -97,7 +102,7 @@ final class catquiz_item_administration implements item_administration {
      */
     private function fetch_question_id(): int {
         // Dummy value - will be replaced by custom logic from catquiz handler
-        return catquiz_handler::fetch_question_id();
+        return catquiz_handler::fetch_question_id($this->adaptivequiz->id, 'mod_adaptivequiz');
     }
 
     /**

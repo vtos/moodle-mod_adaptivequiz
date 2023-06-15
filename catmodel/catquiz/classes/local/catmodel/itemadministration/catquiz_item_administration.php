@@ -62,7 +62,7 @@ final class catquiz_item_administration implements item_administration {
      * The example logic is to stop the attempt if the question is answered incorrectly, in case of a correct answer just fetch
      * any random question from the configured pool.
      *
-     * @param question_answer_evaluation_result|null $questionanswerevaluationresult
+     * @param int|null $previousquestionslot
      * @return item_administration_evaluation
      */
     public function evaluate_ability_to_administer_next_item(?int $previousquestionslot): item_administration_evaluation {
@@ -92,7 +92,7 @@ final class catquiz_item_administration implements item_administration {
 
         $slot = $this->get_slot_for_question($questionid);
 
-        return item_administration_evaluation::with_next_item(new next_item($slot));
+        return item_administration_evaluation::with_next_item(next_item::from_quba_slot($slot));
     }
 
     /**

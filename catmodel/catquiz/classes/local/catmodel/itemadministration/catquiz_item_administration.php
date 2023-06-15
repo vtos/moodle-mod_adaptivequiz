@@ -65,10 +65,8 @@ final class catquiz_item_administration implements item_administration {
      * @param question_answer_evaluation_result|null $questionanswerevaluationresult
      * @return item_administration_evaluation
      */
-    public function evaluate_ability_to_administer_next_item(
-        ?question_answer_evaluation_result $questionanswerevaluationresult
-    ): item_administration_evaluation {
-        if (is_null($questionanswerevaluationresult)) {
+    public function evaluate_ability_to_administer_next_item(?int $previousquestionslot): item_administration_evaluation {
+        if (is_null($previousquestionslot)) {
             // This means no answer has been given yet, it's a fresh attempt.
             if (!$questionid = $this->fetch_question_id()) {
                 return item_administration_evaluation::with_stoppage_reason(
@@ -76,26 +74,20 @@ final class catquiz_item_administration implements item_administration {
                 );
             }
 
-            $slot = $this->get_slot_for_question($questionid);
-
-            return item_administration_evaluation::with_next_item(new next_item($slot));
+            return item_administration_evaluation::with_next_item(next_item::from_question_id($questionid));
         }
 
+        // TODO: check if answer was correct
+        $questionanswerevaluationresult = question_answer_evaluation_result::when_answer_is_correct();
         if (!$questionanswerevaluationresult->answer_is_correct()) {
             return item_administration_evaluation::with_stoppage_reason(
                 get_string('itemadministration:stopbecauseincorrectanswer', 'adaptivequizcatmodel_catquiz')
             );
         }
 
-        //if (!$questionid = $this->fetch_question_id()) {
             return item_administration_evaluation::with_stoppage_reason(
                 get_string('itemadministration:stopbecausenomorequestions', 'adaptivequizcatmodel_catquiz')
             );
-        //}
-
-        //$slot = $this->get_slot_for_question($questionid);
-
-        //return item_administration_evaluation::with_next_item(new next_item($slot));
     }
 
     /**

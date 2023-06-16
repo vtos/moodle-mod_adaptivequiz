@@ -41,7 +41,7 @@ $context = context_module::instance($cm->id);
 
 require_capability('mod/adaptivequiz:viewreport', $context);
 
-$returnurl = new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['cmid' => $cm->id, 'userid' => $attempt->userid]);
+$returnurl = new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['id' => $cm->id, 'userid' => $attempt->userid]);
 
 if ($attempt->attemptstate == attempt_state::COMPLETED) {
     throw new moodle_exception('errorclosingattempt_alreadycomplete', 'adaptivequiz', $returnurl);

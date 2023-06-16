@@ -247,6 +247,18 @@ class attempt {
     }
 
     /**
+     * Returns the number of all attempts started in a particular adaptive quiz.
+     *
+     * @param int $adaptivequizid
+     * @return int
+     */
+    public static function total_number(int $adaptivequizid): int {
+        global $DB;
+
+        return $DB->count_records(self::TABLE, ['instance' => $adaptivequizid]);
+    }
+
+    /**
      * Created an instance of attempt, saves it in the database and returns as the result.
      *
      * @param stdClass $adaptivequiz A record from {adaptivequiz}.

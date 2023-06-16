@@ -201,6 +201,30 @@ class attempt_test extends advanced_testcase {
         $this->assertEquals($attempt, attempt::find_in_progress_for_user($adaptivequiz, $user->id));
     }
 
+    public function test_it_reports_total_number_of_attempts_in_activity(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+
+        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
+        $context = context_module::instance($cm->id);
+
+        self::assertEquals(0, attempt::total_number($adaptivequiz->id));
+
+        $attempt = attempt::create($adaptivequiz, $user->id);
+        self::assertEquals(1, attempt::total_number($adaptivequiz->id));
+
+        $attempt->complete($context, '_some_stoppage_reason_', time());
+        self::assertEquals(1, attempt::total_number($adaptivequiz->id));
+
+        attempt::create($adaptivequiz, $user->id);
+        self::assertEquals(2, attempt::total_number($adaptivequiz->id));
+    }
+
     public function test_it_gets_an_attempt_by_its_id(): void {
         $this->resetAfterTest();
 

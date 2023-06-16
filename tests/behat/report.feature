@@ -65,7 +65,9 @@ Feature: View students results in adaptive quiz
   @javascript
   Scenario: Attempts report
     When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-    Then I should see "Attempts report"
+    Then "Attempts: 1" "link" should exist
+    And I click on "Attempts: 1" "link"
+    And I should see "Attempts report"
     And "Peter The Student" "table_row" should exist
     And "Peter The Student" row "Number of attempts" column of "usersattemptstable" table should contain "1"
 
@@ -97,13 +99,15 @@ Feature: View students results in adaptive quiz
     And I press "Yes"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    And I click on "Attempts: 2" "link"
     Then "Henry The Student" "table_row" should not exist
 
   @javascript
   Scenario: Individual user attempts report
     When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    And I click on "Attempts: 1" "link"
     And I click on "1" "link" in the "Peter The Student" "table_row"
-    Then I should see "Adaptive Quiz - individual user attempts report for Peter The Student"
+    Then I should see "Individual user attempts report for Peter The Student"
     And "Completed" "table_row" should exist
     And "Completed" row "Reason for stopping attempt" column of "individualuserattemptstable" table should contain "Unable to fetch a question for level 5"
     And "Completed" row "Sum of questions attempted" column of "individualuserattemptstable" table should contain "2"
@@ -111,6 +115,7 @@ Feature: View students results in adaptive quiz
   @javascript
   Scenario: View attempt summary
     When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    And I click on "Attempts: 1" "link"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Review attempt" "link" in the "Completed" "table_row"
     Then I should see "Peter The Student (peterthestudent@example.com)" in the "User" "table_row"
@@ -118,6 +123,7 @@ Feature: View students results in adaptive quiz
   @javascript
   Scenario: View attempt graph
     When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    And I click on "Attempts: 1" "link"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Review attempt" "link" in the "Completed" "table_row"
     And I click on "Attempt Graph" "link"
@@ -139,6 +145,7 @@ Feature: View students results in adaptive quiz
   @javascript
   Scenario: View attempt answer distribution
     When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    And I click on "Attempts: 1" "link"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Review attempt" "link" in the "Completed" "table_row"
     And I click on "Answer Distribution" "link"
@@ -157,6 +164,7 @@ Feature: View students results in adaptive quiz
   @javascript
   Scenario: View attempt questions details
     When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    And I click on "Attempts: 1" "link"
     And I click on "1" "link" in the "Peter The Student" "table_row"
     And I click on "Review attempt" "link" in the "Completed" "table_row"
     And I click on "Questions Details" "link"

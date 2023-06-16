@@ -24,6 +24,7 @@ use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\output\ability_measure;
 use mod_adaptivequiz\output\attempt_progress;
+use mod_adaptivequiz\output\attempts_number;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_action;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_actions;
 use mod_adaptivequiz\output\user_attempt_summary;
@@ -81,6 +82,35 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             'post',
             single_button::BUTTON_PRIMARY
         ));
+    }
+
+    /**
+     * Renders the link to the general user attempts report.
+     *
+     * @param moodle_url $url
+     * @param int $attemptsnumber
+     * @return string
+     */
+    public function attempts_number(moodle_url $url, int $attemptsnumber): string {
+        return $this->render(new attempts_number($url, $attemptsnumber));
+    }
+
+    /**
+     * Renders the expected renderable.
+     *
+     * @param attempts_number $attemptsnumber
+     * @return string
+     */
+    protected function render_attempts_number(attempts_number $attemptsnumber): string {
+        if ($attemptsnumber->number > 0) {
+            return html_writer::link(
+                $attemptsnumber->reporturl,
+                get_string('attemptsnumber', 'adaptivequiz', $attemptsnumber->number),
+                ['title' => get_string('attemptsnumberlinktitle', 'adaptivequiz')]
+            );
+        }
+
+        return get_string('attemptsnumber', 'adaptivequiz', $attemptsnumber->number);
     }
 
     /**

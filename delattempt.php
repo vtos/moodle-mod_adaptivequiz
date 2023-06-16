@@ -48,7 +48,7 @@ $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-$returnurl = new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['cmid' => $cm->id, 'userid' => $user->id]);
+$returnurl = new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['id' => $cm->id, 'userid' => $user->id]);
 
 $a = new stdClass();
 $a->name = fullname($user);

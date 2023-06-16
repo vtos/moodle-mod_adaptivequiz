@@ -154,7 +154,7 @@ final class users_attempts_table extends table_sql {
             return html_writer::link(
                 new moodle_url(
                     '/mod/adaptivequiz/viewattemptreport.php',
-                    ['userid' => $row->id, 'cmid' => $this->cmid]
+                    ['userid' => $row->id, 'id' => $this->cmid]
                 ),
                 $row->attemptsnum
             );

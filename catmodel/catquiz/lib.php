@@ -36,8 +36,7 @@ use mod_adaptivequiz\local\attempt\cat_model_params;
  */
 function adaptivequizcatmodel_catquiz_post_create_attempt_callback(stdClass $adaptivequiz, attempt $attempt): void {
         cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
-        $contextid = 1;
-        catquiz_handler::purge_attemptquestions_cache($contextid);
+        catquiz_handler::purge_attemptquestions_cache(intval($adaptivequiz->id), 'mod_adaptivequiz');
 }
 
 /**

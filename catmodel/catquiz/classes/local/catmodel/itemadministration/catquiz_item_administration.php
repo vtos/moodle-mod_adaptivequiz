@@ -66,43 +66,30 @@ final class catquiz_item_administration implements item_administration {
      * @return item_administration_evaluation
      */
     public function evaluate_ability_to_administer_next_item(?int $previousquestionslot): item_administration_evaluation {
+        [$questionid, $errormessage] = catquiz_handler::fetch_question_id(
+            $this->adaptivequiz->id,
+            'mod_adaptivequiz'
+        );
+        // This means no answer has been given yet, it's a fresh attempt.
         if (is_null($previousquestionslot)) {
-            // This means no answer has been given yet, it's a fresh attempt.
-            if (!$questionid = $this->fetch_question_id()) {
+            if ($questionid === 0) {
                 return item_administration_evaluation::with_stoppage_reason(
-                    get_string('itemadministration:stopbecausenomorequestions', 'adaptivequizcatmodel_catquiz')
+                    $errormessage
                 );
             }
 
             return item_administration_evaluation::with_next_item(next_item::from_question_id($questionid));
         }
 
-        // An incorrect answer is no reason to abort.
-        // if (!$questionanswerevaluationresult->answer_is_correct()) {
-        //     return item_administration_evaluation::with_stoppage_reason(
-        //         get_string('itemadministration:stopbecauseincorrectanswer', 'adaptivequizcatmodel_catquiz')
-        //     );
-        // }
-
-        if (!$questionid = $this->fetch_question_id()) {
+        if ($questionid === 0) {
             return item_administration_evaluation::with_stoppage_reason(
-                get_string('itemadministration:stopbecausenomorequestions', 'adaptivequizcatmodel_catquiz')
+                $errormessage
             );
         }
 
         $slot = $this->get_slot_for_question($questionid);
 
         return item_administration_evaluation::with_next_item(next_item::from_quba_slot($slot));
-    }
-
-    /**
-     * Fetches a question id for the configured pool.
-     *
-     * @return int Question id
-     */
-    private function fetch_question_id(): int {
-        // Dummy value - will be replaced by custom logic from catquiz handler
-        return catquiz_handler::fetch_question_id($this->adaptivequiz->id, 'mod_adaptivequiz');
     }
 
     /**

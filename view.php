@@ -29,9 +29,9 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use core\output\notification;
 use mod_adaptivequiz\local\adaptive_quiz_requires;
-use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\report\user_own_attempts_table;
+use mod_adaptivequiz\output\attempts_number;
 use mod_adaptivequiz\output\user_attempt_summary;
 
 $id = optional_param('id', 0, PARAM_INT);
@@ -130,13 +130,5 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
     }
 }
 
-if ($canviewattemptsreport) {
-    echo $renderer->container_start('text-center');
-    echo $renderer->attempts_number(
-        new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['id' => $cm->id]),
-        attempt::total_number($adaptivequiz->id)
-    );
-    echo $renderer->container_end();
-}
-
+echo $renderer->render(attempts_number::create($adaptivequiz, $cm));
 echo $OUTPUT->footer();

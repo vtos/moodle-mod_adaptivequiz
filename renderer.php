@@ -89,32 +89,29 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Renders the link to the general user attempts report.
-     *
-     * @param moodle_url $url
-     * @param int $attemptsnumber
-     * @return string
-     */
-    public function attempts_number(moodle_url $url, int $attemptsnumber): string {
-        return $this->render(new attempts_number($url, $attemptsnumber));
-    }
-
-    /**
      * Renders the expected renderable.
      *
      * @param attempts_number $attemptsnumber
      * @return string
      */
     protected function render_attempts_number(attempts_number $attemptsnumber): string {
-        if ($attemptsnumber->number > 0) {
-            return html_writer::link(
-                $attemptsnumber->reporturl,
-                get_string('attemptsnumber', 'adaptivequiz', $attemptsnumber->number),
-                ['title' => get_string('attemptsnumberlinktitle', 'adaptivequiz')]
-            );
+        if (!$attemptsnumber->show) {
+            return '';
         }
 
-        return get_string('attemptsnumber', 'adaptivequiz', $attemptsnumber->number);
+        $reportlink = html_writer::link(
+            $attemptsnumber->reporturl,
+            get_string('attemptsnumber', 'adaptivequiz', $attemptsnumber->number),
+            ['title' => get_string('attemptsnumberlinktitle', 'adaptivequiz')]
+        );
+
+        $output = $this->container_start('text-center');
+        $output .= ($attemptsnumber->number > 0 && !is_null($reportlink))
+            ? $reportlink
+            : get_string('attemptsnumber', 'adaptivequiz', $attemptsnumber->number);
+        $output .= $this->container_end();
+
+        return $output;
     }
 
     /**

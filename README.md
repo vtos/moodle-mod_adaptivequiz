@@ -398,7 +398,7 @@ The returned value is an instance of the class implementing the `item_administra
 section.
 
 ### Callbacks
-The adaptive quiz engine supports two callbacks, which may be implemented by sub-plugins to run some specific logic:
+The adaptive quiz engine supports a number of callbacks, which may be implemented by sub-plugins to run some specific logic:
 1. `post_create_attempt_callback` - can be run when a new attempt has just been created. This may be used by a sub-plugin
 to initialize its own data in some way, etc.
 2. `post_process_item_result_callback` - can be run when a question answer has been submitted. Please, do not confuse it with
@@ -406,8 +406,12 @@ item administration interface, which should decide what next question should be 
 allows a sub-plugin run some intermediate logic between answering questions by the test-taker. For example, update some
 calculations in its database, even trigger its own events and whatever. Deciding what the next question should be or whether 
 the attempt will stop must still be inside implementation of the item administration interface.
+3. `attempts_report_url` - enables a sub-plugin to provide a link to its own attempts report, which will be picked up by
+the adaptive quiz activity and displayed as a number of attempts made in the activity's view page for a manager/teacher role.
+When a custom sub-plugin is used, the default attempts reporting obviously does not make sense. The sub-plugin being used is fully
+responsible for providing proper attempts reporting.
 
-How to define those callback in a sub-plugin and where to place them to be picked up by the adaptive quiz engine?
+How to define those callbacks in a sub-plugin and where to place them to be picked up by the adaptive quiz engine?
 The mechanism is absolutely the same as for any other callback in Moodle. Callbacks in sub-plugins are expected to be in
 `lib.php` file. Each callback is a function, starting with sub-plugin's `{component name}`, and ending with `_callback`.
 For the `helloworld` sub-plugin it looks like this:
@@ -417,17 +421,31 @@ function adaptivequizcatmodel_helloworld_post_create_attempt_callback(stdClass $
 ```
 
 ```
-function adaptivequizcatmodel_helloworld_post_process_item_result_callback(stdClass $adaptivequiz, attempt $attempt): void`
+function adaptivequizcatmodel_helloworld_post_process_item_result_callback(stdClass $adaptivequiz, attempt $attempt): void
 ```
 
-As you can see, callbacks return nothing (they're expected to simply run some logic, no flow control like redirects or output
-is expected, just some background actions) and accept two arguments:
+```
+function adaptivequizcatmodel_helloworld_attempts_report_url(stdClass $adaptivequiz, stdClass $cm): ?moodle_url
+```
+
+As you can see, the first two callbacks return nothing (they're expected to simply run some logic, no flow control like redirects
+or output is expected, just some background actions) and accept two arguments:
 1. `stdClass $adaptivequiz` - an activity instance record, but with a couple of extra properties - `context` and `cm` - are
 well-known Moodle objects.
 2. `attempt $attempt` - the attempt entity, normally should be used to just read data from using
 the `read_attempt_data()->{property}` statement, where `{property}` is a field name from the attempts database table.
 
-A callback is supposed to fetch all the required data by using the attempt data passed as an argument and then act on its own way.
+These callbacks are supposed to fetch all the required data by using the attempt data passed as an argument and then act on its
+own way.
+
+The third callback accepts a bit different set of parameters:
+1. `stdClass $adaptivequiz` - doesn't require any description at this point.
+2. `stdClass $cm` - the well known Moodle's object representing the current course module. This is what's returned by
+`get_coursemodule_from_id()` or similar.
+
+The callback is expected to return either `null` or an instance of `moodle_url`, which is actually the URL of the attempts report
+provided by the sub-plugin being used. The `null` value can be returned in cases when for some reason the link must not
+be displayed (the most common example - missing capabilities).
 
 ### Hooking to attempt completion
 If some actions (also in background) should be done by a sub-plugin once an attempt is completed, it may handle the adaptive quiz

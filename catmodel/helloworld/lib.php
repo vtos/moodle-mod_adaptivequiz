@@ -62,3 +62,20 @@ function adaptivequizcatmodel_helloworld_post_process_item_result_callback(stdCl
     $staterecord->stateparam2 = $staterecord->stateparam2 * 1.78;
     $DB->update_record('catmodel_helloworld_state', $staterecord);
 }
+
+/**
+ * A hook for this sub-plugin to provide a URL to its own attempts report.
+ *
+ * Picked up by mod_adaptivequiz component only.
+ *
+ * @param stdClass $adaptivequiz
+ * @param stdClass $cm
+ * @return moodle_url|null
+ */
+function adaptivequizcatmodel_helloworld_attempts_report_url(stdClass $adaptivequiz, stdClass $cm): ?moodle_url {
+    $context = context_module::instance($cm->id);
+
+    return has_capability('adaptivequizcatmodel/helloworld:viewreport', $context)
+        ? new moodle_url('/mod/adaptivequiz/catmodel/helloworld/report.php', ['id' => $cm->id])
+        : null;
+}

@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['helloworld:viewreport'] = 'View attempts report';
 $string['formelementnegative'] = 'Input a positive number from 1 to 999';
 $string['formlowlevelgreaterthan'] = 'Parameter 1 must be less than parameter 2';
 $string['itemadministration:stopbecauseincorrectanswer'] = 'You have answered incorrectly, so we stopped the attempt, sorry :P';

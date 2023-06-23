@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin basic info.
+ * Capabilities definition.
  *
  * @package    adaptivequizcatmodel_helloworld
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
@@ -24,8 +24,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2023061900;
-$plugin->release = '1.0.4dev';
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->requires = 2022041900;
-$plugin->component = 'adaptivequizcatmodel_helloworld';
+$capabilities = [
+    'adaptivequizcatmodel/helloworld:viewreport' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'manager' => CAP_ALLOW,
+        ],
+    ],
+];

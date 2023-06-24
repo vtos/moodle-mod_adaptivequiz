@@ -28,14 +28,10 @@ Feature: Add an adaptive quiz
 
   @javascript
   Scenario: Add an adaptive quiz to a course to be visible to a student
-    When I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I navigate to "Question bank" in current page administration
-    And I set the field "Select a category" to "Adaptive Quiz Questions (4)"
-    And I choose "Edit question" action for "TF1" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_1"
-    And I press "id_submitbutton"
+    When the following "core_question > Tags" exist:
+      | question | tag    |
+      | TF1      | adpq_1 |
+    And I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:
@@ -56,25 +52,13 @@ Feature: Add an adaptive quiz
 
   @javascript
   Scenario: It is impossible to create an adaptive quiz without a properly tagged question for the starting level of difficulty
-    When I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I navigate to "Question bank" in current page administration
-    And I set the field "Select a category" to "Adaptive Quiz Questions (4)"
-    And I choose "Edit question" action for "TF1" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_001"
-    And I press "id_submitbutton"
-    And I wait until the page is ready
-    And I choose "Edit question" action for "TF2" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_2"
-    And I press "id_submitbutton"
-    And I wait until the page is ready
-    And I choose "Edit question" action for "TF3" in the question bank
-    And I expand all fieldsets
-    And I set the following fields to these values:
-      | Tags | truefalse_1, TF |
-    And I press "id_submitbutton"
+    When the following "core_question > Tags" exist:
+      | question | tag         |
+      | TF1      | adpq_001    |
+      | TF2      | adpq_2      |
+      | TF3      | truefalse_1 |
+      | TF3      | TF          |
+    And I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:

@@ -23,19 +23,11 @@ Feature: Attempt feedback
       | questioncategory        | qtype     | name | questiontext    | answer |
       | Adaptive Quiz Questions | truefalse | Q1   | First question  | True   |
       | Adaptive Quiz Questions | truefalse | Q2   | Second question | True   |
+    And the following "core_question > Tags" exist:
+      | question | tag    |
+      | Q1       | adpq_1 |
+      | Q2       | adpq_2 |
     And I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I navigate to "Question bank" in current page administration
-    And I set the field "Select a category" to "Adaptive Quiz Questions (2)"
-    And I choose "Edit question" action for "Q1" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_1"
-    And I press "id_submitbutton"
-    And I wait until the page is ready
-    And I choose "Edit question" action for "Q2" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_2"
-    And I press "id_submitbutton"
     And I am on "Course 1" course homepage with editing mode on
     And I add a "Adaptive Quiz" to section "1"
     And I set the following fields to these values:

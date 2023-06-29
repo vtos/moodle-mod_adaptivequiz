@@ -108,7 +108,7 @@ final class adaptive_quiz_session {
         if ($itemadministrationevaluationresult->item_administration_is_to_stop()) {
             /** @var \context_module $modcontext */
             $modcontext = $this->quba->get_owning_context();
-            $attempt->complete($modcontext, $itemadministrationevaluationresult->stoppage_reason(), time());
+            $attempt->complete($this->adaptivequiz, $modcontext, $itemadministrationevaluationresult->stoppage_reason(), time());
 
             return null;
         }
@@ -158,9 +158,9 @@ final class adaptive_quiz_session {
     public static function initialize_attempt(stdClass $adaptivequiz): attempt {
         global $USER;
 
-        $attempt = attempt::find_in_progress_for_user($adaptivequiz, $USER->id);
+        $attempt = attempt::find_in_progress_for_user($adaptivequiz->id, $USER->id);
         if ($attempt === null) {
-            $attempt = attempt::create($adaptivequiz, $USER->id);
+            $attempt = attempt::create($adaptivequiz->id, $USER->id);
             self::post_create_attempt($adaptivequiz, $attempt);
         }
 

@@ -43,7 +43,7 @@ class cat_model_params_test extends \advanced_testcase {
 
         $user = $this->getDataGenerator()->create_user();
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
 
         // Given an instance of CAT model parameters was created.
         $params = cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);

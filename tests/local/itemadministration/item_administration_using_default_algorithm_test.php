@@ -74,7 +74,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
             ]);
 
         $user = $this->getDataGenerator()->create_user();
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
         $context = context_module::instance($cm->id);
@@ -153,7 +153,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
             ]);
 
         $user = $this->getDataGenerator()->create_user();
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
         $context = context_module::instance($cm->id);
@@ -242,7 +242,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
 
         $user = $this->getDataGenerator()->create_user();
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
         cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
@@ -335,7 +335,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
             ]);
 
         $user = $this->getDataGenerator()->create_user();
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
         $context = context_module::instance($cm->id);
@@ -444,7 +444,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
 
         $user = $this->getDataGenerator()->create_user();
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
         cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
@@ -575,7 +575,7 @@ class item_administration_using_default_algorithm_test extends advanced_testcase
 
         $user = $this->getDataGenerator()->create_user();
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
         cat_model_params::create_new_for_attempt($attempt->read_attempt_data()->id);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);

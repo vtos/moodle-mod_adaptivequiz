@@ -62,19 +62,12 @@ class attempt {
     protected $tags = array();
 
     /**
-     * @var stdClass $adaptivequiz Record from the {adaptivequiz} table.
-     */
-    private $adaptivequiz;
-
-    /**
      * The constructor.
      *
-     * @param stdClass $adaptivequiz A record from the {adaptivequiz} table.
      * @param int $userid
      * @param string[] $tags An array of acceptable tags.
      */
-    private function __construct(stdClass $adaptivequiz, int $userid, array $tags = array()) {
-        $this->adaptivequiz = $adaptivequiz;
+    private function __construct(int $userid, array $tags = array()) {
         $this->userid = $userid;
         $this->tags = $tags;
         $this->tags[] = ADAPTIVEQUIZ_QUESTION_TAG;
@@ -132,12 +125,13 @@ class attempt {
     /**
      * Sets the attempt as complete.
      *
+     * @param stdClass $adaptivequiz A record from the {adaptivequiz} table.
      * @param context_module $context
      * @param string $statusmessage
      * @param int $time Current timestamp.
      * @return void
      */
-    public function complete(context_module $context, string $statusmessage, int $time): void {
+    public function complete(stdClass $adaptivequiz, context_module $context, string $statusmessage, int $time): void {
         // Need to keep the record as it is before triggering the event below.
         $attemptrecordsnapshot = clone $this->adpqattempt;
 
@@ -145,7 +139,7 @@ class attempt {
         $this->adpqattempt->attemptstopcriteria = $statusmessage;
         $this->save($time);
 
-        adaptivequiz_update_grades($this->adaptivequiz, $this->userid);
+        adaptivequiz_update_grades($adaptivequiz, $this->userid);
 
         $event = attempt_completed::create([
             'objectid' => $this->adpqattempt->id,
@@ -153,7 +147,7 @@ class attempt {
             'userid' => $this->adpqattempt->userid
         ]);
         $event->add_record_snapshot('adaptivequiz_attempt', $attemptrecordsnapshot);
-        $event->add_record_snapshot('adaptivequiz', $this->adaptivequiz);
+        $event->add_record_snapshot('adaptivequiz', $adaptivequiz);
         $event->trigger();
     }
 
@@ -207,22 +201,22 @@ class attempt {
     /**
      * Returns an in-progress attempt for the user, returns null when no such attempt was found.
      *
-     * @param stdClass $adaptivequiz
+     * @param int $adaptivequizid
      * @param int $userid
      * @return self|null
      */
-    public static function find_in_progress_for_user(stdClass $adaptivequiz, int $userid): ?self {
+    public static function find_in_progress_for_user(int $adaptivequizid, int $userid): ?self {
         global $DB;
 
         $record = $DB->get_record(
             'adaptivequiz_attempt',
-            ['instance' => $adaptivequiz->id, 'userid' => $userid, 'attemptstate' => attempt_state::IN_PROGRESS]
+            ['instance' => $adaptivequizid, 'userid' => $userid, 'attemptstate' => attempt_state::IN_PROGRESS]
         );
         if (!$record) {
             return null;
         }
 
-        $attempt = new self($adaptivequiz, $userid);
+        $attempt = new self($userid);
         $attempt->adpqattempt = $record;
 
         return $attempt;
@@ -232,15 +226,14 @@ class attempt {
      * Returns an attempt by its id.
      *
      * @param int $id
-     * @param stdClass $adaptivequiz
      * @return self
      */
-    public static function get_by_id(int $id, stdClass $adaptivequiz): self {
+    public static function get_by_id(int $id): self {
         global $DB;
 
         $record = $DB->get_record('adaptivequiz_attempt', ['id' => $id], '*', MUST_EXIST);
 
-        $attempt = new self($adaptivequiz, $record->userid);
+        $attempt = new self($record->userid);
         $attempt->adpqattempt = $record;
 
         return $attempt;
@@ -261,17 +254,17 @@ class attempt {
     /**
      * Created an instance of attempt, saves it in the database and returns as the result.
      *
-     * @param stdClass $adaptivequiz A record from {adaptivequiz}.
+     * @param int $adaptivequizid
      * @param int $userid
      * @return self
      */
-    public static function create(stdClass $adaptivequiz, int $userid): self {
+    public static function create(int $adaptivequizid, int $userid): self {
         global $DB;
 
         $time = time();
 
         $record = new stdClass();
-        $record->instance = $adaptivequiz->id;
+        $record->instance = $adaptivequizid;
         $record->userid = $userid;
         $record->uniqueid = 0;
         $record->attemptstate = attempt_state::IN_PROGRESS;
@@ -282,7 +275,7 @@ class attempt {
 
         $record->id = $DB->insert_record(self::TABLE, $record);
 
-        $attempt = new self($adaptivequiz, $userid);
+        $attempt = new self($userid);
         $attempt->adpqattempt = $record;
 
         return $attempt;

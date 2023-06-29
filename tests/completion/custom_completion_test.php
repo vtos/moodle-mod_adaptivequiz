@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\completion;
 
 use advanced_testcase;
@@ -27,6 +22,12 @@ use context_module;
 use mod_adaptivequiz\local\attempt\attempt;
 
 /**
+ * Completion rules tests.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
  * @covers \mod_adaptivequiz\completion\custom_completion
  */
 class custom_completion_test extends advanced_testcase {
@@ -42,7 +43,7 @@ class custom_completion_test extends advanced_testcase {
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
 
         $cminfo = cm_info::create($cm);
         $cminfo->override_customdata('customcompletionrules',
@@ -52,7 +53,7 @@ class custom_completion_test extends advanced_testcase {
 
         $this->assertEquals(COMPLETION_INCOMPLETE, $completion->get_state('completionattemptcompleted'));
 
-        $attempt->complete(context_module::instance($cm->id), 'php unit test', time());
+        $attempt->complete($adaptivequiz, context_module::instance($cm->id), 'php unit test', time());
 
         $this->assertEquals(COMPLETION_COMPLETE, $completion->get_state('completionattemptcompleted'));
     }

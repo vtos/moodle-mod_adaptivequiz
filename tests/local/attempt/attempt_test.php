@@ -113,7 +113,7 @@ class attempt_test extends advanced_testcase {
 
         $userid = 1;
 
-        $attempt = attempt::create($adaptivequiz, $userid);
+        $attempt = attempt::create($adaptivequiz->id, $userid);
 
         $result = $attempt->get_question_mark($mockquba, 1);
         $this->assertEquals(1.0, $result);
@@ -137,7 +137,7 @@ class attempt_test extends advanced_testcase {
 
         $userid = 1;
 
-        $attempt = attempt::create($adaptivequiz, $userid);
+        $attempt = attempt::create($adaptivequiz->id, $userid);
 
         $result = $attempt->get_question_mark($mockqubatwo, 1);
         $this->assertEquals(0, $result);
@@ -161,7 +161,7 @@ class attempt_test extends advanced_testcase {
 
         $userid = 1;
 
-        $attempt = attempt::create($adaptivequiz, $userid);
+        $attempt = attempt::create($adaptivequiz->id, $userid);
 
         $result = $attempt->get_question_mark($mockqubathree, 1);
         $this->assertEquals(0, $result);
@@ -178,8 +178,8 @@ class attempt_test extends advanced_testcase {
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
-        $attempt->complete(context_module::instance($cm->id), '_some_reason_to_stop_the_attempt', time());
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
+        $attempt->complete($adaptivequiz, context_module::instance($cm->id), '_some_reason_to_stop_the_attempt', time());
 
         $this->assertTrue(attempt::user_has_completed_on_quiz($adaptivequiz->id, $user->id));
     }
@@ -194,11 +194,11 @@ class attempt_test extends advanced_testcase {
         $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
 
         // No attempt exists for the user at the moment.
-        $this->assertNull(attempt::find_in_progress_for_user($adaptivequiz, $user->id));
+        $this->assertNull(attempt::find_in_progress_for_user($adaptivequiz->id, $user->id));
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
 
-        $this->assertEquals($attempt, attempt::find_in_progress_for_user($adaptivequiz, $user->id));
+        $this->assertEquals($attempt, attempt::find_in_progress_for_user($adaptivequiz->id, $user->id));
     }
 
     public function test_it_reports_total_number_of_attempts_in_activity(): void {
@@ -215,13 +215,13 @@ class attempt_test extends advanced_testcase {
 
         self::assertEquals(0, attempt::total_number($adaptivequiz->id));
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
         self::assertEquals(1, attempt::total_number($adaptivequiz->id));
 
-        $attempt->complete($context, '_some_stoppage_reason_', time());
+        $attempt->complete($adaptivequiz, $context, '_some_stoppage_reason_', time());
         self::assertEquals(1, attempt::total_number($adaptivequiz->id));
 
-        attempt::create($adaptivequiz, $user->id);
+        attempt::create($adaptivequiz->id, $user->id);
         self::assertEquals(2, attempt::total_number($adaptivequiz->id));
     }
 
@@ -234,7 +234,7 @@ class attempt_test extends advanced_testcase {
         $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
         $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
 
         self::assertEquals($attempt, attempt::get_by_id($attempt->read_attempt_data()->id, $adaptivequiz));
     }
@@ -263,7 +263,7 @@ class attempt_test extends advanced_testcase {
         $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
         $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
 
-        attempt::create($adaptivequiz, $user->id);
+        attempt::create($adaptivequiz->id, $user->id);
 
         // Check it inserted a record for the attempt.
         $expectedfields = new stdClass();
@@ -293,7 +293,7 @@ class attempt_test extends advanced_testcase {
         $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
         $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
 
         $attempt->update_after_question_answered(1658759115);
 
@@ -338,12 +338,12 @@ class attempt_test extends advanced_testcase {
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
 
         self::assertFalse($attempt->is_completed());
 
         $message = '_some_reason_to_stop_the_attempt';
-        $attempt->complete(context_module::instance($cm->id), $message, time());
+        $attempt->complete($adaptivequiz, context_module::instance($cm->id), $message, time());
 
         self::assertTrue($attempt->is_completed());
 
@@ -375,8 +375,8 @@ class attempt_test extends advanced_testcase {
 
         $context = context_module::instance($cm->id);
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
-        $attempt->complete($context, '_some_reason_to_stop_the_attempt', time());
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
+        $attempt->complete($adaptivequiz, $context, '_some_reason_to_stop_the_attempt', time());
 
         $events = $eventsink->get_events();
 
@@ -404,7 +404,7 @@ class attempt_test extends advanced_testcase {
         $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
         $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
 
-        $attempt = attempt::create($adaptivequiz, $user->id);
+        $attempt = attempt::create($adaptivequiz->id, $user->id);
         $attempt->set_quba_id(1);
 
         self::expectException(coding_exception::class);

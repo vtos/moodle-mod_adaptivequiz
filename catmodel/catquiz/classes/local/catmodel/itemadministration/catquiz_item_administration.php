@@ -20,6 +20,7 @@ use local_catquiz\catquiz_handler;
 use mod_adaptivequiz\local\itemadministration\item_administration;
 use mod_adaptivequiz\local\itemadministration\item_administration_evaluation;
 use mod_adaptivequiz\local\itemadministration\next_item;
+use mod_adaptivequiz\local\question\question_answer_evaluation;
 use mod_adaptivequiz\local\question\question_answer_evaluation_result;
 use question_bank;
 use question_engine;
@@ -41,6 +42,11 @@ final class catquiz_item_administration implements item_administration {
     private $quba;
 
     /**
+     * @var question_answer_evaluation
+     */
+    private $questionanswerevaluation;
+
+    /**
      * @var stdClass $adaptivequiz
      */
     private $adaptivequiz;
@@ -51,8 +57,12 @@ final class catquiz_item_administration implements item_administration {
      * @param question_usage_by_activity $quba
      * @param stdClass $adaptivequiz
      */
-    public function __construct(question_usage_by_activity $quba, stdClass $adaptivequiz) {
+    public function __construct(
+        question_usage_by_activity $quba,
+        question_answer_evaluation $questionanswerevaluation,
+        stdClass $adaptivequiz) {
         $this->quba = $quba;
+        $this->questionanswerevaluation = $questionanswerevaluation;
         $this->adaptivequiz = $adaptivequiz;
     }
 
@@ -88,6 +98,7 @@ final class catquiz_item_administration implements item_administration {
         }
 
         $slot = $this->get_slot_for_question($questionid);
+        $questionanswerevaluationresult = $this->questionanswerevaluation->perform($previousquestionslot);
 
         return item_administration_evaluation::with_next_item(next_item::from_quba_slot($slot));
     }

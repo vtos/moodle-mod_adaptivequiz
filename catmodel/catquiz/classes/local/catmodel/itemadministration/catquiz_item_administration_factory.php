@@ -19,6 +19,7 @@ namespace adaptivequizcatmodel_catquiz\local\catmodel\itemadministration;
 use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\itemadministration\item_administration;
 use mod_adaptivequiz\local\itemadministration\item_administration_factory;
+use mod_adaptivequiz\local\question\question_answer_evaluation;
 use question_usage_by_activity;
 use stdClass;
 
@@ -44,6 +45,6 @@ final class catquiz_item_administration_factory implements item_administration_f
         attempt $attempt,
         stdClass $adaptivequiz
     ): item_administration {
-        return new catquiz_item_administration($quba, $adaptivequiz);
+        return new catquiz_item_administration($quba, new question_answer_evaluation($quba), $adaptivequiz);
     }
 }

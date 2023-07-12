@@ -398,7 +398,10 @@ item administration interface, which should decide what next question should be 
 allows a sub-plugin run some intermediate logic between answering questions by the test-taker. For example, update some
 calculations in its database, even trigger its own events and whatever. Deciding what the next question should be or whether 
 the attempt will stop must still be inside implementation of the item administration interface.
-3. `attempts_report_url` - enables a sub-plugin to provide a link to its own attempts report, which will be picked up by
+3. `post_delete_attempt_callback` - enables a sub-plugin to inject its code to run when an attempt is deleted. Normally
+a sub-plugin creates its own data structures to support its implementation. This is the right place to remove the sub-plugin's
+data bound to an attempt.
+4. `attempts_report_url` - enables a sub-plugin to provide a link to its own attempts report, which will be picked up by
 the adaptive quiz activity and displayed as a number of attempts made in the activity's view page for a manager/teacher role.
 When a custom sub-plugin is used, the default attempts reporting obviously does not make sense. The sub-plugin being used is fully
 responsible for providing proper attempts reporting.
@@ -417,10 +420,14 @@ function adaptivequizcatmodel_helloworld_post_process_item_result_callback(stdCl
 ```
 
 ```
+function adaptivequizcatmodel_helloworld_post_delete_attempt_callback(stdClass $adaptivequiz, attempt $attempt): void
+```
+
+```
 function adaptivequizcatmodel_helloworld_attempts_report_url(stdClass $adaptivequiz, stdClass $cm): ?moodle_url
 ```
 
-As you can see, the first two callbacks return nothing (they're expected to simply run some logic, no flow control like redirects
+As you can see, the first three callbacks return nothing (they're expected to simply run some logic, no flow control like redirects
 or output is expected, just some background actions) and accept two arguments:
 1. `stdClass $adaptivequiz` - an activity instance record, but with a couple of extra properties - `context` and `cm` - are
 well-known Moodle objects.
@@ -430,7 +437,7 @@ the `read_attempt_data()->{property}` statement, where `{property}` is a field n
 These callbacks are supposed to fetch all the required data by using the attempt data passed as an argument and then act on its
 own way.
 
-The third callback accepts a bit different set of parameters:
+The fourth callback accepts a bit different set of parameters:
 1. `stdClass $adaptivequiz` - doesn't require any description at this point.
 2. `stdClass $cm` - the well known Moodle's object representing the current course module. This is what's returned by
 `get_coursemodule_from_id()` or similar.

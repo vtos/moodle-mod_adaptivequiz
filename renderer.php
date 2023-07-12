@@ -754,8 +754,9 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * Outputs available action links for an attempt in the user's attempts report.
      *
      * @param stdClass $attempt A record from {adaptivequiz_attempt}.
+     * @param int $cmid A course module id, required to build the action links.
      */
-    public function individual_user_attempt_actions(stdClass $attempt): string {
+    public function individual_user_attempt_actions(stdClass $attempt, int $cmid): string {
         $actions = new individual_user_attempt_actions();
 
         $actions->add(
@@ -778,7 +779,13 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
 
         $actions->add(
             new individual_user_attempt_action(
-                new moodle_url('/mod/adaptivequiz/delattempt.php', ['attempt' => $attempt->id]),
+                new moodle_url('/mod/adaptivequiz/delattempt.php', [
+                    'id' => $cmid,
+                    'attempt' => $attempt->id,
+                    'user' => $attempt->userid,
+                    'return' => (new moodle_url('/mod/adaptivequiz/viewattemptreport.php',
+                        ['id' => $cmid, 'userid' => $attempt->userid]))->out(),
+                ]),
                 new pix_icon('t/delete', ''),
                 get_string('deleteattemp', 'adaptivequiz')
             )

@@ -64,6 +64,20 @@ function adaptivequizcatmodel_helloworld_post_process_item_result_callback(stdCl
 }
 
 /**
+ * Callback to execute when an attempt on adaptive quiz has been deleted.
+ *
+ * Picked up by mod_adaptivequiz component only.
+ *
+ * @param stdClass $adaptivequiz
+ * @param attempt $attempt
+ */
+function adaptivequizcatmodel_helloworld_post_delete_attempt_callback(stdClass $adaptivequiz, attempt $attempt): void {
+    global $DB;
+
+    $DB->delete_records('catmodel_helloworld_state', ['adaptivequizattempt' => $attempt->read_attempt_data()->id]);
+}
+
+/**
  * A hook for this sub-plugin to provide a URL to its own attempts report.
  *
  * Picked up by mod_adaptivequiz component only.

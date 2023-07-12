@@ -26,7 +26,7 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/tablelib.php');
 
-use mod_adaptivequiz\local\report\individual_user_attempts\filter as user_attempts_table;
+use mod_adaptivequiz\local\report\individual_user_attempts\filter as user_attempts_table_filter;
 use mod_adaptivequiz\local\report\individual_user_attempts\table as individual_user_attempts_table;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
@@ -135,8 +135,9 @@ echo $renderer->heading($title);
 
 if ($userid) {
     $attemptstable = new individual_user_attempts_table(
+        $cm,
         $renderer,
-        user_attempts_table::from_vars($cm->instance, $user->id),
+        user_attempts_table_filter::from_vars($cm->instance, $user->id),
         $PAGE->url,
         questions_difficulty_range::from_activity_instance($adaptivequiz)
     );

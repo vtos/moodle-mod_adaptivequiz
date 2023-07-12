@@ -23,53 +23,53 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_adaptivequiz\local\attempt\cat_model_params;
+require_once('../../config.php');
+require_once($CFG->dirroot .'/mod/adaptivequiz/locallib.php');
 
-require_once(__DIR__ . '/../../config.php');
+use mod_adaptivequiz\local\attempt\attempt;
+use mod_adaptivequiz\local\delete_attempt;
 
+// TODO: explain why this is needed as a param.
+$cmid = required_param('id', PARAM_INT);
 $attemptid = required_param('attempt', PARAM_INT);
+// TODO: explain why this is needed as a param.
+$userid = required_param('user', PARAM_INT);
+$returnurl = required_param('return', PARAM_URL);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 
-$attempt = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid], '*', MUST_EXIST);
-$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $attempt->instance], '*', MUST_EXIST);
-$cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $adaptivequiz->course, false, MUST_EXIST);
-$course = $DB->get_record('course', ['id' => $adaptivequiz->course], '*', MUST_EXIST);
+/** @var cm_info $cm */
+list($course, $cm) = get_course_and_cm_from_cmid($cmid, 'adaptivequiz');
 
 require_login($course, true, $cm);
+
+if ($confirm) {
+    delete_attempt::with_id($attemptid);
+
+    redirect($returnurl, get_string('attemptdeleted', 'adaptivequiz'));
+}
 
 $context = context_module::instance($cm->id);
 
 require_capability('mod/adaptivequiz:viewreport', $context);
 
-$user = $DB->get_record('user', ['id' => $attempt->userid], '*', MUST_EXIST);
+$attempt = attempt::get_by_id($attemptid);
 
-$PAGE->set_url('/mod/adaptivequiz/delattempt.php', ['attempt' => $attempt->id]);
+$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $attempt->read_attempt_data()->instance], '*', MUST_EXIST);
+$user = $DB->get_record('user', ['id' => $attempt->read_attempt_data()->userid], '*', MUST_EXIST);
+
+$PAGE->set_url('/mod/adaptivequiz/delattempt.php', ['attempt' => $attemptid]);
 $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-$returnurl = new moodle_url('/mod/adaptivequiz/viewattemptreport.php', ['id' => $cm->id, 'userid' => $user->id]);
+echo $OUTPUT->header();
 
 $a = new stdClass();
 $a->name = fullname($user);
-$a->timecompleted = userdate($attempt->timemodified);
-
-if ($confirm) {
-    question_engine::delete_questions_usage_by_activity($attempt->uniqueid);
-    $DB->delete_records('adaptivequiz_attempt', ['id' => $attempt->id]);
-
-    $catmodelparams = cat_model_params::for_attempt($attempt->id);
-    $catmodelparams->delete();
-
-    adaptivequiz_update_grades($adaptivequiz, $user->id);
-
-    $message = get_string('attemptdeleted', 'adaptivequiz', $a);
-    redirect($returnurl, $message, 4);
-}
-
+$a->timecompleted = userdate($attempt->read_attempt_data()->timemodified);
 $message = get_string('confirmdeleteattempt', 'adaptivequiz', $a);
-
-$confirm = new moodle_url('/mod/adaptivequiz/delattempt.php', ['attempt' => $attempt->id, 'confirm' => 1]);
-echo $OUTPUT->header();
+$confirm = new moodle_url('/mod/adaptivequiz/delattempt.php',
+    ['id' => $cmid, 'attempt' => $attemptid, 'user' => $userid, 'return' => $returnurl, 'confirm' => 1]);
 echo $OUTPUT->confirm($message, $confirm, $returnurl);
+
 echo $OUTPUT->footer();

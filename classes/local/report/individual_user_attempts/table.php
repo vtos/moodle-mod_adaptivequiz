@@ -30,11 +30,16 @@ use table_sql;
 /**
  * Definition of the table class for the user attempts report.
  *
- * @package   mod_adaptivequiz
- * @copyright 2023 Vitaly Potenko <potenkov@gmail.com>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_adaptivequiz
+ * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class table extends table_sql {
+
+    /**
+     * @var stdClass $cm A course module record.
+     */
+    private $cm;
 
     /**
      * @var mod_adaptivequiz_renderer $renderer
@@ -54,12 +59,14 @@ final class table extends table_sql {
     /**
      * The constructor.
      *
+     * @param stdClass $cm
      * @param mod_adaptivequiz_renderer $renderer
      * @param filter $filter
      * @param moodle_url $baseurl
      * @param questions_difficulty_range $questionsdifficultyrange
      */
     public function __construct(
+        stdClass $cm,
         mod_adaptivequiz_renderer $renderer,
         filter $filter,
         moodle_url $baseurl,
@@ -67,6 +74,7 @@ final class table extends table_sql {
     ) {
         parent::__construct('individualuserattemptstable');
 
+        $this->cm = $cm;
         $this->renderer = $renderer;
         $this->filter = $filter;
         $this->questionsdifficultyrange = $questionsdifficultyrange;
@@ -141,9 +149,10 @@ final class table extends table_sql {
      * A hook to format the output of actions column for an attempt row.
      *
      * @param stdClass $row A row from the {adaptivequiz_attempt}.
+     * @return string
      */
     protected function col_actions(stdClass $row): string {
-        return $this->renderer->individual_user_attempt_actions($row);
+        return $this->renderer->individual_user_attempt_actions($row, $this->cm->id);
     }
 
     /**

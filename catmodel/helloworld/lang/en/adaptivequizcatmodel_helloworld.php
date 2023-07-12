@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['attemptsreport:user'] = 'Attempt user';
+$string['attemptsreport:timefinished'] = 'Time finished';
 $string['helloworld:viewreport'] = 'View attempts report';
 $string['formelementnegative'] = 'Input a positive number from 1 to 999';
 $string['formlowlevelgreaterthan'] = 'Parameter 1 must be less than parameter 2';

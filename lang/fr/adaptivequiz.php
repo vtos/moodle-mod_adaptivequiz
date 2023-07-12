@@ -113,7 +113,6 @@ $string['backtoviewreport'] = 'Retour vers le rapport principal';
 $string['reviewattemptreport'] = 'Revue de la tentative par {$a->fullname} soumise à {$a->finished}';
 $string['deleteattemp'] = 'Supprimez la tentative';
 $string['confirmdeleteattempt'] = 'Confirmation de la suppression de la tentative à partir de  {$a->name}  soumise à {$a->timecompleted}';
-$string['attemptdeleted'] = 'Tentative supprimée pour {$a->name} soumise à  {$a->timecompleted}';
 $string['closeattempt'] = 'Clôturer la tentative';
 $string['confirmcloseattempt'] = 'Êtes vous certain(e) de vouloir clôturer et finaliser cette tentative de {$a->name}?';
 $string['confirmcloseattemptstats'] = 'Cette tentative commencée le {$a->started} a été mise à jour le {$a->modified}';

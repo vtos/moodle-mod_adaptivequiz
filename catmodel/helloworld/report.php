@@ -24,6 +24,8 @@
 
 require_once('../../../../config.php');
 
+use adaptivequizcatmodel_helloworld\local\report\attempts_filter;
+use adaptivequizcatmodel_helloworld\local\report\attempts_table;
 use mod_adaptivequiz\local\attempt\attempt;
 
 $id = required_param('id', PARAM_INT);
@@ -43,8 +45,17 @@ $PAGE->add_body_class('limitedwidth');
 $PAGE->activityheader->disable();
 $PAGE->set_title(format_string($adaptivequiz->name));
 
+$renderer = $PAGE->get_renderer('adaptivequizcatmodel_helloworld');
+
 $attemptsnumber = attempt::total_number($adaptivequiz->id);
+$attemptstable = new attempts_table(
+    $renderer,
+    $cm,
+    new attempts_filter($adaptivequiz->id),
+    new moodle_url('/mod/adaptivequiz/catmodel/helloworld/report.php', ['id' => $cm->id])
+);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('attemptsnumber', 'adaptivequiz', $attemptsnumber));
+$attemptstable->out(20, false);
 echo $OUTPUT->footer();

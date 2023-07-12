@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['attemptsreport:user'] = 'Attempt user';
+$string['attemptsreport:timefinished'] = 'Time finished';
 $string['helloworld:viewreport'] = 'View attempts report';
 $string['itemadministration:stopbecauseincorrectanswer'] = 'You have answered incorrectly, so we stopped the attempt, sorry :P';
 $string['itemadministration:stopbecausenomorequestions'] = 'We have run out of questions, you won!';

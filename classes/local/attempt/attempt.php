@@ -152,6 +152,15 @@ class attempt {
     }
 
     /**
+     * Removes the attempt from the database.
+     */
+    public function delete(): void {
+        global $DB;
+
+        $DB->delete_records('adaptivequiz_attempt', ['id' => $this->adpqattempt->id]);
+    }
+
+    /**
      * Sets quba id for the attempt.
      *
      * @param int $id

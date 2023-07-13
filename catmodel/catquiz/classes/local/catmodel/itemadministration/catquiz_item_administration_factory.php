@@ -45,6 +45,6 @@ final class catquiz_item_administration_factory implements item_administration_f
         attempt $attempt,
         stdClass $adaptivequiz
     ): item_administration {
-        return new catquiz_item_administration($quba, new question_answer_evaluation($quba), $adaptivequiz);
+        return new catquiz_item_administration($quba, new question_answer_evaluation($quba), $adaptivequiz, $attempt);
     }
 }

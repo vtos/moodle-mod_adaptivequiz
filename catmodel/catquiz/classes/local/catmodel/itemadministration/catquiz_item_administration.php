@@ -17,6 +17,7 @@
 namespace adaptivequizcatmodel_catquiz\local\catmodel\itemadministration;
 
 use local_catquiz\catquiz_handler;
+use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\itemadministration\item_administration;
 use mod_adaptivequiz\local\itemadministration\item_administration_evaluation;
 use mod_adaptivequiz\local\itemadministration\next_item;
@@ -51,6 +52,8 @@ final class catquiz_item_administration implements item_administration {
      */
     private $adaptivequiz;
 
+    private attempt $attempt;
+
     /**
      * The constructor.
      *
@@ -60,10 +63,12 @@ final class catquiz_item_administration implements item_administration {
     public function __construct(
         question_usage_by_activity $quba,
         question_answer_evaluation $questionanswerevaluation,
-        stdClass $adaptivequiz) {
+        stdClass $adaptivequiz,
+        attempt $attempt) {
         $this->quba = $quba;
         $this->questionanswerevaluation = $questionanswerevaluation;
         $this->adaptivequiz = $adaptivequiz;
+        $this->attempt = $attempt;
     }
 
     /**
@@ -78,7 +83,8 @@ final class catquiz_item_administration implements item_administration {
     public function evaluate_ability_to_administer_next_item(?int $previousquestionslot): item_administration_evaluation {
         [$questionid, $errormessage] = catquiz_handler::fetch_question_id(
             $this->adaptivequiz->id,
-            'mod_adaptivequiz'
+            'mod_adaptivequiz',
+            $this->attempt->read_attempt_data()
         );
         // This means no answer has been given yet, it's a fresh attempt.
         if (is_null($previousquestionslot)) {

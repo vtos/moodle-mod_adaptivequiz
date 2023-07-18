@@ -181,7 +181,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         if (empty(trim($attemptfeedback))) {
             $attemptfeedback = get_string('attemptfeedbackdefaulttext', 'adaptivequiz');
         }
-        $output .= html_writer::tag('p', s($attemptfeedback), ['class' => 'submitbtns adaptivequizfeedback']);
+        $output .= html_writer::tag('p', format_text(s($attemptfeedback)), ['class' => 'submitbtns adaptivequizfeedback']);
 
         if ($abilitymeasure) {
             $output .= $this->render($abilitymeasure);

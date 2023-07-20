@@ -796,8 +796,7 @@ function adaptivequiz_reset_gradebook($courseid) {
 }
 
 /**
- * Called via pluginfile.php -> question_pluginfile to serve files belonging to a question in a question_attempt when that attempt
- * is a quiz attempt.
+ * Called via pluginfile.php -> question_pluginfile to serve files belonging to a question.
  *
  * @param stdClass $course Course settings object.
  * @param context $context
@@ -840,10 +839,7 @@ function mod_adaptivequiz_question_pluginfile($course, context $context, $compon
         if (!adaptivequiz_allowed_attempt($adaptivequiz->attempts, $count)) {
             throw new moodle_exception('noattemptsallowed', 'adaptivequiz');
         }
-        // Check if the uniqueid belongs to the same attempt record the user is currently using.
-        if (!adaptivequiz_uniqueid_part_of_attempt($qubaid, $cm->instance, $USER->id)) {
-            throw new moodle_exception('uniquenotpartofattempt', 'adaptivequiz');
-        }
+
         // Verify that the attempt is still in progress.
         if ($attemptrec->attemptstate != attempt_state::IN_PROGRESS) {
             throw new moodle_exception('notinprogress', 'adaptivequiz');

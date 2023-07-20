@@ -53,7 +53,9 @@ final class attempts_table extends table_sql {
     /**
      * The constructor.
      *
+     * @param helloworld_renderer $renderer
      * @param stdClass $cm
+     * @param attempts_filter $filter
      * @param moodle_url $baseurl
      */
     public function __construct(helloworld_renderer $renderer, stdClass $cm, attempts_filter $filter, moodle_url $baseurl) {

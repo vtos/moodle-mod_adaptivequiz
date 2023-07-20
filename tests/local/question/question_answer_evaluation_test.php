@@ -34,9 +34,17 @@ use question_engine;
  */
 class question_answer_evaluation_test extends advanced_testcase {
 
-    public function test_it_gives_proper_answer_evaluation(): void {
-        self::resetAfterTest();
+    /**
+     * @var \question_usage_by_activity $quba
+     */
+    private $quba;
 
+    /**
+     * @var \stdClass $questioncategory
+     */
+    private $questioncategory;
+
+    protected function setUp(): void {
         $course = $this->getDataGenerator()->create_course();
 
         $adaptivequiz = $this->getDataGenerator()
@@ -53,67 +61,154 @@ class question_answer_evaluation_test extends advanced_testcase {
 
         $quba = question_engine::make_questions_usage_by_activity('mod_adaptivequiz', $context);
         $quba->set_preferred_behaviour(attempt::ATTEMPTBEHAVIOUR);
+        $this->quba = $quba;
 
         $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
 
-        $questioncategory = $questiongenerator->create_question_category(
+        $this->questioncategory = $questiongenerator->create_question_category(
             ['contextid' => context_course::instance($course->id)->id]
         );
+    }
 
-        $question1 = $questiongenerator->create_question('truefalse', null, [
-            'name' => 'True/false question 1',
-            'category' => $questioncategory->id,
-        ]);
-        $question2 = $questiongenerator->create_question('truefalse', null, [
-            'name' => 'True/false question 2',
-            'category' => $questioncategory->id,
-        ]);
-        $question3 = $questiongenerator->create_question('truefalse', null, [
-            'name' => 'True/false question 3',
-            'category' => $questioncategory->id,
+    public function test_test_it_gives_proper_answer_evaluation_when_no_answer_was_given(): void {
+        self::resetAfterTest();
+
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $question = $questiongenerator->create_question('truefalse', null, [
+            'name' => 'Question',
+            'category' => $this->questioncategory->id,
         ]);
 
-        // Given the question was displayed, but no answer was given.
-        $slot = $quba->add_question(question_bank::load_question($question1->id));
-        $quba->start_question($slot);
+        // Given the question was just displayed, but not answered.
+        $slot = $this->quba->add_question(question_bank::load_question($question->id));
+        $this->quba->start_question($slot);
 
         // When performing answer evaluation.
-        $questionanswerevaluation = new question_answer_evaluation($quba);
+        $questionanswerevaluation = new question_answer_evaluation($this->quba);
         $evaluationresult = $questionanswerevaluation->perform($slot);
 
-        // Then no evaluation is expected.
+        // Then the evaluation result should match the expectation.
         self::assertNull($evaluationresult);
+    }
 
-        // Given the question was answered correctly.
-        $slot = $quba->add_question(question_bank::load_question($question2->id));
-        $quba->start_question($slot);
+    /**
+     * A test method.
+     *
+     * @dataProvider truefalse_question_answers_provider
+     * @param question_answer_evaluation_result|null $expectation
+     * @param string $response
+     */
+    public function test_it_gives_proper_answer_evaluation_for_truefalse_questions(
+        ?question_answer_evaluation_result $expectation,
+        string $response
+    ): void {
+        self::resetAfterTest();
+
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+
+        $question = $questiongenerator->create_question('truefalse', null, [
+            'name' => 'Question',
+            'category' => $this->questioncategory->id,
+        ]);
+
+        // Given the question was answered.
+        $slot = $this->quba->add_question(question_bank::load_question($question->id));
+        $this->quba->start_question($slot);
+
         $time = time();
-        $responses = [$slot => 'True'];
-        $quba->process_all_actions($time,
-            $questiongenerator->get_simulated_post_data_for_questions_in_usage($quba, $responses, false));
-        $quba->finish_all_questions($time);
+        $this->quba->process_all_actions($time,
+            $questiongenerator->get_simulated_post_data_for_questions_in_usage($this->quba, [$slot => $response], false));
+        $this->quba->finish_all_questions($time);
 
         // When performing answer evaluation.
-        $questionanswerevaluation = new question_answer_evaluation($quba);
-        $evaluationresult = $questionanswerevaluation->perform($slot);
+        $evaluationresult = (new question_answer_evaluation($this->quba))->perform($slot);
 
-        // Then the evaluation result should match the one expected for a correct question answer.
-        self::assertEquals($evaluationresult, question_answer_evaluation_result::when_answer_is_correct());
+        // Then the evaluation result should match the expectation.
+        self::assertEquals($expectation, $evaluationresult);
+    }
 
-        // Given the question was answered incorrectly.
-        $slot = $quba->add_question(question_bank::load_question($question3->id));
-        $quba->start_question($slot);
+    /**
+     * Data provider method.
+     *
+     * @return array
+     */
+    public function truefalse_question_answers_provider(): array {
+        return [
+            '2' => [
+                'expectation' => question_answer_evaluation_result::when_answer_is_correct(),
+                'response' => 'True',
+            ],
+            '3' => [
+                'expectation' => question_answer_evaluation_result::when_answer_is_incorrect(),
+                'response' => 'False',
+            ],
+        ];
+    }
+
+    /**
+     * A test method.
+     *
+     * @dataProvider multichoice_question_answers_provider
+     * @param question_answer_evaluation_result|null $expectation
+     * @param string $questionfrommaker
+     * @param array $response
+     */
+    public function test_it_gives_proper_answer_evaluation_for_multichoice_questions(
+        ?question_answer_evaluation_result $expectation,
+        string $questionfrommaker,
+        array $response
+    ): void {
+        self::resetAfterTest();
+
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+
+        $question = $questiongenerator->create_question('multichoice', $questionfrommaker, [
+            'name' => 'Question',
+            'category' => $this->questioncategory->id,
+        ]);
+
+        // Given the question was answered.
+        $slot = $this->quba->add_question(question_bank::load_question($question->id));
+        $this->quba->start_question($slot);
+
         $time = time();
-        $responses = [$slot => 'False'];
-        $quba->process_all_actions($time,
-            $questiongenerator->get_simulated_post_data_for_questions_in_usage($quba, $responses, false));
-        $quba->finish_all_questions($time);
+        $this->quba->process_all_actions($time, $this->quba->prepare_simulated_post_data([$slot => $response]));
+        $this->quba->finish_all_questions($time);
 
         // When performing answer evaluation.
-        $questionanswerevaluation = new question_answer_evaluation($quba);
-        $evaluationresult = $questionanswerevaluation->perform($slot);
+        $evaluationresult = (new question_answer_evaluation($this->quba))->perform($slot);
 
-        // Then the evaluation result should match the one expected for a incorrect question answer.
-        self::assertEquals($evaluationresult, question_answer_evaluation_result::when_answer_is_incorrect());
+        // Then the evaluation result should match the expectation.
+        self::assertEquals($expectation, $evaluationresult);
+    }
+
+    /**
+     * Data provider method.
+     *
+     * @return array
+     */
+    public function multichoice_question_answers_provider(): array {
+        return [
+            'single, correct response' => [
+                'expectation' => question_answer_evaluation_result::when_answer_is_correct(),
+                'questionfrommaker' => 'one_of_four',
+                'response' => ['answer' => 'One'],
+            ],
+            'single, incorrect response' => [
+                'expectation' => question_answer_evaluation_result::when_answer_is_incorrect(),
+                'questionfrommaker' => 'one_of_four',
+                'response' => ['answer' => 'Three'],
+            ],
+            'multi, correct response' => [
+                'expectation' => question_answer_evaluation_result::when_answer_is_correct(),
+                'questionfrommaker' => 'two_of_four',
+                'response' => ['One' => '1', 'Two' => '0', 'Three' => '1', 'Four' => '0'],
+            ],
+            'multi, incorrect response' => [
+                'expectation' => question_answer_evaluation_result::when_answer_is_incorrect(),
+                'questionfrommaker' => 'two_of_four',
+                'response' => ['One' => '0', 'Two' => '1', 'Three' => '1', 'Four' => '0'],
+            ],
+        ];
     }
 }

@@ -50,31 +50,14 @@ final class question_answer_evaluation {
      * @return question_answer_evaluation_result|null
      */
     public function perform(int $slot): ?question_answer_evaluation_result {
-        if (!$this->answer_was_given($slot)) {
+        $questionstate = $this->quba->get_question_state($slot);
+
+        if (!$questionstate->is_graded()) {
             return null;
         }
 
-        $mark = $this->quba->get_question_mark($slot);
-        if ($mark === null) {
-            return null;
-        }
-
-        if ($mark > 0.0) {
-            return question_answer_evaluation_result::when_answer_is_correct();
-        }
-
-        return question_answer_evaluation_result::when_answer_is_incorrect();
-    }
-
-    /**
-     * Checks whether the question was given an answer.
-     *
-     * @param int $slot
-     * @return bool
-     */
-    private function answer_was_given(int $slot): bool {
-        $state = $this->quba->get_question_state($slot);
-
-        return $state->is_graded();
+        return $questionstate->is_correct()
+            ? question_answer_evaluation_result::when_answer_is_correct()
+            : question_answer_evaluation_result::when_answer_is_incorrect();
     }
 }

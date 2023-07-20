@@ -14,28 +14,51 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace adaptivequizcatmodel_helloworld\local\report;
+namespace mod_adaptivequiz\output\report\attemptgraph;
 
 /**
- * Attempts filter.
+ * Output object to render a point from the attempt graph data.
  *
- * @package    adaptivequizcatmodel_helloworld
+ * A graph point is a set of parameters describing a single attempted question.
+ *
+ * @package    mod_adaptivequiz
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class attempts_filter {
+final class attempt_graph_dataset_point {
 
     /**
-     * @var int $adaptivequizid
+     * @var string $questiondifficulty
      */
-    public $adaptivequizid;
+    public $questiondifficulty;
 
     /**
-     * The constructor, may be used for quicker instantiation.
-     *
-     * @param int $adaptivequizid
+     * @var string $targetquestiondifficulty
      */
-    public function __construct(int $adaptivequizid) {
-        $this->adaptivequizid = $adaptivequizid;
-    }
+    public $targetquestiondifficulty;
+
+    /**
+     * @var bool $answeriscorrect
+     */
+    public $answeriscorrect;
+
+    /**
+     * @var string $abilitymeasure
+     */
+    public $abilitymeasure;
+
+    /**
+     * @var string $standarderror
+     */
+    public $standarderror;
+
+    /**
+     * @var string $standarderrorrangemin
+     */
+    public $standarderrorrangemin;
+
+    /**
+     * @var string $standarderrorrangemax
+     */
+    public $standarderrorrangemax;
 }

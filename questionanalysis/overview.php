@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Page with questions usage overview.
+ *
  * @copyright  2013 Middlebury College {@link http://www.middlebury.edu/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -47,6 +49,12 @@ $context = context_module::instance($cm->id);
 require_capability('mod/adaptivequiz:viewreport', $context);
 
 $adaptivequiz  = $DB->get_record('adaptivequiz', array('id' => $cm->instance), '*');
+
+// The page is only available for the default algorithm.
+if ($adaptivequiz->catmodel) {
+    throw new moodle_exception('reportpageunavailableforcustomcatmodel', 'adaptivequiz');
+}
+
 $PAGE->set_url('/mod/adaptivequiz/questionanalysis/overview.php', array('cmid' => $cm->id));
 
 $title = get_string('reportquestionanalysispageheading', 'adaptivequiz', format_string($adaptivequiz->name));

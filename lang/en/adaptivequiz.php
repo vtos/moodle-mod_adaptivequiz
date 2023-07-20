@@ -79,6 +79,7 @@ $string['reportattemptsshowinitialbars'] = 'Show initials bar';
 $string['reportattemptsusersperpage'] = 'Number of users displayed:';
 $string['reportattemptsummarytab'] = 'Attempt Summary';
 $string['reportindividualuserattemptpageheading'] = 'Individual user attempts report for {$a}';
+$string['reportpageunavailableforcustomcatmodel'] = 'Sorry,this page is not available when a custom CAT model is used.';
 $string['reportuserattemptstitleshort'] = '{$a}\'s attempts';
 $string['reportquestionanalysispageheading'] = '{$a} - questions report';
 $string['settingsdefaultsettingsheading'] = 'Default settings of activity instances';

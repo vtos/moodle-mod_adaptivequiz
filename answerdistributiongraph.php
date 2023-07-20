@@ -23,51 +23,31 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__).'/../../config.php');
+use mod_adaptivequiz\local\attempt\attempt;
+use mod_adaptivequiz\output\report\answerdistributiongraph\answer_distribution_graph_dataset;
+use mod_adaptivequiz\output\report\answerdistributiongraph\answer_distribution_graph_dataset_point;
+
+require_once('../../config.php');
 require_once($CFG->dirroot.'/tag/lib.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot.'/lib/graphlib.php');
 
-$id = required_param('cmid', PARAM_INT);
-$uniqueid = required_param('uniqueid', PARAM_INT);
-$userid = required_param('userid', PARAM_INT);
-$page = optional_param('page', 0, PARAM_INT);
+$attemptid = required_param('attempt', PARAM_INT);
 
-if (!$cm = get_coursemodule_from_id('adaptivequiz', $id)) {
-    throw new moodle_exception('invalidcoursemodule');
-}
-if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-    throw new moodle_exception('coursemisconf');
-}
+$attempt = attempt::get_by_id($attemptid);
+
+$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $attempt->read_attempt_data()->instance], '*', MUST_EXIST);
+list($course, $cm) = get_course_and_cm_from_instance($adaptivequiz, 'adaptivequiz');
 
 require_login($course, true, $cm);
-$context = context_module::instance($cm->id);
 
-require_capability('mod/adaptivequiz:viewreport', $context);
+require_capability('mod/adaptivequiz:viewreport', context_module::instance($cm->id));
 
-$param = array('uniqueid' => $uniqueid, 'userid' => $userid, 'activityid' => $cm->instance);
-$sql = 'SELECT a.name, a.highestlevel, a.lowestlevel, a.startinglevel, aa.timecreated, aa.timemodified, aa.attemptstate,
-               aa.attemptstopcriteria, aa.questionsattempted, acp.difficultysum, acp.standarderror, acp.measure
-          FROM {adaptivequiz} a
-          JOIN {adaptivequiz_attempt} aa ON a.id = aa.instance
-          JOIN {adaptivequiz_cat_params} acp ON aa.id = acp.attempt
-         WHERE aa.uniqueid = :uniqueid AND aa.userid = :userid AND a.id = :activityid
-      ORDER BY a.name ASC';
-$adaptivequiz  = $DB->get_record_sql($sql, $param);
-$user = $DB->get_record('user', array('id' => $userid));
-if (!$user) {
-    $user = new stdClass();
-    $user->firstname = get_string('unknownuser', 'adaptivequiz');
-    $user->lastname = '#'.$userid;
-}
+$graphdataset = answer_distribution_graph_dataset::create_for_attempt($attempt->read_attempt_data());
 
 $g = new graph(750, 300);
 
-$a = new stdClass;
-$a->quiz_name = $adaptivequiz->name;
-$a->firstname = $user->firstname;
-$a->lastname = $user->lastname;
-$g->parameter['title'] = get_string('answerdistgraph_title', 'adaptivequiz', $a);
+$g->parameter['title'] = '';
 
 $g->parameter['x_label'] = get_string('answerdistgraph_questiondifficulty', 'adaptivequiz');
 $g->parameter['x_label_angle'] = 0;
@@ -86,31 +66,11 @@ $g->parameter['bar_spacing'] = 10;
 $g->parameter['zero_axis'] = 'black';
 $g->parameter['inner_border_type'] = 'y-left'; // Only draw left y axis as zero axis already selected above.
 
-// Set up our data arrays.
-$difficulties = array();
-$rightanswers = array();
-$wronganswers = array();
-
-for ($i = $adaptivequiz->lowestlevel; $i <= $adaptivequiz->highestlevel; $i++) {
-    $difficulties[] = intval($i);
-    $rightanswers[] = 0;
-    $wronganswers[] = 0;
-}
-
-$quba = question_engine::load_questions_usage_by_activity($uniqueid);
-foreach ($quba->get_slots() as $i => $slot) {
-    $question = $quba->get_question($slot);
-    $tags = core_tag_tag::get_item_tags_array('core_question', 'question', $question->id);
-    $difficulty = adaptivequiz_get_difficulty_from_tags($tags);
-    $correct = ($quba->get_question_mark($slot) > 0);
-
-    $position = array_search($difficulty, $difficulties);
-    if ($correct) {
-        $rightanswers[$position]++;
-    } else {
-        $wronganswers[$position]--;
-    }
-}
+$difficulties = array_column($graphdataset->points(), 'questiondifficulty');
+$rightanswers = array_column($graphdataset->points(), 'numberofcorrectanswers');
+$wronganswers = array_map(function (answer_distribution_graph_dataset_point $point): int {
+    return -($point->numberofincorrectanswers);
+}, $graphdataset->points());
 
 $max = max(max($rightanswers), -1 * min($wronganswers));
 
@@ -126,7 +86,7 @@ $g->y_format['wrong_answers'] = array('colour' => 'red', 'bar' => 'fill', 'shado
 $g->parameter['y_min_left'] = -1 * ($max + 1);
 $g->parameter['y_max_left'] = $max + 1;
 
-// Skip some y-axis labels so they aren't too crowded.
+// Skip some y-axis labels, so they aren't too crowded.
 $g->parameter['y_axis_text_left'] = ceil($max / 10);
 
 // Space out the bars so that their width slowly decreases as the number of ticks increases.

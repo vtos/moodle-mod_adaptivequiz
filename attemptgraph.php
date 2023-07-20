@@ -23,123 +23,53 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_adaptivequiz\local\catalgorithm\catalgo;
+use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
+use mod_adaptivequiz\output\report\attemptgraph\attempt_graph_dataset;
 
-require_once(dirname(__FILE__).'/../../config.php');
+require_once('../../config.php');
 require_once($CFG->dirroot.'/tag/lib.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 require_once($CFG->dirroot.'/lib/graphlib.php');
 
-$id = required_param('cmid', PARAM_INT);
-$uniqueid = required_param('uniqueid', PARAM_INT);
-$userid = required_param('userid', PARAM_INT);
-$page = optional_param('page', 0, PARAM_INT);
+$attemptid = required_param('attempt', PARAM_INT);
 
-if (!$cm = get_coursemodule_from_id('adaptivequiz', $id)) {
-    throw new moodle_exception('invalidcoursemodule');
-}
-if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-    throw new moodle_exception("coursemisconf");
-}
+$attempt = attempt::get_by_id($attemptid);
+
+$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $attempt->read_attempt_data()->instance], '*', MUST_EXIST);
+list($course, $cm) = get_course_and_cm_from_instance($adaptivequiz, 'adaptivequiz');
 
 require_login($course, true, $cm);
-$context = context_module::instance($cm->id);
 
-require_capability('mod/adaptivequiz:viewreport', $context);
+require_capability('mod/adaptivequiz:viewreport', context_module::instance($cm->id));
 
-$param = array('uniqueid' => $uniqueid, 'userid' => $userid, 'activityid' => $cm->instance);
-$sql = 'SELECT a.name, a.highestlevel, a.lowestlevel, a.startinglevel, aa.timecreated, aa.timemodified, aa.attemptstate,
-               aa.attemptstopcriteria, aa.questionsattempted, acp.difficultysum, acp.standarderror, acp.measure
-          FROM {adaptivequiz} a
-          JOIN {adaptivequiz_attempt} aa ON a.id = aa.instance
-          JOIN {adaptivequiz_cat_params} acp ON aa.id = acp.attempt
-         WHERE aa.uniqueid = :uniqueid AND aa.userid = :userid AND a.id = :activityid
-      ORDER BY a.name ASC';
-$adaptivequiz  = $DB->get_record_sql($sql, $param);
-$user = $DB->get_record('user', array('id' => $userid));
-if (!$user) {
-    $user = new stdClass();
-    $user->firstname = get_string('unknownuser', 'adaptivequiz');
-    $user->lastname = '#'.$userid;
-}
+$graphdataset = attempt_graph_dataset::create_for_attempt($attempt->read_attempt_data());
+$diffucultyrange = questions_difficulty_range::from_activity_instance($adaptivequiz);
 
 $g = new graph(750, 300);
-$g->parameter['title'] = format_string($adaptivequiz->name).' for '.$user->firstname." ".$user->lastname;
+$g->parameter['title'] = '';
 $g->parameter['y_label_left'] = get_string('attemptquestion_ability', 'adaptivequiz');
 $g->parameter['legend']        = 'outside-top';
 $g->parameter['legend_border'] = 'black';
 $g->parameter['legend_offset'] = 4;
 $g->parameter['grid_colour'] = 'grayCC';
 
-$qnumbers = array();
-$qdifficulties = array();
-$abilitymeasures = array();
-$errormaximums = array();
-$errorminimums = array();
-$targetlevels = array();
+$qnumbers = [];
+$qdifficulties = [];
+$abilitymeasures = [];
+$errormaximums = [];
+$errorminimums = [];
+$targetlevels = [];
 
-$quba = question_engine::load_questions_usage_by_activity($uniqueid);
-$numattempted = 0;
-$difficultysum = 0;
-$sumcorrect = 0;
-$sumincorrect = 0;
-foreach ($quba->get_slots() as $i => $slot) {
-    // The starting target difficulty is set by the test parameters.
-    if ($i == 0) {
-        $targetlevel = $adaptivequiz->startinglevel;
-    } else {
-        // Compute the target difficulty based on the last question.
-        if ($questioncorrect) {
-            $targetlevel = round(catalgo::map_logit_to_scale($qdifficultylogits + 2 / $numattempted,
-                    $adaptivequiz->highestlevel, $adaptivequiz->lowestlevel));
-            if ($targetlevel == $qdifficulty && $targetlevel < $adaptivequiz->highestlevel) {
-                $targetlevel++;
-            }
-        } else {
-            $targetlevel = round(catalgo::map_logit_to_scale($qdifficultylogits - 2 / $numattempted,
-                    $adaptivequiz->highestlevel, $adaptivequiz->lowestlevel));
-            if ($targetlevel == $qdifficulty && $targetlevel > $adaptivequiz->lowestlevel) {
-                $targetlevel--;
-            }
-        }
-    }
-
-    $question = $quba->get_question($slot);
-    $tags = core_tag_tag::get_item_tags_array('core_question', 'question', $question->id);
-    $qdifficulty = adaptivequiz_get_difficulty_from_tags($tags);
-    $qdifficultylogits = catalgo::convert_linear_to_logit($qdifficulty,
-        questions_difficulty_range::from_activity_instance($adaptivequiz));
-    $questioncorrect = ($quba->get_question_mark($slot) > 0);
-
-    $numattempted++;
-    $difficultysum = $difficultysum + $qdifficultylogits;
-    if ($questioncorrect) {
-        $sumcorrect++;
-    } else {
-        $sumincorrect++;
-    }
-
-    $abilitylogits = catalgo::estimate_measure($difficultysum, $numattempted, $sumcorrect,
-        $sumincorrect);
-    $abilityfraction = 1 / ( 1 + exp( (-1 * $abilitylogits) ) );
-    $ability = (($adaptivequiz->highestlevel - $adaptivequiz->lowestlevel) * $abilityfraction) + $adaptivequiz->lowestlevel;
-
-    $stderrlogits = catalgo::estimate_standard_error($numattempted, $sumcorrect, $sumincorrect);
-    $stderr = catalgo::convert_logit_to_percent($stderrlogits);
-
-    $qnumbers[] = $numattempted;
-    $qdifficulties[] = $qdifficulty;
-    $abilitymeasures[] = $ability;
-
-    $errormaximums[] = min($adaptivequiz->highestlevel,
-        $ability + ($stderr * ($adaptivequiz->highestlevel - $adaptivequiz->lowestlevel)));
-    $errorminimums[] = max($adaptivequiz->lowestlevel,
-        $ability - ($stderr * ($adaptivequiz->highestlevel - $adaptivequiz->lowestlevel)));
-
-    $targetlevels[] = $targetlevel;
+$ordernum = 0;
+foreach ($graphdataset->points() as $datasetpoint) {
+    $qnumbers[] = ++$ordernum;
+    $qdifficulties[] = $datasetpoint->questiondifficulty;
+    $targetlevels[] = $datasetpoint->targetquestiondifficulty;
+    $abilitymeasures[] = $datasetpoint->abilitymeasure;
+    $errormaximums[] = $datasetpoint->standarderrorrangemax;
+    $errorminimums[] = $datasetpoint->standarderrorrangemin;
 }
-
 
 $g->x_data = $qnumbers;
 $g->y_data['qdiff'] = $qdifficulties;
@@ -170,6 +100,8 @@ if ($adaptivequiz->highestlevel - $adaptivequiz->lowestlevel <= 20) {
     $g->parameter['y_axis_gridlines'] = 21;
     $g->parameter['y_decimal_left'] = 1;
 }
+
+$numattempted = count($graphdataset->points());
 
 // Ensure that the x-axis text isn't to cramped.
 $g->parameter['x_axis_text'] = ceil($numattempted / 40);

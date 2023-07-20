@@ -14,28 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace adaptivequizcatmodel_helloworld\local\report;
+namespace mod_adaptivequiz\output\report\answerdistributiongraph;
 
 /**
- * Attempts filter.
+ * Output object to shape the data for each point of the answer distribution dataset.
  *
- * @package    adaptivequizcatmodel_helloworld
+ * @package    mod_adaptivequiz
  * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class attempts_filter {
+final class answer_distribution_graph_dataset_point {
 
     /**
-     * @var int $adaptivequizid
+     * @var int $questiondifficulty
      */
-    public $adaptivequizid;
+    public $questiondifficulty;
 
     /**
-     * The constructor, may be used for quicker instantiation.
-     *
-     * @param int $adaptivequizid
+     * @var int $numberofcorrectanswers
      */
-    public function __construct(int $adaptivequizid) {
-        $this->adaptivequizid = $adaptivequizid;
-    }
+    public $numberofcorrectanswers;
+
+    /**
+     * @var int $numberofincorrectanswers
+     */
+    public $numberofincorrectanswers;
 }

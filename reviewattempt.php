@@ -27,14 +27,15 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
+use mod_adaptivequiz\local\attempt\attempt;
 use mod_adaptivequiz\local\attempt\cat_model_params;
 
 $attemptid = required_param('attempt', PARAM_INT);
 $page = optional_param('page', 0, PARAM_INT);
 $tab = optional_param('tab', 'attemptsummary', PARAM_ALPHA);
 
-$attempt = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid], '*', MUST_EXIST);
-$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $attempt->instance], '*', MUST_EXIST);
+$attempt = attempt::get_by_id($attemptid);
+$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $attempt->read_attempt_data()->instance], '*', MUST_EXIST);
 $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $adaptivequiz->course, false, MUST_EXIST);
 $course = $DB->get_record('course', ['id' => $adaptivequiz->course], '*', MUST_EXIST);
 
@@ -44,18 +45,17 @@ $context = context_module::instance($cm->id);
 
 require_capability('mod/adaptivequiz:viewreport', $context);
 
-$user = $DB->get_record('user', ['id' => $attempt->userid], '*', MUST_EXIST);
-$quba = question_engine::load_questions_usage_by_activity($attempt->uniqueid);
+$user = $DB->get_record('user', ['id' => $attempt->read_attempt_data()->userid], '*', MUST_EXIST);
+$quba = question_engine::load_questions_usage_by_activity($attempt->read_attempt_data()->uniqueid);
 
-$catmodelparams = cat_model_params::for_attempt($attempt->id);
+$catmodelparams = cat_model_params::for_attempt($attempt->read_attempt_data()->id);
 
 $a = new stdClass();
-$a->quizname = format_string($adaptivequiz->name);
 $a->fullname = fullname($user);
-$a->finished = userdate($attempt->timemodified);
+$a->finished = userdate($attempt->read_attempt_data()->timemodified);
 $title = get_string('reportattemptreviewpageheading', 'adaptivequiz', $a);
 
-$PAGE->set_url('/mod/adaptivequiz/reviewattempt.php', ['attempt' => $attempt->id, 'tab' => $tab]);
+$PAGE->set_url('/mod/adaptivequiz/reviewattempt.php', ['attempt' => $attempt->read_attempt_data()->id, 'tab' => $tab]);
 $PAGE->set_title($title);
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
@@ -70,7 +70,6 @@ echo $renderer->print_header();
 echo $renderer->heading($title);
 
 echo $renderer->attempt_review_tabs($PAGE->url, $tab);
-echo $renderer->attempt_report_page_by_tab($tab, $adaptivequiz, $attempt, $catmodelparams, $user, $quba, $cm->id, $PAGE->url,
-    $page);
+echo $renderer->attempt_report_page_by_tab($tab, $adaptivequiz, $attempt, $catmodelparams, $user, $quba, $PAGE->url, $page);
 
 echo $renderer->print_footer();

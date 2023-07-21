@@ -247,7 +247,7 @@ function adaptivequiz_get_user_grades($adaptivequiz, $userid = 0) {
         $params['userid'] = $userid;
         $userwhere = 'AND aa.userid = :userid';
     }
-    $sql = "SELECT aa.uniqueid, aa.userid, aa.timemodified, acp.measure, aa.timecreated, a.highestlevel, a.lowestlevel
+    $sql = "SELECT aa.id, aa.userid, aa.timemodified, acp.measure, aa.timecreated, a.highestlevel, a.lowestlevel
               FROM {adaptivequiz_attempt} aa
               JOIN {adaptivequiz_cat_params} acp ON aa.id = acp.attempt
               JOIN {adaptivequiz} a ON aa.instance = a.id

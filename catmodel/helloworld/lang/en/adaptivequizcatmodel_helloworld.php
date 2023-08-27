@@ -36,3 +36,4 @@ $string['param1_help'] = 'An example parameter for the CAT model. The value must
 $string['param2'] = 'Parameter 2';
 $string['param2_help'] = 'An example parameter for the CAT model. The value must be higher than the value of parameter 1 (just for the demo validation purposes).';
 $string['pluginname'] = 'Hello world CAT model';
+$string['attemptfinishedfeedbacktext'] = 'Thank you for making an attempt with the Hello world sub-plugin!';

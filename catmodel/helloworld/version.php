@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2023061900;
-$plugin->release = '1.0.4dev';
+$plugin->version = 2023082700;
+$plugin->release = '1.0.5dev';
 $plugin->maturity = MATURITY_ALPHA;
 $plugin->requires = 2022041900;
 $plugin->component = 'adaptivequizcatmodel_helloworld';

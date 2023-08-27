@@ -413,6 +413,9 @@ data bound to an attempt.
 the adaptive quiz activity and displayed as a number of attempts made in the activity's view page for a manager/teacher role.
 When a custom sub-plugin is used, the default attempts reporting obviously does not make sense. The sub-plugin being used is fully
 responsible for providing proper attempts reporting.
+5. `attempt_finished_feedback` - enables a sub-plugin to provide its own feedback text to display to the user when an attempt
+is finished. When defined, the feedback text returned by this callback will always has a precedence over the feedback text
+defined in the activity settings (or the activity's default one).
 
 How to define those callbacks in a sub-plugin and where to place them to be picked up by the adaptive quiz engine?
 The mechanism is absolutely the same as for any other callback in Moodle. Callbacks in sub-plugins are expected to be in
@@ -435,6 +438,14 @@ function adaptivequizcatmodel_helloworld_post_delete_attempt_callback(stdClass $
 function adaptivequizcatmodel_helloworld_attempts_report_url(stdClass $adaptivequiz, stdClass $cm): ?moodle_url
 ```
 
+```
+adaptivequizcatmodel_helloworld_attempt_finished_feedback(
+    stdClass $adaptivequiz,
+    cm_info $cm,
+    stdClass $attemptrecord
+): string
+```
+
 As you can see, the first three callbacks return nothing (they're expected to simply run some logic, no flow control like redirects
 or output is expected, just some background actions) and accept two arguments:
 1. `stdClass $adaptivequiz` - an activity instance record, but with a couple of extra properties - `context` and `cm` - are
@@ -445,7 +456,7 @@ the `read_attempt_data()->{property}` statement, where `{property}` is a field n
 These callbacks are supposed to fetch all the required data by using the attempt data passed as an argument and then act on its
 own way.
 
-The fourth callback accepts a bit different set of parameters:
+The `attempts_report_url` callback accepts a different set of parameters:
 1. `stdClass $adaptivequiz` - doesn't require any description at this point.
 2. `stdClass $cm` - the well known Moodle's object representing the current course module. This is what's returned by
 `get_coursemodule_from_id()` or similar.
@@ -454,15 +465,19 @@ The callback is expected to return either `null` or an instance of `moodle_url`,
 provided by the sub-plugin being used. The `null` value can be returned in cases when for some reason the link must not
 be displayed (the most common example - missing capabilities).
 
+And the `attempt_finished_feedback` callback accepts the following set of parameters:
+1. `stdClass $adaptivequiz`
+2. `cm_info $cm` - differs from what is passed to the previous callback.
+3. `stdClass $attemptrecord` - also different, the purpose is to provide a read object instead of an entity.
+
+The callback is expected to always return a string, which is ready to be displayed to the user. Please note, that a sub-plugin
+is fully responsible for any formatting of the feedback content it provides. The adaptive quiz plugin will not perform any calls
+of the Moodle's string formatting functions on the feedback content received from a sub-plugin.
+
+The consistency of the arguments being passed is something to be worked on in future versions.
+
 ### Hooking to attempt completion
 If some actions (also in background) should be done by a sub-plugin once an attempt is completed, it may handle the adaptive quiz
 plugin's even, which is available site-wide - `\mod_adaptivequiz\event\attempt_completed`.
-
-### Future plans
-At this point after developing a CAT model sub-plugin and successfully implementing the available interfaces, the reporting pages
-will not display any sensible data on the attempts made using custom CAT models. It's to be decided how to handle reporting when
-using sub*plugins. Obviously, a sub-plugin should be responsible for displaying the reporting data on its own, and
-the adaptive quiz activity should somehow redirect to that reporting. The drawback of the existing visual design of
-the adaptive quiz activity is displaying some piece of reporting on its view.php page.
 
 Any feedback on the current sub-plugins structure is always welcome!

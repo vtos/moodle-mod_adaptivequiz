@@ -14,59 +14,78 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * A class to display a table with user's own attempts on the activity's view page.
- *
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\output;
 
+use help_icon;
 use renderable;
+use renderer_base;
 use stdClass;
+use templatable;
 
-final class ability_measure implements renderable {
-
-    /**
-     * @var float $abilitymeasure
-     */
-    public $measurevalue;
-    /**
-     * @var int $lowestquestiondifficulty
-     */
-    public $lowestquestiondifficulty;
-    /**
-     * @var int $highestquestiondifficulty
-     */
-    public $highestquestiondifficulty;
+/**
+ * An output object to present the ability measure to a user.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2023 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class ability_measure implements renderable, templatable {
 
     /**
-     * A convenience method to convert the object to what {@link mod_adaptivequiz_renderer::format_measure()} expects
-     * to produce a formatted ability measure.
+     * @var string $abilitymeasure
      */
-    public function as_object_to_format(): stdClass {
-        $return = new stdClass();
-        $return->measure = $this->measurevalue;
-        $return->lowestlevel = $this->lowestquestiondifficulty;
-        $return->highestlevel = $this->highestquestiondifficulty;
+    private $measurevalue;
 
-        return $return;
+    /**
+     * @var string $lowestquestiondifficulty
+     */
+    private $lowestquestiondifficulty;
+
+    /**
+     * @var string $highestquestiondifficulty
+     */
+    private $highestquestiondifficulty;
+
+    /**
+     * @var help_icon $helpicon
+     */
+    private $helpicon;
+
+    /**
+     * Empty and closed, the factory method must be used instead.
+     */
+    private function __construct() {
     }
 
     /**
      * A named constructor to set up the object and increase code readability.
      *
-     * @param stdClass $adaptivequiz A record from {adaptivequiz}. lowestlevel and highestlevel are the expected fields.
-     * @param float $measurevalue
+     * @param stdClass $adaptivequiz A record from the {adaptivequiz} table.
+     * @param string $measurevalue A ready for output value.
      * @return self
      */
-    public static function of_attempt_on_adaptive_quiz(stdClass $adaptivequiz, float $measurevalue): self {
+    public static function of_attempt_on_adaptive_quiz(stdClass $adaptivequiz, string $measurevalue): self {
         $return = new self();
-        $return->lowestquestiondifficulty = !empty($adaptivequiz->lowestlevel) ? $adaptivequiz->lowestlevel : 0;
-        $return->highestquestiondifficulty = !empty($adaptivequiz->highestlevel) ? $adaptivequiz->highestlevel : 0;
         $return->measurevalue = $measurevalue;
+        $return->lowestquestiondifficulty = $adaptivequiz->lowestlevel;
+        $return->highestquestiondifficulty = $adaptivequiz->highestlevel;
+        $return->helpicon = new help_icon('abilityestimated', 'adaptivequiz');
 
         return $return;
+    }
+
+    /**
+     * Implements the interface.
+     *
+     * @param renderer_base $output
+     * @return array
+     */
+    public function export_for_template(renderer_base $output): array {
+        return [
+            'abilitymeasurevalue' => $this->measurevalue,
+            'lowestdifficulty' => $this->lowestquestiondifficulty,
+            'highestdifficulty' => $this->highestquestiondifficulty,
+            'helpicon' => $output->render($this->helpicon),
+        ];
     }
 }

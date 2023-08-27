@@ -93,3 +93,19 @@ function adaptivequizcatmodel_helloworld_attempts_report_url(stdClass $adaptiveq
         ? new moodle_url('/mod/adaptivequiz/catmodel/helloworld/report.php', ['id' => $cm->id])
         : null;
 }
+
+/**
+ * A hook for this sub-plugin to provide a custom feedback text when an attempt is finished.
+ *
+ * @param stdClass $adaptivequiz
+ * @param cm_info $cm
+ * @param stdClass $attemptrecord
+ * @return string
+ */
+function adaptivequizcatmodel_helloworld_attempt_finished_feedback(
+    stdClass $adaptivequiz,
+    cm_info $cm,
+    stdClass $attemptrecord
+): string {
+    return get_string('attemptfinishedfeedbacktext', 'adaptivequizcatmodel_helloworld');
+}

@@ -27,37 +27,26 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
 use mod_adaptivequiz\local\attempt\attempt;
-use mod_adaptivequiz\local\attempt\cat_model_params;
-use mod_adaptivequiz\output\ability_measure;
 
+// TODO: change required parameters to make initialization more effective.
 $attemptid = required_param('attempt', PARAM_INT);
 $instanceid = required_param('instance', PARAM_INT);
 
-$adaptivequiz  = $DB->get_record('adaptivequiz', array('id' => $instanceid), '*', MUST_EXIST);
-$attempt = attempt::get_by_id($attemptid, $adaptivequiz);
+$adaptivequiz  = $DB->get_record('adaptivequiz', ['id' => $instanceid], '*', MUST_EXIST);
+$attempt = attempt::get_by_id($attemptid);
+$cmrecord = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, 0, false, MUST_EXIST);
 
-if (!$cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id)) {
-    throw new moodle_exception('invalidcoursemodule');
-}
-if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-    throw new moodle_exception('coursemisconf');
-}
-
-$abilitymeasurerenderable = null;
-if ($adaptivequiz->showabilitymeasure) {
-    $abilitymeasurevalue = cat_model_params::for_attempt($attempt->read_attempt_data()->id)->get('measure');
-    $abilitymeasurerenderable = ability_measure::of_attempt_on_adaptive_quiz($adaptivequiz, $abilitymeasurevalue);
-}
-
-require_login($course, true, $cm);
+/** @var cm_info $cm */
+list($course, $cm) = get_course_and_cm_from_cmid($cmrecord->id, 'adaptivequiz');
 
 $context = context_module::instance($cm->id);
+$PAGE->set_context($context);
+$PAGE->set_url('/mod/adaptivequiz/attemptfinished.php', ['cmid' => $cm->id, 'id' => $cm->instance]);
 
+require_login($course, true, $cm);
 require_capability('mod/adaptivequiz:attempt', $context);
 
-$PAGE->set_url('/mod/adaptivequiz/attemptfinished.php', ['cmid' => $cm->id, 'id' => $cm->instance]);
 $PAGE->set_title(format_string($adaptivequiz->name));
-$PAGE->set_context($context);
 $PAGE->activityheader->disable();
 $PAGE->add_body_class('limitedwidth');
 
@@ -68,11 +57,13 @@ $popup = false;
 if (!empty($adaptivequiz->browsersecurity)) {
     $PAGE->blocks->show_only_fake_blocks();
     $output->init_browser_security(false);
+    $PAGE->requires->js_init_call('M.mod_adaptivequiz.secure_window.init_close_button',
+        [new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id])], true, $output->adaptivequiz_get_js_module());
     $popup = true;
 } else {
     $PAGE->set_heading(format_string($course->fullname));
 }
 
 echo $output->header();
-echo $output->attempt_feedback($adaptivequiz->attemptfeedback, $cm->id, $abilitymeasurerenderable, $popup);
+echo $output->attempt_finished_page($attempt->read_attempt_data(), $adaptivequiz, $cm);
 echo $output->footer();

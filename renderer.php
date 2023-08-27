@@ -23,6 +23,8 @@ use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\attempt\cat_model_params;
 use mod_adaptivequiz\local\catalgorithm\catalgo;
 use mod_adaptivequiz\output\ability_measure;
+use mod_adaptivequiz\output\attempt\attempt_finished_feedback;
+use mod_adaptivequiz\output\attempt\attempt_finished_page;
 use mod_adaptivequiz\output\attempt_progress;
 use mod_adaptivequiz\output\attempts_number;
 use mod_adaptivequiz\output\report\answerdistributiongraph\answer_distribution_graph_dataset;
@@ -196,47 +198,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
 
         $meta .= question_engine::initialise_js();
         return $meta;
-    }
-
-    /**
-     * @throws coding_exception
-     */
-    public function attempt_feedback(string $attemptfeedback, int $cmid, ?ability_measure $abilitymeasure,
-                                     bool $popup = false): string {
-
-        $output = html_writer::start_div('text-center');
-
-        $url = new moodle_url('/mod/adaptivequiz/view.php');
-        $attr = ['action' => $url, 'method' => 'post', 'id' => 'attemptfeedback'];
-        $output .= html_writer::start_tag('form', $attr);
-
-        if (empty(trim($attemptfeedback))) {
-            $attemptfeedback = get_string('attemptfeedbackdefaulttext', 'adaptivequiz');
-        }
-        $output .= html_writer::tag('p', s($attemptfeedback), ['class' => 'submitbtns adaptivequizfeedback']);
-
-        if ($abilitymeasure) {
-            $output .= $this->render($abilitymeasure);
-        }
-
-        if (empty($popup)) {
-            $attr = ['type' => 'submit', 'name' => 'attemptfinished', 'value' => get_string('continue'),
-                'class' => 'btn btn-primary'];
-            $output .= html_writer::empty_tag('input', $attr);
-        } else {
-            // In a 'secure' popup window.
-            $this->page->requires->js_init_call('M.mod_adaptivequiz.secure_window.init_close_button', [$url],
-                $this->adaptivequiz_get_js_module());
-            $output .= html_writer::empty_tag('input', ['type' => 'button', 'value' => get_string('continue'),
-                'id' => 'secureclosebutton', 'class' => 'btn btn-primary']);
-        }
-
-        $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $cmid]);
-        $output .= html_writer::end_tag('form');
-
-        $output .= html_writer::end_div();
-
-        return $output;
     }
 
     /**
@@ -822,6 +783,18 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
+     * A helper public method to call to display the main content of the page, which is displayed when an attempt is finished.
+     *
+     * @param stdClass $attemptrecord A record from the {adaptivequiz_attempt} table.
+     * @param stdClass $adaptivequiz A record from the {adaptivequiz} table.
+     * @param cm_info $cm
+     * @return string
+     */
+    public function attempt_finished_page(stdClass $attemptrecord, stdClass $adaptivequiz, cm_info $cm): string {
+        return $this->render(attempt_finished_page::for_attempt_on_adaptive_quiz($attemptrecord, $adaptivequiz, $cm));
+    }
+
+    /**
      * Renders the main content of the attempt graph page.
      *
      * @param attempt_graph_page $page
@@ -863,6 +836,36 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $output .= $this->render($page->graph_dataset());
 
         return $output;
+    }
+
+    /**
+     * Renders the main content of the page, which is displayed when an attempt is finished.
+     *
+     * @param attempt_finished_page $page
+     * @return string
+     */
+    protected function render_attempt_finished_page(attempt_finished_page $page): string {
+        return $this->render_from_template('mod_adaptivequiz/attempt_finished_page', $page->export_for_template($this));
+    }
+
+    /**
+     * Renders contents of the feedback to be displayed to a user when an attempt is finished.
+     *
+     * @param attempt_finished_feedback $feedback
+     * @return string
+     */
+    protected function render_attempt_finished_feedback(attempt_finished_feedback $feedback): string {
+        return $this->render_from_template('mod_adaptivequiz/attempt_finished_feedback', $feedback->export_for_template($this));
+    }
+
+    /**
+     * Renders ability measure to be displayed to a user.
+     *
+     * @param ability_measure $measure
+     * @return string
+     */
+    protected function render_ability_measure(ability_measure $measure): string {
+        return $this->render_from_template('mod_adaptivequiz/ability_measure', $measure->export_for_template($this));
     }
 
     /**
@@ -1028,20 +1031,6 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             $output .= '&nbsp'.html_writer::link($pageurl, $i + 1, $attr).'&nbsp';
         }
         $output .= html_writer::end_tag('center');
-
-        return $output;
-    }
-
-    protected function render_ability_measure(ability_measure $measure): string {
-        $output = html_writer::start_div('box py-3');
-
-        $abilitymeasurecontents = get_string('abilityestimated', 'adaptivequiz') . ': ' .
-            html_writer::tag('strong', $this->format_measure($measure->as_object_to_format())) . ' / ' .
-            $measure->lowestquestiondifficulty . ' - ' . $measure->highestquestiondifficulty .
-            $this->help_icon('abilityestimated', 'adaptivequiz');
-        $output .= $this->heading($abilitymeasurecontents, 3);
-
-        $output .= html_writer::end_div();
 
         return $output;
     }

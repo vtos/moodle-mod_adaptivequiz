@@ -39,6 +39,14 @@ function adaptivequizcatmodel_catquiz_post_create_attempt_callback(stdClass $ada
         catquiz_handler::prepare_attempt_caches();
 }
 
+function adaptivequizcatmodel_catquiz_attempt_finished_feedback(
+        stdClass $adaptivequiz,
+        cm_info $cm,
+        stdClass $attemptrecord
+    ): string {
+        return catquiz_handler::attemptfeedback($adaptivequiz, $cm, $attemptrecord);
+    }
+
 /**
  * Callback to execute when a question answer is processed.
  *

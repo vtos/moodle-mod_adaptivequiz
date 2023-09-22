@@ -294,13 +294,13 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        if (empty($data['questionpool'])) {
-            $errors['questionpool'] = get_string('formquestionpool', 'adaptivequiz');
-        }
-
         // When there's a custom CAT model submitted, we wire up its form validation if exists and skip the default validation.
         if (!empty($data['catmodel'])) {
             return array_merge($errors, $this->validate_cat_model_fields_or_skip($data, $files));
+        }
+
+        if (empty($data['questionpool'])) {
+            $errors['questionpool'] = get_string('formquestionpool', 'adaptivequiz');
         }
 
         // Validate for positivity.

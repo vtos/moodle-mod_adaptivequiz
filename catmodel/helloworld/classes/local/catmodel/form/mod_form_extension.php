@@ -60,7 +60,8 @@ final class mod_form_extension implements
         $form->setType('catmodelinstanceid', PARAM_INT);
 
         // Remove some default form fields the sub-plugin does not use.
-        $defaultelementstodrop = ['startinglevel', 'stopingconditionshdr', 'minimumquestions', 'maximumquestions', 'standarderror'];
+        $defaultelementstodrop = ['startinglevel', 'stopingconditionshdr', 'minimumquestions', 'maximumquestions', 'standarderror',
+            'questionpool', 'lowestlevel', 'highestlevel', 'questionselectionheading'];
         foreach ($defaultelementstodrop as $elementname) {
             $form->removeElement($elementname);
         }

@@ -101,8 +101,6 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addHelpButton('showattemptprogress', 'modformshowattemptprogress', 'adaptivequiz');
         $mform->setDefault('showattemptprogress', 0);
 
-        $this->questions_pool_selector($mform);
-
         $mform->addElement('header', 'algorithmsettingsheading', get_string('mod_form:algorithmsettingsheading', 'adaptivequiz'));
         $mform->setExpanded('algorithmsettingsheading', true);
 
@@ -201,13 +199,13 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        if (empty($data['questionpool'])) {
-            $errors['questionpool'] = get_string('formquestionpool', 'adaptivequiz');
-        }
-
         // When there's a custom CAT model submitted, we wire up its form validation if exists and skip the default validation.
         if (!empty($data['catmodel'])) {
             return array_merge($errors, $this->validate_custom_cat_model_fields_or_skip($data, $files));
+        }
+
+        if (empty($data['questionpool'])) {
+            $errors['questionpool'] = get_string('formquestionpool', 'adaptivequiz');
         }
 
         $errors = array_merge($errors, $this->validate_cat_algorithm_fields($data));
@@ -238,7 +236,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $form->getElement('questionpool')->setSelected($selquestcat);
 
         $form->addHelpButton('questionpool', 'questionpool', 'adaptivequiz');
-        $form->addRule('questionpool', get_string('err_required', 'form'), 'required', null, 'client');
+        $form->hideIf('questionpool', 'catmodel', 'neq', '');
     }
 
     /**
@@ -269,6 +267,8 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
      * @param stdClass $config Plugin's global config.
      */
     private function default_cat_algorithm_fields_section(MoodleQuickForm $form, stdClass $config): void {
+        $this->questions_pool_selector($form);
+
         $form->addElement('text', 'startinglevel', get_string('startinglevel', 'adaptivequiz'),
             ['size' => '3', 'maxlength' => '3']);
         $form->addHelpButton('startinglevel', 'startinglevel', 'adaptivequiz');

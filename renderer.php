@@ -73,7 +73,19 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      * @param bool $browsersecurityenabled
      * @return string
      */
-    public function attempt_controls_or_notification(int $cmid, bool $attemptallowed, bool $browsersecurityenabled): string {
+    public function attempt_controls_or_notification(
+        int $cmid,
+        bool $attemptallowed,
+        string $activityavailabilitynotification,
+        bool $browsersecurityenabled
+    ): string {
+
+        global $CFG;
+
+        if ($activityavailabilitynotification) {
+            return $this->notification($activityavailabilitynotification, notification::NOTIFY_WARNING);
+        }
+
         if (!$attemptallowed) {
             return html_writer::div(get_string('noattemptsallowed', 'adaptivequiz'), 'alert alert-info text-center');
         }
@@ -86,7 +98,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cmid, 'sesskey' => sesskey()]),
             get_string('startattemptbtn', 'adaptivequiz'),
             'post',
-            single_button::BUTTON_PRIMARY
+            $CFG->version < 2023042400 ? true : single_button::BUTTON_PRIMARY,
         ));
     }
 

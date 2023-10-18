@@ -280,7 +280,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
                 $form->insertElementBefore($form->removeElement($formelement->getName(), false), 'catmodelfieldsmarker');
             }
 
-            // $formmodifier->definition_after_data_callback($form);
+            $formmodifier->definition_after_data_callback($form);
 
             break;
         }

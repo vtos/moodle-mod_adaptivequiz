@@ -53,6 +53,16 @@ final class mod_form_extension implements
 
         }
 
+        // Remove some default form fields the sub-plugin does not use.
+        $defaultelementstodrop = ['startinglevel', 'stopingconditionshdr', 'minimumquestions', 'maximumquestions', 'standarderror',
+            'questionpool', 'lowestlevel', 'highestlevel', 'questionselectionheading'];
+        foreach ($defaultelementstodrop as $elementname) {
+
+            if ($form->elementExists($elementname)) {
+                $form->removeElement($elementname);
+            }
+        }
+
         return $formelements;
     }
 

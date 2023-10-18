@@ -280,7 +280,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
                 $form->insertElementBefore($form->removeElement($formelement->getName(), false), 'catmodelfieldsmarker');
             }
 
-            $formmodifier->definition_after_data_callback($form);
+            // $formmodifier->definition_after_data_callback($form);
 
             break;
         }
@@ -415,9 +415,15 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         foreach (array_keys($catmodelplugins) as $pluginname) {
             $options[$pluginname] = get_string('pluginname', "adaptivequizcatmodel_$pluginname");
         }
+        $config = get_config('adaptivequiz');
         $form->addElement('select', 'catmodel', get_string('modformcatmodel', 'adaptivequiz'), $options,
             ['data-on-change-action' => 'reloadForm']);
+        $form->setDefault('catmodel', $config->catmodel);
         $form->addHelpButton('catmodel', 'modformcatmodel', 'adaptivequiz');
+
+        if (!empty($config->catmodel_locked)) {
+            $form->freeze('catmodel');
+        }
 
         // Just a marker to identify the place in form where custom fields should be added.
         $form->addElement('hidden', 'catmodelfieldsmarker');

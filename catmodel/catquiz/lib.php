@@ -45,7 +45,7 @@ function adaptivequizcatmodel_catquiz_attempt_finished_feedback(
         stdClass $attemptrecord
     ): string {
         return catquiz_handler::attemptfeedback($adaptivequiz, $cm, $attemptrecord);
-    }
+}
 
 /**
  * Callback to execute when a question answer is processed.

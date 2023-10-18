@@ -25,19 +25,22 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($ADMIN->fulltree) {
-    $settings->add(new admin_setting_heading(
+
+    $setting = new admin_setting_heading(
         'adaptivequizdefaultsettingsheading',
         get_string('settingsdefaultsettingsheading', 'adaptivequiz'),
         get_string('settingsdefaultsettingsheadinginfo', 'adaptivequiz')
-    ));
+    );
+    $settings->add($setting);
 
-    $settings->add(new admin_setting_configtext(
+    $setting = new admin_setting_configtext(
         'adaptivequiz/startinglevel',
         get_string('startinglevel', 'adaptivequiz'),
         get_string('startinglevel_help', 'adaptivequiz'),
         0,
         PARAM_INT
-    ));
+    );
+    $settings->add($setting);
 
     $settings->add(new admin_setting_configtext(
         'adaptivequiz/lowestlevel',
@@ -71,11 +74,31 @@ if ($ADMIN->fulltree) {
         PARAM_INT
     ));
 
-    $settings->add(new admin_setting_configtext(
+    $setting = new admin_setting_configtext(
         'adaptivequiz/standarderror',
         get_string('standarderror', 'adaptivequiz'),
         get_string('standarderror_help', 'adaptivequiz'),
         5,
         PARAM_FLOAT
-    ));
+    );
+    $settings->add($setting);
+
+    if ($catmodelplugins = core_component::get_plugin_list('adaptivequizcatmodel')) {
+
+        $options = ['' => ''];
+        foreach (array_keys($catmodelplugins) as $pluginname) {
+            $options[$pluginname] = get_string('pluginname', "adaptivequizcatmodel_$pluginname");
+        }
+
+        $setting = new admin_setting_configselect(
+            'adaptivequiz/catmodel',
+            get_string('modformcatmodel', 'adaptivequiz'),
+            '',
+            0,
+            $options,
+        );
+
+        $setting->set_locked_flag_options(admin_setting_flag::ENABLED, false);
+        $settings->add($setting);
+    }
 }

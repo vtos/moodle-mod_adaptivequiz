@@ -277,10 +277,10 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
             }
 
             foreach ($formelements as $formelement) {
-                $form->insertElementBefore($form->removeElement($formelement->getName(), false), 'catmodelfieldsmarker');
+                $value = $formelement->getValue();
+                $formelement = $form->insertElementBefore($form->removeElement($formelement->getName(), false), 'catmodelfieldsmarker');
+                $formelement->setValue($value);
             }
-
-            $formmodifier->definition_after_data_callback($form);
 
             break;
         }

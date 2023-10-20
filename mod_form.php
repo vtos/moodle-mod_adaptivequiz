@@ -418,7 +418,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $config = get_config('adaptivequiz');
         $form->addElement('select', 'catmodel', get_string('modformcatmodel', 'adaptivequiz'), $options,
             ['data-on-change-action' => 'reloadForm']);
-        $form->setDefault('catmodel', $config->catmodel);
+        $form->setDefault('catmodel', $config->catmodel ?? 0);
         $form->addHelpButton('catmodel', 'modformcatmodel', 'adaptivequiz');
 
         if (!empty($config->catmodel_locked)) {

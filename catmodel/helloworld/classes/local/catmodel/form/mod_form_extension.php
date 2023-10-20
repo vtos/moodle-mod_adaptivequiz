@@ -63,7 +63,9 @@ final class mod_form_extension implements
         $defaultelementstodrop = ['startinglevel', 'stopingconditionshdr', 'minimumquestions', 'maximumquestions', 'standarderror',
             'questionpool', 'lowestlevel', 'highestlevel', 'questionselectionheading'];
         foreach ($defaultelementstodrop as $elementname) {
-            $form->removeElement($elementname);
+            if ($form->elementExists($elementname)) {
+                $form->removeElement($elementname);
+            }
         }
 
         return $formelements;

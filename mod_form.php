@@ -218,7 +218,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
             }
 
             $formdatapreprocessor = new $classname();
-            $defaultvalues = $formdatapreprocessor->data_preprocessing_callback($defaultvalues);
+            $defaultvalues = $formdatapreprocessor->data_preprocessing_callback($defaultvalues, $this->_form);
 
             break;
         }

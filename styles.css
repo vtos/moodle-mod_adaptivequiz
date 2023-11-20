@@ -47,7 +47,7 @@ table.adpq_answers_table thead:first-child th.section {
     margin-top: 1rem;
 }
 .usersattemptstable {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 0.75rem !important; /* stylelint-disable-line declaration-no-important */
 }
 
 .attempt-controls-or-notification-container {

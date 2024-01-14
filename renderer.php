@@ -61,6 +61,14 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         'menubar' => false
     );
 
+    /**
+     * Returns content for a button to start an adaptive quiz attempt or a notification when starting an attempt is not available.
+     *
+     * @param int $cmid
+     * @param bool $attemptallowed
+     * @param bool $browsersecurityenabled
+     * @return string
+     */
     public function attempt_controls_or_notification(int $cmid, bool $attemptallowed, bool $browsersecurityenabled): string {
         if (!$attemptallowed) {
             return html_writer::div(get_string('noattemptsallowed', 'adaptivequiz'), 'alert alert-info text-center');
@@ -74,7 +82,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cmid, 'sesskey' => sesskey()]),
             get_string('startattemptbtn', 'adaptivequiz'),
             'post',
-            true
+            single_button::BUTTON_PRIMARY
         ));
     }
 

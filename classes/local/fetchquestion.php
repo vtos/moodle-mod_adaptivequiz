@@ -92,7 +92,7 @@ class fetchquestion {
      * @param int $maximumlevel the maximum level the student can achieve
      * @param array $tags an array of accepted tags
      */
-    public function __construct($adaptivequiz, $level = 1, $minimumlevel, $maximumlevel, $tags = array()) {
+    public function __construct($adaptivequiz, $level, $minimumlevel, $maximumlevel, $tags = array()) {
         global $SESSION;
 
         $this->adaptivequiz = $adaptivequiz;

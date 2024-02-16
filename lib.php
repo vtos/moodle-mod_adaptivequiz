@@ -880,13 +880,18 @@ function mod_adaptivequiz_question_pluginfile($course, context $context, $compon
 function adaptivequiz_get_coursemodule_info(stdClass $coursemodule) {
     global $DB;
 
-    $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $coursemodule->instance], 'id, name, completionattemptcompleted');
+    $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $coursemodule->instance], 'id, name, intro,introformat, completionattemptcompleted');
     if (!$adaptivequiz) {
         return false;
     }
 
     $result = new cached_cm_info();
     $result->name = $adaptivequiz->name;
+    
+    if ($coursemodule->showdescription) {
+        // Convert intro to html. Do not filter cached version, filters run at display time.
+        $result->content = format_module_intro('adaptivequiz', $adaptivequiz, $coursemodule->id, false);
+    }
 
     if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
         $result->customdata['customcompletionrules']['completionattemptcompleted'] = $adaptivequiz->completionattemptcompleted;

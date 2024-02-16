@@ -44,7 +44,7 @@ function adaptivequizcatmodel_catquiz_attempt_finished_feedback(
         cm_info $cm,
         stdClass $attemptrecord
     ): string {
-        return catquiz_handler::attemptfeedback($adaptivequiz, $cm, $attemptrecord);
+        return catquiz_handler::attempt_finished($adaptivequiz, $cm, $attemptrecord);
 }
 
 /**

@@ -88,10 +88,6 @@ if ($canviewattemptsreport && $activityisnotavailablenotification) {
     echo $OUTPUT->notification($activityisnotavailablenotification, notification::NOTIFY_WARNING, false);
 }
 
-if ($adaptivequiz->intro) { // Conditions to show the intro can change to look for own settings or whatever.
-    echo $OUTPUT->box(format_module_intro('adaptivequiz', $adaptivequiz, $cm->id), 'generalbox mod_introbox', 'newmoduleintro');
-}
-
 if (has_capability('mod/adaptivequiz:attempt', $context)) {
     $completedattemptscount = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
 

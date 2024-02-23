@@ -77,5 +77,24 @@ function xmldb_adaptivequizcatmodel_helloworld_upgrade($oldversion): bool {
         upgrade_plugin_savepoint(true, 2023052800, 'adaptivequizcatmodel', 'helloworld');
     }
 
+    if ($oldversion < 2024022300) {
+
+        // Changing type of field stateparam1 on table catmodel_helloworld_state to number.
+        $table = new xmldb_table('catmodel_helloworld_state');
+        $field = new xmldb_field('stateparam1', XMLDB_TYPE_NUMBER, '3', null, XMLDB_NOTNULL, null, '0', 'adaptivequizattempt');
+
+        // Launch change of type for field stateparam1.
+        $dbman->change_field_type($table, $field);
+
+        // Changing type of field stateparam2 on table catmodel_helloworld_state to number.
+        $field = new xmldb_field('stateparam2', XMLDB_TYPE_NUMBER, '3', null, XMLDB_NOTNULL, null, '0', 'stateparam1');
+
+        // Launch change of type for field stateparam2.
+        $dbman->change_field_type($table, $field);
+
+        // Helloworld savepoint reached.
+        upgrade_plugin_savepoint(true, 2024022300, 'adaptivequizcatmodel', 'helloworld');
+    }
+
     return true;
 }

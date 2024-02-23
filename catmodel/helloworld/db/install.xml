@@ -20,8 +20,8 @@
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="adaptivequizattempt" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="link with adaptive quiz attempt"/>
-                <FIELD NAME="stateparam1" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT=""/>
-                <FIELD NAME="stateparam2" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT=""/>
+                <FIELD NAME="stateparam1" TYPE="number" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="0"/>
+                <FIELD NAME="stateparam2" TYPE="number" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="0"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

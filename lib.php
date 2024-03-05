@@ -780,3 +780,23 @@ function adaptivequiz_get_coursemodule_info(stdClass $coursemodule) {
 
     return $result;
 }
+
+/**
+ * Definition of user preferences used by the plugin.
+ *
+ * @return array[]
+ */
+function mod_adaptivequiz_user_preferences(): array {
+    return [
+        '/^mod_adaptivequiz_answers_distribution_chart_settings_(\d)+$/' => [
+            'isregex' => true,
+            'type' => PARAM_RAW, // JSON.
+            'default' => null,
+            'permissioncallback' => function($user, $preferencename) {
+                global $USER;
+
+                return $user->id == $USER->id;
+            },
+        ],
+    ];
+}

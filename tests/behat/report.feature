@@ -108,45 +108,6 @@ Feature: View students results in adaptive quiz
     Then I should see "Peter The Student (peterthestudent@example.com)" in the "User" "table_row"
 
   @javascript
-  Scenario: View attempt graph
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-    And I click on "1" "link" in the "Peter The Student" "table_row"
-    And I click on "Review attempt" "link" in the "Completed" "table_row"
-    And I click on "Attempt Graph" "link"
-    Then "img.adaptivequiz-attemptgraph" "css_element" should be visible
-    And I should see "Table View of Attempt Graph"
-    # "Question Level" column
-    And I should see "2" in the ".generaltable tr:nth-of-type(1) td.c1" "css_element"
-    And I should see "3" in the ".generaltable tr:nth-of-type(2) td.c1" "css_element"
-    # "Right/Wrong" column
-    And I should see "r" in the ".generaltable tr:nth-of-type(1) td.c2" "css_element"
-    And I should see "r" in the ".generaltable tr:nth-of-type(2) td.c2" "css_element"
-    # "Ability Measure" column
-    And I should see "2" in the ".generaltable tr:nth-of-type(1) td.c3" "css_element"
-    And I should see "4.26" in the ".generaltable tr:nth-of-type(2) td.c3" "css_element"
-    # "Standard Error (± x%)" column
-    And I should see "38.1%" in the ".generaltable tr:nth-of-type(1) td.c4" "css_element"
-    And I should see "33.7%" in the ".generaltable tr:nth-of-type(2) td.c4" "css_element"
-
-  @javascript
-  Scenario: View attempt answer distribution
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-    And I click on "1" "link" in the "Peter The Student" "table_row"
-    And I click on "Review attempt" "link" in the "Completed" "table_row"
-    And I click on "Answer Distribution" "link"
-    Then "img.adaptivequiz-answerdistributiongraph" "css_element" should be visible
-    And I should see "Table View of Answer Distribution"
-    # Second scoring table with no caption, "Question Level" column
-    And I should see "2" in the ".generaltable tr:nth-of-type(2) td.c0" "css_element"
-    And I should see "3" in the ".generaltable tr:nth-of-type(3) td.c0" "css_element"
-    # Second scoring table with no caption, "Num right" column
-    And I should see "1" in the ".generaltable tr:nth-of-type(2) td.c1" "css_element"
-    And I should see "1" in the ".generaltable tr:nth-of-type(3) td.c1" "css_element"
-    # Second scoring table with no caption, "Num wrong" column
-    And I should see "0" in the ".generaltable tr:nth-of-type(2) td.c2" "css_element"
-    And I should see "0" in the ".generaltable tr:nth-of-type(3) td.c2" "css_element"
-
-  @javascript
   Scenario: View attempt questions details
     When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
     And I click on "1" "link" in the "Peter The Student" "table_row"

@@ -17,6 +17,7 @@
 /**
  * Page to view info about a certain attempt.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -65,6 +66,6 @@ echo $renderer->print_header();
 echo $renderer->heading($title);
 
 echo $renderer->attempt_review_tabs($PAGE->url, $tab);
-echo $renderer->attempt_report_page_by_tab($tab, $adaptivequiz, $attempt, $user, $quba, $cm->id, $PAGE->url, $page);
+echo $renderer->attempt_report_page_by_tab($tab, $adaptivequiz, $attempt, $user, $quba, $PAGE->url, $page);
 
 echo $renderer->print_footer();

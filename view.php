@@ -17,6 +17,7 @@
 /**
  * Adaptive testing main view page script.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -153,10 +154,6 @@ echo $OUTPUT->header();
 
 if ($canviewattemptsreport && $activityisnotavailablenotification) {
     echo $OUTPUT->notification($activityisnotavailablenotification, notification::NOTIFY_WARNING, false);
-}
-
-if ($adaptivequiz->intro) { // Conditions to show the intro can change to look for own settings or whatever.
-    echo $OUTPUT->box(format_module_intro('adaptivequiz', $adaptivequiz, $cm->id), 'generalbox mod_introbox', 'newmoduleintro');
 }
 
 if (has_capability('mod/adaptivequiz:attempt', $context)) {

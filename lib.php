@@ -761,20 +761,27 @@ function mod_adaptivequiz_question_pluginfile($course, context $context, $compon
 }
 
 /**
- * This callback is used by the core to add any "extra" information to the activity. For example, completion info.
+ * A system callback.
  *
+ * Given a course_module object, this function returns any "extra" information that may be needed when printing this activity
+ * in a course listing. See get_array_of_activities() in course/lib.php.
+ *
+ * @param stdClass $coursemodule the course module object (record).
  * @return false|cached_cm_info
  */
 function adaptivequiz_get_coursemodule_info(stdClass $coursemodule) {
     global $DB;
 
-    $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $coursemodule->instance], 'id, name, completionattemptcompleted');
-    if (!$adaptivequiz) {
+    if (!$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $coursemodule->instance])) {
         return false;
     }
 
     $result = new cached_cm_info();
     $result->name = $adaptivequiz->name;
+
+    if ($coursemodule->showdescription) {
+        $result->content = format_module_intro('adaptivequiz', $adaptivequiz, $coursemodule->id, false);
+    }
 
     if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
         $result->customdata['customcompletionrules']['completionattemptcompleted'] = $adaptivequiz->completionattemptcompleted;

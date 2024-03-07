@@ -873,8 +873,12 @@ function mod_adaptivequiz_question_pluginfile($course, context $context, $compon
 }
 
 /**
- * This callback is used by the core to add any "extra" information to the activity. For example, completion info.
+ * A system callback.
  *
+ * Given a course_module object, this function returns any "extra" information that may be needed when printing this activity
+ * in a course listing. See get_array_of_activities() in course/lib.php.
+ *
+ * @param stdClass $coursemodule the course module object (record).
  * @return false|cached_cm_info
  */
 function adaptivequiz_get_coursemodule_info(stdClass $coursemodule) {
@@ -893,9 +897,29 @@ function adaptivequiz_get_coursemodule_info(stdClass $coursemodule) {
         $result->content = format_module_intro('adaptivequiz', $adaptivequiz, $coursemodule->id, false);
     }
 
+    if ($coursemodule->showdescription) {
+        $result->content = format_module_intro('adaptivequiz', $adaptivequiz, $coursemodule->id, false);
+    }
+
     if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
         $result->customdata['customcompletionrules']['completionattemptcompleted'] = $adaptivequiz->completionattemptcompleted;
     }
 
     return $result;
+}
+
+/**
+ * Definition of user preferences used by the plugin.
+ *
+ * @return array[]
+ */
+function mod_adaptivequiz_user_preferences(): array {
+    return [
+        '/^mod_adaptivequiz_answers_distribution_chart_settings_(\d)+$/' => [
+            'isregex' => true,
+            'type' => PARAM_RAW, // JSON.
+            'default' => null,
+            'permissioncallback' => [core_user::class, 'is_current_user'],
+        ],
+    ];
 }

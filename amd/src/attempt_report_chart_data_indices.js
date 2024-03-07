@@ -1,4 +1,3 @@
-<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,19 +14,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin basic info.
+ * Lists indices of datasets used in the questions administration report.
  *
- * @package    mod_adaptivequiz
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @module     mod_adaptivequiz/attempt_report_chart_data_indices
+ * @copyright  2024 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2024030500;
-$plugin->release = '2.3.3';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->requires = 2023042400;
-$plugin->cron = 0;
-$plugin->component = 'mod_adaptivequiz';
+export default {
+    ABILITY_MEASURE: 0,
+    TARGET_DIFFICULTY: 1,
+    ADMINISTERED_DIFFICULTY: 2,
+    STANDARD_ERROR_MAX: 3,
+    STANDARD_ERROR_MIN: 4,
+    STANDARD_ERROR_PERCENT: 5,
+    CORRECT_WRONG_FLAG: 6
+};

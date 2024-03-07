@@ -31,6 +31,8 @@ use mod_adaptivequiz\output\report\answerdistributiongraph\answer_distribution_g
 use mod_adaptivequiz\output\report\answerdistributiongraph\answer_distribution_graph_page;
 use mod_adaptivequiz\output\report\attemptgraph\attempt_graph_dataset;
 use mod_adaptivequiz\output\report\attemptgraph\attempt_graph_page;
+use mod_adaptivequiz\output\report\attempt_administration_report;
+use mod_adaptivequiz\output\report\attempt_answers_distribution_report;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_action;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_actions;
 use mod_adaptivequiz\output\user_attempt_summary;
@@ -680,17 +682,13 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         int $page
     ): string {
         if ($tabid == 'attemptgraph') {
-            return $this->attempt_graph_page($attempt->read_attempt_data());
+            return $this->attempt_administration_report($attempt->id);
         }
+
         if ($tabid == 'answerdistribution') {
-            return $this->answer_distribution_graph_page($attempt->read_attempt_data());
-
-            $return = $this->attempt_answer_distribution_graph($attempt->read_attempt_data()->id);
-            $return .= html_writer::empty_tag('br');
-            $return .= $this->attempt_answer_distribution_table($adaptivequiz, $quba);
-
-            return $return;
+            return $this->attempt_answers_distribution_report($attempt->id);
         }
+
         if ($tabid == 'questionsdetails') {
             return $this->attempt_questions_review($quba, $pageurl, $page);
         }
@@ -942,6 +940,49 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
 
         return html_writer::table($table);
     }
+
+    /**
+     * A wrapper method to render answers distribution report for the given attempt.
+     *
+     * @param int $attemptid
+     * @return string
+     */
+    public function attempt_answers_distribution_report(int $attemptid): string {
+        return $this->render(new attempt_answers_distribution_report($attemptid));
+    }
+
+    /**
+     * A wrapper method to render items administration report for the given attempt.
+     *
+     * @param int $attemptid
+     * @return string
+     */
+    public function attempt_administration_report(int $attemptid): string {
+        return $this->render(new attempt_administration_report($attemptid));
+    }
+
+    /**
+     * Renders answers distribution report.
+     *
+     * @param attempt_answers_distribution_report $report
+     * @return string
+     */
+    protected function render_attempt_answers_distribution_report(attempt_answers_distribution_report $report): string {
+        return $this->render_from_template('mod_adaptivequiz/attempt_answers_distribution_report',
+            $report->export_for_template($this));
+    }
+
+    /**
+     * Renders items administration report.
+     *
+     * @param attempt_administration_report $report
+     * @return string
+     */
+    protected function render_attempt_administration_report(attempt_administration_report $report): string {
+        return $this->render_from_template('mod_adaptivequiz/attempt_administration_report',
+            $report->export_for_template($this));
+    }
+
 
     /**
      * This function returns HTML markup of questions and student's responses.

@@ -525,20 +525,19 @@ function adaptivequiz_extend_navigation(navigation_node $navref, stdclass $cours
 }
 
 /**
- * @throws coding_exception
- * @throws moodle_exception
+ * A system callback, allows to add custom nodes to the settings navigation.
+ *
+ * @param settings_navigation $settingsnav
+ * @param navigation_node $adaptivequiznode
  */
-function adaptivequiz_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $adaptivequiznode) {
-    global $PAGE;
-
-    if (!has_capability('mod/adaptivequiz:viewreport', $PAGE->cm->context)) {
+function adaptivequiz_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $adaptivequiznode): void {
+    if (!has_capability('mod/adaptivequiz:viewreport', $settingsnav->get_page()->cm->context)) {
         return;
     }
 
     $node = navigation_node::create(get_string('questionanalysisbtn', 'adaptivequiz'),
-        new moodle_url('/mod/adaptivequiz/questionanalysis/overview.php', ['cmid' => $PAGE->cm->id]),
-        navigation_node::TYPE_SETTING, null, 'mod_adaptivequiz_question_analysis',
-        new pix_icon('i/report', ''));
+        new moodle_url('/mod/adaptivequiz/questionanalysis/overview.php', ['cmid' => $settingsnav->get_page()->cm->id]),
+        navigation_node::TYPE_SETTING, null, 'mod_adaptivequiz_question_analysis', new pix_icon('i/report', ''));
     $adaptivequiznode->add_node($node);
 }
 

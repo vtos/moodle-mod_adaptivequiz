@@ -60,9 +60,8 @@ class attempt_answers_distribution_report implements renderable, templatable {
         $adaptivequizid = $attemptrecord->instance;
 
         $showchartstacked = true;
-        if ($chartsettings = json_decode(
-            get_user_preferences("mod_adaptivequiz_answers_distribution_chart_settings_$adaptivequizid")
-        )) {
+        if ($chartsettingsjson = get_user_preferences("mod_adaptivequiz_answers_distribution_chart_settings_$adaptivequizid")) {
+            $chartsettings = json_decode($chartsettingsjson);
             $showchartstacked = $chartsettings->showstacked;
         }
 

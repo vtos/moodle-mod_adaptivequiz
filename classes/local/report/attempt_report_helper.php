@@ -17,7 +17,7 @@
 namespace mod_adaptivequiz\local\report;
 
 use core_tag_tag;
-use mod_adaptivequiz\local\catalgo;
+use mod_adaptivequiz\local\catalgorithm\catalgo;
 use question_engine;
 use question_usage_by_activity;
 use stdClass;

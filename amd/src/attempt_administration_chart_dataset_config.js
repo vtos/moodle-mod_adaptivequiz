@@ -14,19 +14,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Lists indices of datasets used in the questions administration report.
+ * Defines order and indices for datasets.
  *
- * @module     mod_adaptivequiz/attempt_report_chart_data_indices
+ * @module     mod_adaptivequiz/attempt_administration_chart_dataset_config
  * @copyright  2024 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 export default {
-    ABILITY_MEASURE: 0,
-    TARGET_DIFFICULTY: 1,
-    ADMINISTERED_DIFFICULTY: 2,
-    STANDARD_ERROR_MAX: 3,
-    STANDARD_ERROR_MIN: 4,
-    STANDARD_ERROR_PERCENT: 5,
-    CORRECT_WRONG_FLAG: 6
+    orderWeights: {
+        ABILITY_MEASURE: 10,
+        ADMINISTERED_DIFFICULTY: 20,
+        TARGET_DIFFICULTY: 30,
+        STANDARD_ERROR_BORDER: 40,
+        STANDARD_ERROR_PERCENT: 50,
+        CORRECT_WRONG_FLAG: 60,
+    },
+    indices: {
+        TARGET_DIFFICULTY: 0,
+        ADMINISTERED_DIFFICULTY: 1,
+        CORRECT_WRONG_FLAG: 2,
+        ABILITY_MEASURE: 3,
+        STANDARD_ERROR_MAX: 4,
+        STANDARD_ERROR_MIN: 5,
+        STANDARD_ERROR_PERCENT: 6,
+    },
 };

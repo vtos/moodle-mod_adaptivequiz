@@ -23,11 +23,11 @@
 define([
     'jquery',
     'core/chart_output_htmltable',
-    'mod_adaptivequiz/attempt_report_chart_data_indices'
+    'mod_adaptivequiz/attempt_administration_chart_dataset_config'
 ], function (
     $,
     OutputTable,
-    DatasetIndices
+    DatasetConfig
 ) {
 
     /**
@@ -52,7 +52,7 @@ define([
         let tbl = OutputTable.prototype._makeTable.apply(this, arguments);
 
         // Remove columns with standard error min/max.
-        const dataIndicesToRemove = [DatasetIndices.STANDARD_ERROR_MAX, DatasetIndices.STANDARD_ERROR_MIN];
+        const dataIndicesToRemove = [DatasetConfig.indices.STANDARD_ERROR_MAX, DatasetConfig.indices.STANDARD_ERROR_MIN];
 
         const selectorsToRemove = dataIndicesToRemove.flatMap(
             (dataIndexToRemove) => [`th:nth-child(${dataIndexToRemove + 2})`, `td:nth-child(${dataIndexToRemove + 2})`]

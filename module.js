@@ -16,11 +16,9 @@
 /**
  * JavaScript library for the adaptivequiz module.
  *
- * This module was created as a collaborative effort between Middlebury College
- * and Remote Learner.
- *
  * @package    mod_adaptivequiz
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2024 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,8 +27,12 @@ M.mod_adaptivequiz = M.mod_adaptivequiz || {};
 M.mod_adaptivequiz.init_attempt_form = function(Y, url, secure) {
     // Check if the page is on the password required page
     if (null == document.getElementById('id_quizpassword')) {
-        M.core_question_engine.init_form(Y, '#responseform');
-        M.core_formchangechecker.init({formid: 'responseform'});
+        require(['core_question/question_engine'], function(QuestionEngine) {
+            QuestionEngine.initForm('#responseform');
+        });
+        require(['core_form/changechecker'], function(FormChangeChecker) {
+            FormChangeChecker.watchFormById('responseform');
+        });
     } else {
         if ('1' == secure) {
             Y.on('click', function(e) {

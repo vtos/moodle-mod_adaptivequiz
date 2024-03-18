@@ -66,37 +66,15 @@ class attempt_administration_report implements renderable, templatable {
         $yaxis->set_label(get_string('attemptquestion_ability', 'adaptivequiz'));
         $yaxis->set_stepsize(1);
 
-        $chart->add_series(new chart_series(get_string('attemptquestion_ability', 'adaptivequiz'),
-            array_values(array_map(fn (stdClass $dataitem): int => $dataitem->abilitymeasure, $data))));
+        $targetdiffseries = new chart_series(get_string('reportattemptadmcharttargetdifflabel', 'adaptivequiz'),
+            array_values(array_map(fn (stdClass $dataitem): int => $dataitem->targetdifficulty, $data)));
+        $targetdiffseries->set_color('#a1caf1');
+        $chart->add_series($targetdiffseries);
 
-        $chart->add_series(new chart_series(get_string('reportattemptadmcharttargetdifflabel', 'adaptivequiz'),
-            array_values(array_map(fn (stdClass $dataitem): int => $dataitem->targetdifficulty, $data))));
-
-        $chart->add_series(new chart_series(get_string('reportattemptadmchartadmdifflabel', 'adaptivequiz'),
-            array_values(array_map(fn (stdClass $dataitem): int => $dataitem->administereddifficulty, $data))));
-
-        // We don't care about the label here, as it's supposed to be not displayed.
-        $standarderrormaxseries = new chart_series('standarderrormax', array_values(array_map(
-            fn (stdClass $dataitem): int => $dataitem->standarderrormax, $data
-        )));
-        $standarderrormaxseries->set_fill('-3');
-        $standarderrormaxseries->set_color('rgba(255, 26, 104, 0.2)');
-        $chart->add_series($standarderrormaxseries);
-
-        // Same for the label as above.
-        $standarderrorminseries = new chart_series('standarderrormin', array_values(array_map(
-            fn (stdClass $dataitem): int => $dataitem->standarderrormin, $data
-        )));
-        $standarderrorminseries->set_fill('-4');
-        $standarderrorminseries->set_color('rgba(255, 26, 104, 0.2)');
-        $chart->add_series($standarderrorminseries);
-
-        // Hidden series.
-        $chart->add_series(new chart_series(get_string('graphlegend_error', 'adaptivequiz'),
-            array_values(array_map(
-                fn (stdClass $dataitem): string => '+/- ' . (round($dataitem->standarderror, 2) * 100)  . '%', $data
-            ))
-        ));
+        $admdiffseries = new chart_series(get_string('reportattemptadmchartadmdifflabel', 'adaptivequiz'),
+            array_values(array_map(fn (stdClass $dataitem): int => $dataitem->administereddifficulty, $data)));
+        $admdiffseries->set_color('#875692');
+        $chart->add_series($admdiffseries);
 
         $chart->add_series(new chart_series(get_string('attemptquestion_rightwrong', 'adaptivequiz'),
             array_values(array_map(
@@ -104,6 +82,33 @@ class attempt_administration_report implements renderable, templatable {
                     ? get_string('reportattemptadmanswerright', 'adaptivequiz')
                     : get_string('reportattemptadmanswerwrong', 'adaptivequiz'),
                 $data
+            ))
+        ));
+
+        $abilityseries = new chart_series(get_string('attemptquestion_ability', 'adaptivequiz'),
+            array_values(array_map(fn (stdClass $dataitem): float => round($dataitem->abilitymeasure, 2), $data)));
+        $abilityseries->set_color('#7f180d');
+        $chart->add_series($abilityseries);
+
+        // We don't care about the label here, as it's supposed to be not displayed.
+        $standarderrormaxseries = new chart_series('standarderrormax', array_values(array_map(
+            fn (stdClass $dataitem): float => round($dataitem->standarderrormax, 2), $data
+        )));
+        $standarderrormaxseries->set_fill('-1');
+        $standarderrormaxseries->set_color('rgba(255, 26, 104, 0.2)');
+        $chart->add_series($standarderrormaxseries);
+
+        // Same for the label as above.
+        $standarderrorminseries = new chart_series('standarderrormin', array_values(array_map(
+            fn (stdClass $dataitem): float => round($dataitem->standarderrormin, 2), $data
+        )));
+        $standarderrorminseries->set_fill('-2');
+        $standarderrorminseries->set_color('rgba(255, 26, 104, 0.2)');
+        $chart->add_series($standarderrorminseries);
+
+        $chart->add_series(new chart_series(get_string('graphlegend_error', 'adaptivequiz'),
+            array_values(array_map(
+                fn (stdClass $dataitem): string => '+/- ' . format_float($dataitem->standarderror * 100, 2)  . '%', $data
             ))
         ));
 

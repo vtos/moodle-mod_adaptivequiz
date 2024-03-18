@@ -28,10 +28,7 @@ Feature: Set activity as completed when at least one attempt is completed
       | TF1      | adpq_2 |
       | TF2      | adpq_3 |
     And I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I expand all fieldsets
-    And I set the following fields to these values:
+    And I add a "adaptivequiz" activity to course "Course 1" section "1" and I fill the form with:
       | Name                         | Adaptive Quiz               |
       | Description                  | Adaptive quiz description.  |
       | Question pool                | Adaptive Quiz Questions (2) |
@@ -42,10 +39,8 @@ Feature: Set activity as completed when at least one attempt is completed
       | Maximum number of questions  | 20                          |
       | Standard Error to stop       | 5                           |
       | ID number                    | adaptivequiz1               |
-      | Completion tracking          | Show activity as complete when conditions are met |
-    And I wait "2" seconds
-    And I click on "completionattemptcompleted" "checkbox"
-    And I click on "Save and return to course" "button"
+      | Add requirements             | 1                           |
+      | completionattemptcompleted   | 1                           |
     And I log out
 
   @javascript

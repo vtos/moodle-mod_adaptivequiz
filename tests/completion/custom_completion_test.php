@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\completion;
 
 use advanced_testcase;
@@ -27,7 +22,13 @@ use context_module;
 use mod_adaptivequiz\local\attempt\attempt;
 
 /**
- * @covers \mod_adaptivequiz\completion\custom_completion
+ * Tests activity's custom completion rules.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2022 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
+ * @covers     \mod_adaptivequiz\completion\custom_completion
  */
 class custom_completion_test extends advanced_testcase {
 
@@ -37,8 +38,17 @@ class custom_completion_test extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
 
-        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
-        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id, 'completionattemptcompleted' => 1]);
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'course' => $course->id,
+                'completionattemptcompleted' => 1,
+                'questionpool' => [$questioncategory->id],
+            ]);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
 

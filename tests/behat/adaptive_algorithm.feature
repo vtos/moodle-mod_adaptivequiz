@@ -46,22 +46,18 @@ Feature: Adaptive quiz content
 
   @javascript
   Scenario: 20% standard error, user performs 1 level above the starting level
-    Given I am on the "C1" "Course" page logged in as "teacher1"
-    And I turn editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I set the following fields to these values:
-      | Name                         | Adaptive Quiz                |
-      | Description                  | Adaptive quiz description.   |
-      | Question pool                | Adaptive Quiz Questions (10) |
-      | Starting level of difficulty | 2                            |
-      | Lowest level of difficulty   | 1                            |
-      | Highest level of difficulty  | 5                            |
-      | Minimum number of questions  | 1                            |
-      | Maximum number of questions  | 10                           |
-      | Standard Error to stop       | 20                           |
-      | ID number                    | adaptivequiz1                |
-    And I click on "Save and return to course" "button"
-    And I log out
+    Given the following "activity" exists:
+      | activity          | adaptivequiz            |
+      | idnumber          | adaptivequiz1           |
+      | course            | C1                      |
+      | name              | Adaptive Quiz           |
+      | startinglevel     | 2                       |
+      | lowestlevel       | 1                       |
+      | highestlevel      | 5                       |
+      | minimumquestions  | 1                       |
+      | maximumquestions  | 10                      |
+      | standarderror     | 20                      |
+      | questionpoolnamed | Adaptive Quiz Questions |
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     And I press "Start attempt"
     Then I should see " (difficulty 2)."
@@ -86,22 +82,18 @@ Feature: Adaptive quiz content
 
   @javascript
   Scenario: 20% standard error, user performs on the lowest level
-    Given I am on the "C1" "Course" page logged in as "teacher1"
-    And I turn editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I set the following fields to these values:
-      | Name                         | Adaptive Quiz                |
-      | Description                  | Adaptive quiz description.   |
-      | Question pool                | Adaptive Quiz Questions (10) |
-      | Starting level of difficulty | 2                            |
-      | Lowest level of difficulty   | 1                            |
-      | Highest level of difficulty  | 5                            |
-      | Minimum number of questions  | 1                            |
-      | Maximum number of questions  | 10                           |
-      | Standard Error to stop       | 20                           |
-      | ID number                    | adaptivequiz1                |
-    And I click on "Save and return to course" "button"
-    And I log out
+    Given the following "activity" exists:
+      | activity          | adaptivequiz            |
+      | idnumber          | adaptivequiz1           |
+      | course            | C1                      |
+      | name              | Adaptive Quiz           |
+      | startinglevel     | 2                       |
+      | lowestlevel       | 1                       |
+      | highestlevel      | 5                       |
+      | minimumquestions  | 1                       |
+      | maximumquestions  | 10                      |
+      | standarderror     | 20                      |
+      | questionpoolnamed | Adaptive Quiz Questions |
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     And I press "Start attempt"
     Then I should see " (difficulty 2)."
@@ -120,22 +112,18 @@ Feature: Adaptive quiz content
 
   @javascript
   Scenario: 20% standard error, user performs on the highest level
-    Given I am on the "C1" "Course" page logged in as "teacher1"
-    And I turn editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I set the following fields to these values:
-      | Name                         | Adaptive Quiz                |
-      | Description                  | Adaptive quiz description.   |
-      | Question pool                | Adaptive Quiz Questions (10) |
-      | Starting level of difficulty | 2                            |
-      | Lowest level of difficulty   | 1                            |
-      | Highest level of difficulty  | 5                            |
-      | Minimum number of questions  | 1                            |
-      | Maximum number of questions  | 10                           |
-      | Standard Error to stop       | 20                           |
-      | ID number                    | adaptivequiz1                |
-    And I click on "Save and return to course" "button"
-    And I log out
+    Given the following "activity" exists:
+      | activity          | adaptivequiz            |
+      | idnumber          | adaptivequiz1           |
+      | course            | C1                      |
+      | name              | Adaptive Quiz           |
+      | startinglevel     | 2                       |
+      | lowestlevel       | 1                       |
+      | highestlevel      | 5                       |
+      | minimumquestions  | 1                       |
+      | maximumquestions  | 10                      |
+      | standarderror     | 20                      |
+      | questionpoolnamed | Adaptive Quiz Questions |
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     And I press "Start attempt"
     Then I should see " (difficulty 2)."

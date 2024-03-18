@@ -14,13 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz;
 
+use advanced_testcase;
 use cm_info;
 use context_module;
 use mod_adaptivequiz\completion\custom_completion;
@@ -29,9 +25,15 @@ use mod_adaptivequiz\local\attempt\attempt_state;
 use stdClass;
 
 /**
- * @covers \mod_adaptivequiz\attempt_state_change_observers::attempt_completed
+ * Tests observers of the attempt state change.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2022 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
+ * @covers     \mod_adaptivequiz\attempt_state_change_observers::attempt_completed
  */
-class attempt_state_change_observers_test extends \advanced_testcase {
+class attempt_state_change_observers_test extends advanced_testcase {
 
     public function test_it_handles_completion_state(): void {
         global $DB;
@@ -40,8 +42,20 @@ class attempt_state_change_observers_test extends \advanced_testcase {
 
         // Test it can set the activity as completed.
         $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
-        $adaptivequiz = $this->getDataGenerator()->create_module('adaptivequiz', ['course' => $course->id],
-            ['completion' => 1, 'completionattemptcompleted' => 1]);
+
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'course' => $course->id,
+                'completion' => 1,
+                'completionattemptcompleted' => 1,
+                'questionpool' => [$questioncategory->id],
+            ]);
+
         $user = $this->getDataGenerator()->create_user();
         $studentrole = $DB->get_record('role', ['shortname' => 'student']);
         $this->getDataGenerator()->enrol_user($user->id, $course->id, $studentrole->id);

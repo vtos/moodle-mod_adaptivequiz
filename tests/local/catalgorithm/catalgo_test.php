@@ -140,13 +140,19 @@ class catalgo_test extends advanced_testcase {
         self::resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
         $adaptivequiz = $this->getDataGenerator()
             ->get_plugin_generator('mod_adaptivequiz')
             ->create_instance([
                 'highestlevel' => 10,
                 'lowestlevel' => 1,
                 'standarderror' => 5,
-                'course' => $course->id
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
             ]);
 
         $catalgo = new catalgo(false, 1);
@@ -170,13 +176,19 @@ class catalgo_test extends advanced_testcase {
         self::resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
         $adaptivequiz = $this->getDataGenerator()
             ->get_plugin_generator('mod_adaptivequiz')
             ->create_instance([
                 'highestlevel' => 10,
                 'lowestlevel' => 1,
                 'standarderror' => 5,
-                'course' => $course->id
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
             ]);
 
         $catalgo = new catalgo(true, 1);
@@ -200,13 +212,19 @@ class catalgo_test extends advanced_testcase {
         self::resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
         $adaptivequiz = $this->getDataGenerator()
             ->get_plugin_generator('mod_adaptivequiz')
             ->create_instance([
                 'highestlevel' => 10,
                 'lowestlevel' => 1,
                 'standarderror' => 5,
-                'course' => $course->id
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
             ]);
 
         $catalgo = new catalgo(false, 5);
@@ -246,13 +264,19 @@ class catalgo_test extends advanced_testcase {
         self::resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
         $adaptivequiz = $this->getDataGenerator()
             ->get_plugin_generator('mod_adaptivequiz')
             ->create_instance([
                 'highestlevel' => 10,
                 'lowestlevel' => 1,
                 'standarderror' => 5,
-                'course' => $course->id
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
             ]);
 
         $catalgo = new catalgo(false, 5);

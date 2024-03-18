@@ -41,6 +41,11 @@ class item_administration_test extends advanced_testcase {
         self::resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
         $adaptivequiz = $this->getDataGenerator()
             ->get_plugin_generator('mod_adaptivequiz')
             ->create_instance([
@@ -48,6 +53,7 @@ class item_administration_test extends advanced_testcase {
                 'lowestlevel' => 1,
                 'standarderror' => 5,
                 'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
             ]);
 
         $user = $this->getDataGenerator()->create_user();
@@ -86,6 +92,11 @@ class item_administration_test extends advanced_testcase {
         self::resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
         $adaptivequiz = $this->getDataGenerator()
             ->get_plugin_generator('mod_adaptivequiz')
             ->create_instance([
@@ -93,6 +104,7 @@ class item_administration_test extends advanced_testcase {
                 'lowestlevel' => 1,
                 'standarderror' => 5,
                 'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
             ]);
 
         $user = $this->getDataGenerator()->create_user();
@@ -136,6 +148,11 @@ class item_administration_test extends advanced_testcase {
         self::resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
         $adaptivequiz = $this->getDataGenerator()
             ->get_plugin_generator('mod_adaptivequiz')
             ->create_instance([
@@ -144,6 +161,7 @@ class item_administration_test extends advanced_testcase {
                 'maximumquestions' => 10,
                 'standarderror' => 5,
                 'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
             ]);
 
         $user = $this->getDataGenerator()->create_user();
@@ -197,6 +215,11 @@ class item_administration_test extends advanced_testcase {
         self::resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
         $adaptivequiz = $this->getDataGenerator()
             ->get_plugin_generator('mod_adaptivequiz')
             ->create_instance([
@@ -205,6 +228,7 @@ class item_administration_test extends advanced_testcase {
                 'maximumquestions' => 10,
                 'standarderror' => 5,
                 'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
             ]);
 
         $user = $this->getDataGenerator()->create_user();

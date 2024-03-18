@@ -27,23 +27,19 @@ Feature: Attempt feedback
       | question | tag    |
       | Q1       | adpq_1 |
       | Q2       | adpq_2 |
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I set the following fields to these values:
-      | Name                             | Adaptive Quiz               |
-      | Description                      | Adaptive quiz description.  |
-      | Question pool                    | Adaptive Quiz Questions (2) |
-      | Starting level of difficulty     | 1                           |
-      | Lowest level of difficulty       | 1                           |
-      | Highest level of difficulty      | 2                           |
-      | Minimum number of questions      | 1                           |
-      | Maximum number of questions      | 2                           |
-      | Standard Error to stop           | 20                          |
-      | Show ability measure to students | Yes                         |
-      | ID number                        | adaptivequiz1               |
-    And I click on "Save and return to course" "button"
-    And I log out
+    And the following "activity" exists:
+      | activity           | adaptivequiz            |
+      | idnumber           | adaptivequiz1           |
+      | course             | C1                      |
+      | name               | Adaptive Quiz           |
+      | startinglevel      | 1                       |
+      | lowestlevel        | 1                       |
+      | highestlevel       | 2                       |
+      | minimumquestions   | 1                       |
+      | maximumquestions   | 2                       |
+      | standarderror      | 20                      |
+      | questionpoolnamed  | Adaptive Quiz Questions |
+      | showabilitymeasure | 1                       |
 
   @javascript
   Scenario: Get default textual feedback after an attempt is finished

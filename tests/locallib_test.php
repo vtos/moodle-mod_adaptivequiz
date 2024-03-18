@@ -14,54 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Adaptive locallib.php PHPUnit tests
- *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-
-require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
+require_once($CFG->dirroot .'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
+use context_course;
 use context_module;
-use mod_adaptivequiz\event\attempt_completed;
-use mod_adaptivequiz\local\attempt\attempt_state;
 
 /**
- * @group mod_adaptivequiz
+ * Adaptive locallib.php PHPUnit tests.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class locallib_test extends advanced_testcase {
-
-    private $activitycontext;
-
-    /**
-     * This function calls the data generator classes required by these tests
-     */
-    protected function setup_test_data_generator() {
-        // Create course.
-        $user = $this->getDataGenerator()->create_user();
-        $this->setUser($user);
-        $this->setAdminUser();
-
-        // Create course category and course.
-        $category = $this->getDataGenerator()->create_category();
-        $course = $this->getDataGenerator()->create_course(array('name' => 'Some course', 'category' => $category->id));
-
-        // Create activity.
-        $generator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
-        $adaptivequiz = $generator->create_instance(array('course' => $course->id));
-
-        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
-        $this->activitycontext = context_module::instance($cm->id);
-    }
 
     /**
      * This functions loads data via the tests/fixtures/mod_adaptivequiz.xml file
@@ -129,35 +101,40 @@ class locallib_test extends advanced_testcase {
     }
 
     /**
-     * Test the making of the default course question category.
-     *
-     * @covers ::adaptivequiz_make_default_categories
-     */
-    public function test_make_default_categories() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_generator();
-
-        $data = adaptivequiz_make_default_categories($this->activitycontext);
-
-        $this->assertObjectHasAttribute('id', $data);
-        $this->assertObjectHasAttribute('name', $data);
-        $this->assertObjectHasAttribute('contextid', $data);
-    }
-
-    /**
      * Test retrieving an array of question categories.
      *
      * @covers ::adaptivequiz_get_question_categories
      */
     public function test_get_question_categories() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_generator();
+        $this->resetAfterTest();
 
-        $data = adaptivequiz_make_default_categories($this->activitycontext);
+        $this->setAdminUser();
 
-        $data = adaptivequiz_get_question_categories($this->activitycontext);
+        $course = $this->getDataGenerator()->create_course();
+        $coursecontext = context_course::instance($course->id);
 
+        adaptivequiz_make_default_categories($coursecontext);
+
+        // Test it returns data for both course and activity contexts.
+        $data = adaptivequiz_get_question_categories($coursecontext);
         $this->assertEquals(1, count($data));
+
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
+            ]);
+
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id);
+        $activitycontext = context_module::instance($cm->id);
+
+        $data = adaptivequiz_get_question_categories($activitycontext);
+        $this->assertEquals(2, count($data));
     }
 
     /**

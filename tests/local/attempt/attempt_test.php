@@ -22,11 +22,8 @@ global $CFG;
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
-use coding_exception;
 use context_module;
 use mod_adaptivequiz\event\attempt_completed;
-use mod_adaptivequiz\local\fetchquestion;
-use question_usage_by_activity;
 use stdClass;
 
 /**
@@ -36,7 +33,8 @@ use stdClass;
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \mod_adaptivequiz\local\attempt
+ *
+ * @covers     \mod_adaptivequiz\local\attempt
  */
 class attempt_test extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */
@@ -173,8 +171,16 @@ class attempt_test extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
 
-        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
-        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
+            ]);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
 
@@ -190,8 +196,16 @@ class attempt_test extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
 
-        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
-        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
+            ]);
 
         // No attempt exists for the user at the moment.
         $this->assertNull(attempt::find_in_progress_for_user($adaptivequiz, $user->id));
@@ -209,8 +223,16 @@ class attempt_test extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
 
-        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
-        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
+            ]);
 
         attempt::create($adaptivequiz, $user->id);
 
@@ -240,8 +262,16 @@ class attempt_test extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
 
-        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
-        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
+            ]);
 
         $attempt = attempt::create($adaptivequiz, $user->id);
 
@@ -291,8 +321,16 @@ class attempt_test extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
 
-        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
-        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
+            ]);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
 
@@ -325,8 +363,16 @@ class attempt_test extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
 
-        $adaptivequizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
-        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+        $questioncategory = $this->getDataGenerator()
+            ->get_plugin_generator('core_question')
+            ->create_question_category(['name' => 'My category']);
+
+        $adaptivequiz = $this->getDataGenerator()
+            ->get_plugin_generator('mod_adaptivequiz')
+            ->create_instance([
+                'course' => $course->id,
+                'questionpool' => [$questioncategory->id],
+            ]);
 
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id);
 

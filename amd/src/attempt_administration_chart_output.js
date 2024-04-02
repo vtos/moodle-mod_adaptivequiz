@@ -124,9 +124,15 @@ define([
         let config = Output.prototype._makeConfig.apply(this, arguments);
 
         // Hide lines and points for standard error min/max datasets.
+
+        // In Chart.js version prior to 4.2.1 points visibility can be controlled with the 'pointRadius' property.
         config.data.datasets[DatasetIndices.STANDARD_ERROR_MAX].pointRadius = 0;
-        config.data.datasets[DatasetIndices.STANDARD_ERROR_MAX].showLine = false;
         config.data.datasets[DatasetIndices.STANDARD_ERROR_MIN].pointRadius = 0;
+        // For Chart.js since 4.2.1.
+        config.data.datasets[DatasetIndices.STANDARD_ERROR_MAX].pointStyle = false;
+        config.data.datasets[DatasetIndices.STANDARD_ERROR_MIN].pointStyle = false;
+
+        config.data.datasets[DatasetIndices.STANDARD_ERROR_MAX].showLine = false;
         config.data.datasets[DatasetIndices.STANDARD_ERROR_MIN].showLine = false;
 
         // Hide entire datasets with standard error percentages and right/wrong flags.

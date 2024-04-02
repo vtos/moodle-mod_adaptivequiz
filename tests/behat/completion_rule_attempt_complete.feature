@@ -47,7 +47,7 @@ Feature: Set activity as completed when at least one attempt is completed
   Scenario: Student completes an attempt
     When I log in as "student1"
     And I am on the "adaptivequiz1" "Activity" page
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"

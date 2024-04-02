@@ -45,7 +45,7 @@ Feature: Add an adaptive quiz
       | ID number                    | adaptivequiz1               |
     And I log out
     And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    Then "Start attempt" "button" should exist
+    Then "Start attempt" "link" should exist
 
   @javascript
   Scenario: It is impossible to create an adaptive quiz without a properly tagged question for the starting level of difficulty

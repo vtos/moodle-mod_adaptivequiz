@@ -44,7 +44,7 @@ Feature: Attempt feedback
   @javascript
   Scenario: Get default textual feedback after an attempt is finished
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -60,7 +60,7 @@ Feature: Attempt feedback
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -70,7 +70,7 @@ Feature: Attempt feedback
   @javascript
   Scenario: Get estimated ability after an attempt is finished
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -86,7 +86,7 @@ Feature: Attempt feedback
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -100,13 +100,13 @@ Feature: Attempt feedback
   @javascript
   Scenario: View attempts summary with estimated ability for several attempts
     Given I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
     And I press "Submit answer"
     And I press "Continue"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -130,7 +130,7 @@ Feature: Attempt feedback
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -147,7 +147,7 @@ Feature: Attempt feedback
     And I click on "Save and return to course" "button"
     And I log out
     And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -165,13 +165,13 @@ Feature: Attempt feedback
     And I click on "Save and return to course" "button"
     And I log out
     And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
     And I press "Submit answer"
     And I press "Continue"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"

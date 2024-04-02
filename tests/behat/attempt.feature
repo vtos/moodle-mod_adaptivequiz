@@ -44,20 +44,20 @@ Feature: Attempt an adaptive quiz
   @javascript
   Scenario: Attempt an adaptive quiz
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     Then I should see "First question"
 
   @javascript
   Scenario: A student cannot attempt an adaptive quiz if no more attempts are allowed
     Given I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
     And I press "Submit answer"
     And I press "Continue"
     When I am on the "adaptivequiz1" "Activity" page
-    Then "Start attempt" "button" should not be visible
+    Then "Start attempt" "link" should not be visible
     And I should see "No more attempts allowed at this activity"
 
   @javascript
@@ -79,11 +79,11 @@ Feature: Attempt an adaptive quiz
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio"
     And I press "Submit answer"
     And I am on the "adaptivequiz1" "Activity" page
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio"
     And I press "Submit answer"
     Then I should see "Fourth question"

@@ -23,51 +23,29 @@ Feature: Attempt an adaptive quiz
       | questioncategory        | qtype     | name | questiontext    |
       | Adaptive Quiz Questions | truefalse | Q1   | First question  |
       | Adaptive Quiz Questions | truefalse | Q2   | Second question |
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I navigate to "Question bank" in current page administration
-    And I set the field "Select a category" to "Adaptive Quiz Questions (2)"
-    And I choose "Edit question" action for "Q1" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_1"
-    And I press "id_submitbutton"
-    And I wait until the page is ready
-    And I choose "Edit question" action for "Q2" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_2"
-    And I press "id_submitbutton"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I set the following fields to these values:
-      | Name                         | Adaptive Quiz               |
-      | Description                  | Adaptive quiz description.  |
-      | Question pool                | Adaptive Quiz Questions (2) |
-      | Starting level of difficulty | 1                           |
-      | Lowest level of difficulty   | 1                           |
-      | Highest level of difficulty  | 2                           |
-      | Minimum number of questions  | 1                           |
-      | Maximum number of questions  | 2                           |
-      | Standard Error to stop       | 20                          |
-      | Attempts allowed             | 1                           |
-      | ID number                    | adaptivequiz1               |
-    And I click on "Save and return to course" "button"
-    And I log out
+    And the following "core_question > Tags" exist:
+      | question | tag    |
+      | Q1       | adpq_1 |
+      | Q2       | adpq_2 |
+    And the following "activity" exists:
+      | activity          | adaptivequiz            |
+      | idnumber          | adaptivequiz1           |
+      | course            | C1                      |
+      | name              | Adaptive Quiz           |
+      | startinglevel     | 1                       |
+      | lowestlevel       | 1                       |
+      | highestlevel      | 2                       |
+      | minimumquestions  | 1                       |
+      | maximumquestions  | 2                       |
+      | standarderror     | 25                      |
+      | questionpoolnamed | Adaptive Quiz Questions |
+      | attempts          | 1                       |
 
   @javascript
   Scenario: Attempt an adaptive quiz
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     And I press "Start attempt"
     Then I should see "First question"
-
-  @javascript
-  Scenario: Return to a started attempt
-    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
-    And I click on "True" "radio"
-    And I press "Submit answer"
-    And I am on the "adaptivequiz1" "Activity" page
-    And I press "Start attempt"
-    Then I should see "Second question"
 
   @javascript
   Scenario: A student cannot attempt an adaptive quiz if no more attempts are allowed
@@ -81,3 +59,31 @@ Feature: Attempt an adaptive quiz
     When I am on the "adaptivequiz1" "Activity" page
     Then "Start attempt" "button" should not be visible
     And I should see "No more attempts allowed at this activity"
+
+  @javascript
+  Scenario: Return to a started attempt
+    Given the following "questions" exist:
+      | questioncategory        | qtype     | name | questiontext    |
+      | Adaptive Quiz Questions | truefalse | Q3   | Third question  |
+      | Adaptive Quiz Questions | truefalse | Q4   | Fourth question |
+    And the following "core_question > Tags" exist:
+      | question | tag    |
+      | Q3       | adpq_2 |
+      | Q4       | adpq_3 |
+    And I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
+    And I click on "Settings" "link"
+    And I set the following fields to these values:
+      | Highest level of difficulty  | 3 |
+      | Minimum number of questions  | 1 |
+      | Maximum number of questions  | 3 |
+    And I click on "Save and return to course" "button"
+    And I log out
+    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
+    And I press "Start attempt"
+    And I click on "True" "radio"
+    And I press "Submit answer"
+    And I am on the "adaptivequiz1" "Activity" page
+    And I press "Start attempt"
+    And I click on "True" "radio"
+    And I press "Submit answer"
+    Then I should see "Fourth question"

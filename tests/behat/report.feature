@@ -23,37 +23,23 @@ Feature: View students results in adaptive quiz
       | questioncategory        | qtype     | name | questiontext    | answer |
       | Adaptive Quiz Questions | truefalse | TF1  | First question  | True   |
       | Adaptive Quiz Questions | truefalse | TF2  | Second question | True   |
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I navigate to "Question bank" in current page administration
-    And I set the field "Select a category" to "Adaptive Quiz Questions (2)"
-    And I choose "Edit question" action for "TF1" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_2"
-    And I press "id_submitbutton"
-    And I wait until the page is ready
-    And I choose "Edit question" action for "TF2" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_3"
-    And I press "id_submitbutton"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I set the following fields to these values:
-      | Name                         | Adaptive Quiz               |
-      | Description                  | Adaptive quiz description.  |
-      | Question pool                | Adaptive Quiz Questions (2) |
-      | Starting level of difficulty | 2                           |
-      | Lowest level of difficulty   | 1                           |
-      | Highest level of difficulty  | 10                          |
-      | Minimum number of questions  | 2                           |
-      | Maximum number of questions  | 20                          |
-      | Standard Error to stop       | 5                           |
-      | ID number                    | adaptivequiz1               |
-    And I click on "Save and return to course" "button"
-    And I am on "Course 1" course homepage
-    And I log out
-    And I log in as "student1"
-    And I am on the "adaptivequiz1" "Activity" page
+    And the following "core_question > Tags" exist:
+      | question  | tag    |
+      | TF1       | adpq_2 |
+      | TF2       | adpq_3 |
+    And the following "activity" exists:
+      | activity          | adaptivequiz            |
+      | idnumber          | adaptivequiz1           |
+      | course            | C1                      |
+      | name              | Adaptive Quiz           |
+      | startinglevel     | 2                       |
+      | lowestlevel       | 1                       |
+      | highestlevel      | 10                      |
+      | minimumquestions  | 2                       |
+      | maximumquestions  | 20                      |
+      | standarderror     | 5                       |
+      | questionpoolnamed | Adaptive Quiz Questions |
+    And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     And I press "Start attempt"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"

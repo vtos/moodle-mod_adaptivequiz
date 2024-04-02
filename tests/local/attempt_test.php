@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local;
 
 defined('MOODLE_INTERNAL') || die();
@@ -33,8 +27,14 @@ use mod_adaptivequiz\local\attempt\attempt_state;
 use stdClass;
 
 /**
- * @group mod_adaptivequiz
- * @covers \mod_adaptivequiz\local\attempt
+ * Tests for the attempt class.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
+ * @covers     \mod_adaptivequiz\local\attempt
  */
 class attempt_test extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */

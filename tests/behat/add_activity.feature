@@ -28,17 +28,11 @@ Feature: Add an adaptive quiz
 
   @javascript
   Scenario: Add an adaptive quiz to a course to be visible to a student
-    When I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I navigate to "Question bank" in current page administration
-    And I set the field "Select a category" to "Adaptive Quiz Questions (4)"
-    And I choose "Edit question" action for "TF1" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_1"
-    And I press "id_submitbutton"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I set the following fields to these values:
+    When the following "core_question > Tags" exist:
+      | question | tag    |
+      | TF1      | adpq_1 |
+    And I log in as "teacher1"
+    And I add a "adaptivequiz" activity to course "Course 1" section "1" and I fill the form with:
       | Name                         | Adaptive Quiz               |
       | Description                  | Adaptive quiz description.  |
       | Question pool                | Adaptive Quiz Questions (4) |
@@ -49,35 +43,20 @@ Feature: Add an adaptive quiz
       | Maximum number of questions  | 2                           |
       | Standard Error to stop       | 25                          |
       | ID number                    | adaptivequiz1               |
-    And I click on "Save and return to course" "button"
     And I log out
     And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
     Then "Start attempt" "button" should exist
 
   @javascript
   Scenario: It is impossible to create an adaptive quiz without a properly tagged question for the starting level of difficulty
-    When I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I navigate to "Question bank" in current page administration
-    And I set the field "Select a category" to "Adaptive Quiz Questions (4)"
-    And I choose "Edit question" action for "TF1" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_001"
-    And I press "id_submitbutton"
-    And I wait until the page is ready
-    And I choose "Edit question" action for "TF2" in the question bank
-    And I expand all fieldsets
-    And I set the field "Tags" to "adpq_2"
-    And I press "id_submitbutton"
-    And I wait until the page is ready
-    And I choose "Edit question" action for "TF3" in the question bank
-    And I expand all fieldsets
-    And I set the following fields to these values:
-      | Tags | truefalse_1, TF |
-    And I press "id_submitbutton"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Adaptive Quiz" to section "1"
-    And I set the following fields to these values:
+    When the following "core_question > Tags" exist:
+      | question | tag         |
+      | TF1      | adpq_001    |
+      | TF2      | adpq_2      |
+      | TF3      | truefalse_1 |
+      | TF3      | TF          |
+    And I log in as "teacher1"
+    And I add a "adaptivequiz" activity to course "Course 1" section "1" and I fill the form with:
       | Name                         | Adaptive Quiz               |
       | Description                  | Adaptive quiz description.  |
       | Question pool                | Adaptive Quiz Questions (4) |
@@ -87,5 +66,4 @@ Feature: Add an adaptive quiz
       | Minimum number of questions  | 1                           |
       | Maximum number of questions  | 2                           |
       | Standard Error to stop       | 25                          |
-    And I click on "Save and return to course" "button"
     Then I should see "The selected questions categories do not contain questions which are properly tagged to match the selected starting level of difficulty."

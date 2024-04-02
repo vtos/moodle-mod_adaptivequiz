@@ -63,6 +63,14 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         'menubar' => false
     );
 
+    /**
+     * Returns content for a button to start an adaptive quiz attempt or a notification when starting an attempt is not available.
+     *
+     * @param int $cmid
+     * @param bool $attemptallowed
+     * @param bool $browsersecurityenabled
+     * @return string
+     */
     public function attempt_controls_or_notification(int $cmid, bool $attemptallowed, bool $browsersecurityenabled): string {
         if (!$attemptallowed) {
             return html_writer::div(get_string('noattemptsallowed', 'adaptivequiz'), 'alert alert-info text-center');
@@ -72,12 +80,8 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
             return $this->display_start_attempt_form_secured($cmid);
         }
 
-        return $this->render(new single_button(
-            new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cmid, 'sesskey' => sesskey()]),
-            get_string('startattemptbtn', 'adaptivequiz'),
-            'post',
-            true
-        ));
+        return html_writer::link(new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cmid, 'sesskey' => sesskey()]),
+            get_string('startattemptbtn', 'adaptivequiz'), ['class' => 'btn btn-primary']);
     }
 
     /**
@@ -963,18 +967,21 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * This functions prints the start attempt button to start a secured browser attempt.
+     * This functions returns content for the start attempt button to start a secured browser attempt.
+     *
+     * @param int $cmid
+     * @return string
      */
     private function display_start_attempt_form_secured(int $cmid): string {
         $url = new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cmid]);
 
-        $button = new single_button($url, get_string('startattemptbtn', 'adaptivequiz'), 'post', true);
+        $startlink = new action_link($url, get_string('startattemptbtn', 'adaptivequiz'), null, ['class' => 'btn btn-primary']);
 
         $this->page->requires->js_module($this->adaptivequiz_get_js_module());
         $this->page->requires->js('/mod/adaptivequiz/module.js');
 
         $popupaction = new popup_action('click', $url, 'adaptivequizpopup', self::$popupoptions);
-        $button->add_action(new component_action('click',
+        $startlink->add_action(new component_action('click',
             'M.mod_adaptivequiz.secure_window.start_attempt_action', [
                 'url' => $url->out(false),
                 'windowname' => 'adaptivequizpopup',
@@ -985,7 +992,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
 
         $warning = html_writer::tag('noscript', $this->heading(get_string('noscript', 'quiz')));
 
-        return $this->render($button).$warning;
+        return $this->render($startlink) . $warning;
     }
 }
 

@@ -51,7 +51,7 @@ Feature: Set activity as completed when at least one attempt is completed
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -76,7 +76,7 @@ Feature: Set activity as completed when at least one attempt is completed
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"

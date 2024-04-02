@@ -59,7 +59,7 @@ Feature: Adaptive quiz content
       | standarderror     | 20                      |
       | questionpoolnamed | Adaptive Quiz Questions |
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     Then I should see " (difficulty 2)."
     And I click on "True" "radio"
     And I press "Submit answer"
@@ -95,7 +95,7 @@ Feature: Adaptive quiz content
       | standarderror     | 20                      |
       | questionpoolnamed | Adaptive Quiz Questions |
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     Then I should see " (difficulty 2)."
     And I click on "False" "radio"
     And I press "Submit answer"
@@ -125,7 +125,7 @@ Feature: Adaptive quiz content
       | standarderror     | 20                      |
       | questionpoolnamed | Adaptive Quiz Questions |
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     Then I should see " (difficulty 2)."
     And I click on "True" "radio"
     And I press "Submit answer"

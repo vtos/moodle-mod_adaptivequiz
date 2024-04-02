@@ -40,7 +40,7 @@ Feature: View students results in adaptive quiz
       | standarderror     | 5                       |
       | questionpoolnamed | Adaptive Quiz Questions |
     And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -67,7 +67,7 @@ Feature: View students results in adaptive quiz
       | course       | C1       |
       | role         | student  |
     And I am on the "adaptivequiz1" "Activity" page logged in as "student2"
-    And I press "Start attempt"
+    And I click on "Start attempt" "link"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"

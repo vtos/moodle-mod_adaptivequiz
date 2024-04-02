@@ -82,17 +82,16 @@ class fetchquestion {
     public $rebuild = false;
 
     /**
-     * Constructor initializes data required to retrieve questions associated with tag
-     * and within question categories
-     * @throws coding_exception throws a coding exception if $level is not a positive integer and if $maximumlevEl is greater
-     *      than $minimumlevel
-     * @param stdClass $adaptivequiz: adaptivequiz record object from adaptivequiz table
-     * @param int $level level of difficuty to look for when fetching a question
-     * @param int $minimumlevel the minimum level the student can achieve
-     * @param int $maximumlevel the maximum level the student can achieve
-     * @param array $tags an array of accepted tags
+     * The constructor.
+     *
+     * @param stdClass $adaptivequiz A record object from {adaptivequiz}.
+     * @param int $level Level of difficulty to look for when fetching a question.
+     * @param int $minimumlevel The minimum level the student can achieve.
+     * @param int $maximumlevel The maximum level the student can achieve.
+     * @param array $tags An array of accepted tags.
+     * @throws coding_exception
      */
-    public function __construct($adaptivequiz, $level = 1, $minimumlevel, $maximumlevel, $tags = array()) {
+    public function __construct($adaptivequiz, $level, $minimumlevel, $maximumlevel, $tags = []) {
         global $SESSION;
 
         $this->adaptivequiz = $adaptivequiz;

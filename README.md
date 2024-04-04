@@ -22,14 +22,11 @@ This Moodle activity module was originally created as a collaborative effort bet
 College][3] and [Remote Learner][4]. The current repository was forked from
 [https://github.com/middlebury/moodle-mod_adaptivequiz][5].
 
-The [MOODLE_400][6] branch of the repository is compatible with Moodle 4.0. Also, all versions starting from 3.8 are supported.
-
-Further support and development of the plugin to be expected.
+The current branch of the repository is compatible with Moodle versions from 4.1 to 4.3.
 
 [3]: http://www.middlebury.edu/
 [4]: http://remote-learner.net/
 [5]: https://github.com/middlebury/moodle-mod_adaptivequiz
-[6]: https://github.com/vtos/moodle-mod_adaptivequiz/tree/MOODLE_400
 
 The Question Bank
 -----------------
@@ -48,7 +45,7 @@ abilities on will make the test ineffective and may provide inconclusive results
 
 Take for example a language placement test. Low-difficulty vocabulary and
 reading-comprehension questions would likely be answerable by all but the most novice
-test-takers. Likewise, high-difficulty questions involving advanced gramatical
+test-takers. Likewise, high-difficulty questions involving advanced grammatical
 constructs and nuanced reading-comprehension would be likely only be correctly
 answered by advanced, high-level test-takers. Such questions would all be good
 candidates for usage in an Adaptive Test. In contrast, a question like "Is 25¥ a good
@@ -158,9 +155,9 @@ additional questions.
 
 Starting level
 ---------------
-As mentioned above, this usually will be set in the lower part of the difficulty
+As mentioned above, this will usually be set in the lower part of the difficulty
 range (about 1/3 of the way up from the bottom) so that most test takers will be able
-answer one of the first two questions correctly and get a moral boost from their
+to answer one of the first two questions correctly and get a moral boost from their
 correct answers. If the starting level is too high, low-ability users would be asked
 several questions they can't answer before the test begins asking them questions at a
 level they can answer.
@@ -179,7 +176,7 @@ Note that this measure is not affected by the order of answers, just the total
 difficulty and number of right and wrong answers. This measure is dependent on the
 test algorithm presenting alternating easier/harder questions as the user answers
 wrong/right and may not be applicable to other algorithms. In practice, this means
-that the ability measure should not greatly affected by a small number of spurrious
+that the ability measure should not be greatly affected by a small number of spurious
 right or wrong answers.
 
 As discussed in [Linacre (2000)][2], the ability measure of the test taker aligns
@@ -190,4 +187,5 @@ For example, given a test with levels 1-10 and a test-taker that answered every
 question 5 and below correctly and every question 6 and up wrong, the test-taker's
 ability measure would fall close to 5.5.
 
-Remember that the ability measure does have error associated with it. Be sure to take the standard error ammount into account when acting on the score.
+Remember that the ability measure does have error associated with it. Be sure to take the standard error amount into account
+when acting on the score.

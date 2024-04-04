@@ -22,14 +22,14 @@ This Moodle activity module was originally created as a collaborative effort bet
 College][3] and [Remote Learner][4]. The current repository was forked from
 [https://github.com/middlebury/moodle-mod_adaptivequiz][5].
 
-The [MOODLE_400][6] branch of the repository is compatible with Moodle 4.0. Also, all versions starting from 3.8 are supported.
+The current branch of the repository is compatible with the latest dev version of Moodle. This is not a release branch
+and can be used at your own risk.
 
 Further support and development of the plugin to be expected.
 
 [3]: http://www.middlebury.edu/
 [4]: http://remote-learner.net/
 [5]: https://github.com/middlebury/moodle-mod_adaptivequiz
-[6]: https://github.com/vtos/moodle-mod_adaptivequiz/tree/MOODLE_400
 
 The Question Bank
 -----------------
@@ -179,7 +179,7 @@ Note that this measure is not affected by the order of answers, just the total
 difficulty and number of right and wrong answers. This measure is dependent on the
 test algorithm presenting alternating easier/harder questions as the user answers
 wrong/right and may not be applicable to other algorithms. In practice, this means
-that the ability measure should not greatly affected by a small number of spurrious
+that the ability measure should not be greatly affected by a small number of spurious
 right or wrong answers.
 
 As discussed in [Linacre (2000)][2], the ability measure of the test taker aligns
@@ -190,4 +190,5 @@ For example, given a test with levels 1-10 and a test-taker that answered every
 question 5 and below correctly and every question 6 and up wrong, the test-taker's
 ability measure would fall close to 5.5.
 
-Remember that the ability measure does have error associated with it. Be sure to take the standard error ammount into account when acting on the score.
+Remember that the ability measure does have error associated with it. Be sure to take the standard error amount into account when
+acting on the score.

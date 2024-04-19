@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * This interface defines the methods required for pluggable statistics that may be added to the question analysis.
- *
- * @copyright  2013 Middlebury College {@link http://www.middlebury.edu/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\questionanalysis\statistics;
 
 use html_writer;
@@ -29,6 +21,14 @@ use mod_adaptivequiz\local\questionanalysis\question_analyser;
 use moodle_url;
 use stdClass;
 
+/**
+ * This interface defines the methods required for pluggable statistics that may be added to the question analysis.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Middlebury College {@link http://www.middlebury.edu/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class answers_statistic implements question_statistic {
     /**
      * Answer a display-name for this statistic.
@@ -40,12 +40,12 @@ class answers_statistic implements question_statistic {
     }
 
     /**
-     * Calculate this statistic for a question's results
+     * Calculate this statistic for a question's results.
      *
      * @param question_analyser $analyser
      * @return question_statistic_result
      */
-    public function calculate(question_analyser $analyser) {
+    public function calculate(question_analyser $analyser): question_statistic_result {
         // Sort the results.
         $results = $analyser->get_results();
         foreach ($results as $result) {
@@ -96,7 +96,7 @@ class answers_statistic implements question_statistic {
         print html_writer::start_tag('tbody', array('class' => 'adpq_highlevel'));
         if (count($high)) {
             foreach ($high as $result) {
-                $this->print_user_result($analyser, $result);
+                $this->print_user_result($result);
             }
         } else {
             $this->print_empty_user_result();
@@ -113,7 +113,7 @@ class answers_statistic implements question_statistic {
         print html_writer::start_tag('tbody', array('class' => 'adpq_midlevel'));
         if (count($mid)) {
             foreach ($mid as $result) {
-                $this->print_user_result($analyser, $result);
+                $this->print_user_result($result);
             }
         } else {
             $this->print_empty_user_result();
@@ -130,7 +130,7 @@ class answers_statistic implements question_statistic {
         print html_writer::start_tag('tbody', array('class' => 'adpq_lowlevel'));
         if (count($low)) {
             foreach ($low as $result) {
-                $this->print_user_result($analyser, $result);
+                $this->print_user_result($result);
             }
         } else {
             $this->print_empty_user_result();
@@ -143,23 +143,18 @@ class answers_statistic implements question_statistic {
     }
 
     /**
-     * Print out a user result
+     * Print out a user result.
      *
-     * @param question_analyser $analyser
      * @param stdClass $result
-     * @return void
      */
-    public function print_user_result(question_analyser $analyser, $result) {
+    public function print_user_result(stdClass $result): void {
         if ($result->correct) {
             $class = 'adpq_correct';
         } else {
             $class = 'adpq_incorrect';
         }
-        $url = new moodle_url('/mod/adaptivequiz/reviewattempt.php', array(
-                    'cmid' => $analyser->get_owning_context()->instanceid,
-                    'uniqueid' => $result->attemptid,
-                    'userid' => $result->user->id));
-        print html_writer::start_tag('tr', array('class' => $class));
+        $url = new moodle_url('/mod/adaptivequiz/reviewattempt.php', ['attempt' => $result->attemptid]);
+        print html_writer::start_tag('tr', ['class' => $class]);
         print html_writer::tag('td', round($result->score->measured_ability_in_scale(), 2));
         print html_writer::tag('td', $result->user->firstname." ".$result->user->lastname);
         print html_writer::tag('td', (($result->correct) ? "correct" : "incorrect"));

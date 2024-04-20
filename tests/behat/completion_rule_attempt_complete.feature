@@ -42,7 +42,7 @@ Feature: Set activity as completed when at least one attempt is completed
 
   @javascript
   Scenario: Teacher sets the completion rule and student completes an attempt in Moodle version 4.2 or lower
-    Given the site is running Moodle version 4.2.6 or lower
+    Given the site is running Moodle version 4.2.7 or lower
     And I am on the "Adaptive Quiz" "adaptivequiz activity editing" page logged in as teacher1
     And I expand all fieldsets
     And I set the following fields to these values:

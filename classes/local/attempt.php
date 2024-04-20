@@ -627,14 +627,14 @@ class attempt {
     }
 
     /**
-     * This function updates the current attempt with the question_usage_by_activity id
+     * This function updates the current attempt with the question_usage_by_activity id.
      */
-    protected function set_attempt_uniqueid() {
+    protected function set_attempt_uniqueid(): void {
         global $DB;
 
         $this->adpqattempt->uniqueid = $this->quba->get_id();
-        $this->timemodified = time();
         $DB->update_record(self::TABLE, $this->adpqattempt);
+
         $this->print_debug('set_attempt_uniqueid() - attempt uniqueid set: '.$this->adpqattempt->uniqueid);
     }
 

@@ -800,11 +800,7 @@ function mod_adaptivequiz_user_preferences(): array {
             'isregex' => true,
             'type' => PARAM_RAW, // JSON.
             'default' => null,
-            'permissioncallback' => function($user, $preferencename) {
-                global $USER;
-
-                return $user->id == $USER->id;
-            },
+            'permissioncallback' => [core_user::class, 'is_current_user'],
         ],
     ];
 }

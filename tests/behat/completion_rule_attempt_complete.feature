@@ -41,34 +41,8 @@ Feature: Set activity as completed when at least one attempt is completed
       | questionpoolnamed | Adaptive Quiz Questions |
 
   @javascript
-  Scenario: Teacher sets the completion rule and student completes an attempt in Moodle version 4.2 or lower
-    Given the site is running Moodle version 4.2.7 or lower
-    And I am on the "Adaptive Quiz" "adaptivequiz activity editing" page logged in as teacher1
-    And I expand all fieldsets
-    And I set the following fields to these values:
-      | Completion tracking | Show activity as complete when conditions are met |
-    And I click on "completionattemptcompleted" "checkbox"
-    And I click on "Save and return to course" "button"
-    And I log out
-    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
-    And I click on "True" "radio" in the "First question" "question"
-    And I press "Submit answer"
-    And I click on "True" "radio" in the "Second question" "question"
-    And I press "Submit answer"
-    And I press "Continue"
-    And I log out
-    And I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-    Then "Adaptive Quiz" should have the "Complete an attempt" completion condition
-    And I am on "Course 1" course homepage
-    And I navigate to "Reports" in current page administration
-    And I click on "Activity completion" "link"
-    And "Completed" "icon" should exist in the "Peter The Student" "table_row"
-
-  @javascript
-  Scenario: Teacher sets the completion rule and student completes an attempt in Moodle version 4.3 or higher
-    Given the site is running Moodle version 4.3 or higher
-    And I am on the "Adaptive Quiz" "adaptivequiz activity editing" page logged in as teacher1
+  Scenario: Teacher sets the completion rule and student completes an attempt
+    Given I am on the "Adaptive Quiz" "adaptivequiz activity editing" page logged in as teacher1
     And I expand all fieldsets
     And I set the following fields to these values:
       | Add requirements           | 1 |

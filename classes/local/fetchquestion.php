@@ -442,6 +442,15 @@ class fetchquestion {
     }
 
     /**
+     * Stores the value of 'tagquestsum' property in global session.
+     */
+    public function store_tagquestsum_in_session(): void {
+        global $SESSION;
+
+        $SESSION->adpqtagquestsum = $this->tagquestsum;
+    }
+
+    /**
      * This function retrieves all of the question categories used the activity.
      * @return array an array of quesiton category ids
      */
@@ -464,13 +473,5 @@ class fetchquestion {
         $this->print_debug('retrieve_question_categories() - question category ids: '.$this->vardump($records));
 
         return $records;
-    }
-
-    /**
-     * The destruct method saves the difficult level and qustion number mapping to the session variable
-     */
-    public function __destruct() {
-        global $SESSION;
-        $SESSION->adpqtagquestsum = $this->tagquestsum;
     }
 }

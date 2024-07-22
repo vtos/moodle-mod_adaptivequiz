@@ -1,4 +1,4 @@
-@mod @mod_adaptivequiz
+@mod @mod_adaptivequiz @mod_adaptivequiz_continued_attempt
 Feature: User may leave the adaptive quiz page and return to the current in-progress attempt
   In order to make the adaptive testing process robust
   As a student

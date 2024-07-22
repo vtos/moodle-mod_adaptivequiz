@@ -1,0 +1,7 @@
+instancenumber,lowestlevel,highestlevel,startinglevel,minimumquestions,maximumquestions,standarderror
+1,1,15,6,12,25,11
+2,1,15,6,12,25,2
+3,1,15,6,12,25,7
+4,1,15,10,25,50,7
+5,1,15,10,25,60,8
+6,1,15,4,75,80,5

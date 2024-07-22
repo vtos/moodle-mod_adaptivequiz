@@ -274,7 +274,7 @@ class locallib_test extends advanced_testcase {
      *
      * @covers ::adaptivequiz_complete_attempt
      */
-    public function test_adaptivequiz_complete_attempt() {
+    public function test_adaptivequiz_complete_attempt(): void {
         global $DB;
 
         $this->resetAfterTest();
@@ -287,7 +287,7 @@ class locallib_test extends advanced_testcase {
         $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
         $context = context_module::instance($cmid);
 
-        adaptivequiz_complete_attempt(3, $adaptivequiz, $context, $userid, '1', 'php unit test');
+        adaptivequiz_complete_attempt(3, $adaptivequiz, $context, $userid, 'php unit test');
         $attempt = $DB->get_record('adaptivequiz_attempt', ['id' => $attemptid]);
 
         $this->assertEquals('php unit test', $attempt->attemptstopcriteria);

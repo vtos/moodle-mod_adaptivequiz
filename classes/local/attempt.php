@@ -14,18 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * This class contains information about the attempt parameters
- *
- * @pacakage   mod_adaptivequiz
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local;
 
 use coding_exception;
+use context_module;
 use core_tag_tag;
 use dml_exception;
 use mod_adaptivequiz\local\attempt\attempt_state;
@@ -39,6 +31,14 @@ use question_state_gradedwrong;
 use question_usage_by_activity;
 use stdClass;
 
+/**
+ * This class contains information about the attempt parameters
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class attempt {
 
     private const TABLE = 'adaptivequiz_attempt';
@@ -104,9 +104,6 @@ class attempt {
     /** @var int $level the difficulty level the attempt is currently set at */
     protected $level = 0;
 
-    /** @var int $lastdifficultylevel the last difficulty level used in the attempt if any */
-    protected $lastdifficultylevel = null;
-
     /**
      * Constructor initializes required data to process the attempt
      * @param stdClass $adaptivequiz adaptivequiz record object from adaptivequiz table
@@ -154,21 +151,6 @@ class attempt {
      */
     public function set_level($level) {
         $this->level = $level;
-    }
-
-    /**
-     * Set the last difficulty level that was used.
-     * This may influence the next question chosing process.
-     *
-     * @param int $lastdifficultylevel
-     * @return void
-     */
-    public function set_last_difficulty_level($lastdifficultylevel) {
-        if (is_null($lastdifficultylevel)) {
-            $this->lastdifficultylevel = null;
-        } else {
-            $this->lastdifficultylevel = (int) $lastdifficultylevel;
-        }
     }
 
     /**
@@ -238,11 +220,25 @@ class attempt {
     }
 
     /**
+     * Sets the status value, may be used when alternative CAT implementation is used.
+     *
+     * @param string $status
+     */
+    public function set_status(string $status): void {
+        if (empty(trim($status))) {
+            throw new coding_exception('the status value must be a meaningful string');
+        }
+
+        $this->status = $status;
+    }
+
+    /**
      * This function does the work of initializing data required to fetch a new question for the attempt.
      *
+     * @param context_module $context
      * @return bool True if attempt started okay otherwise false.
      */
-    public function start_attempt() {
+    public function start_attempt(context_module $context): bool {
         // Get most recent attempt or start a new one.
         $adpqattempt = $this->get_attempt();
 
@@ -261,7 +257,7 @@ class attempt {
         }
 
         // Initialize the question usage by activity property.
-        $this->initialize_quba();
+        $this->initialize_quba($context);
         // Find the last question viewed/answered by the user.
         $this->slot = $this->find_last_quest_used_by_attempt($this->quba);
         // Create a an instance of the fetchquestion class.
@@ -283,14 +279,16 @@ class attempt {
             // If the attempt already has a question attached to it, check if an answer was submitted to the question.
             // If so fetch a new question.
 
+            $lastdifficultylevel = $this->get_question_level($this->slot);
+
             // Provide the question-fetching process with limits based on our last question.
             // If the last question was correct...
             if ($this->quba->get_question_mark($this->slot) > 0) {
                 // Only ask questions harder than the last question unless we are already at the top of the ability scale.
-                if (!is_null($this->lastdifficultylevel) && $this->lastdifficultylevel < $this->adaptivequiz->highestlevel) {
-                    $fetchquestion->set_minimum_level($this->lastdifficultylevel + 1);
+                if (!is_null($lastdifficultylevel) && $lastdifficultylevel < $this->adaptivequiz->highestlevel) {
+                    $fetchquestion->set_minimum_level($lastdifficultylevel + 1);
                     // Do not ask a question of the same level unless we are already at the max.
-                    if ($this->lastdifficultylevel == $this->level) {
+                    if ($lastdifficultylevel == $this->level) {
                         $this->print_debug("start_attempt() - Last difficulty is the same as the new difficulty, ".
                                 "incrementing level from {$this->level} to ".($this->level + 1).".");
                         $this->level++;
@@ -299,10 +297,10 @@ class attempt {
             } else {
                 // If the last question was wrong...
                 // Only ask questions easier than the last question unless we are already at the bottom of the ability scale.
-                if (!is_null($this->lastdifficultylevel) && $this->lastdifficultylevel > $this->adaptivequiz->lowestlevel) {
-                    $fetchquestion->set_maximum_level($this->lastdifficultylevel - 1);
+                if (!is_null($lastdifficultylevel) && $lastdifficultylevel > $this->adaptivequiz->lowestlevel) {
+                    $fetchquestion->set_maximum_level($lastdifficultylevel - 1);
                     // Do not ask a question of the same level unless we are already at the min.
-                    if ($this->lastdifficultylevel == $this->level) {
+                    if ($lastdifficultylevel == $this->level) {
                         $this->print_debug("start_attempt() - Last difficulty is the same as the new difficulty, ".
                                 "decrementing level from {$this->level} to ".($this->level - 1).".");
                         $this->level--;
@@ -323,27 +321,25 @@ class attempt {
             $this->print_debug('start_attempt() - something went horribly wrong since the quba has no slot number AND the number '.
                     'of question answered is greater than 0');
             $this->status = get_string('errorattemptstate', 'adaptivequiz');
+
+            $fetchquestion->store_tagquestsum_in_session();
+
             return false;
         }
 
         // If the slot property is set, then we have a question that is ready to be attempted. No more processing is required.
         if (!empty($this->slot)) {
-            $question = $this->quba->get_question($this->slot);
+            $fetchquestion->store_tagquestsum_in_session();
 
-            $questiontags = core_tag_tag::get_item_tags('core_question', 'question', $question->id);
-            $questiontags = array_filter($questiontags, function (core_tag_tag $tag): bool {
-                return substr($tag->name, 0, strlen(ADAPTIVEQUIZ_QUESTION_TAG)) === ADAPTIVEQUIZ_QUESTION_TAG;
-            });
-            $questiontag = array_shift($questiontags);
-
-            $level = substr($questiontag->name, strlen(ADAPTIVEQUIZ_QUESTION_TAG));
-            $this->level = $level;
+            $this->level = $this->get_question_level($this->slot);
 
             return true;
         }
 
         // If we are here, then the slot property was unset and a new question needs to prepared for display.
         $status = $this->get_question_ready($fetchquestion);
+
+        $fetchquestion->store_tagquestsum_in_session();
 
         if (empty($status)) {
             $var = new stdClass();
@@ -451,14 +447,16 @@ class attempt {
     }
 
     /**
-     * This function initializes the question_usage_by_activity object.  If an attempt unfinished attempt
-     * has a usage id, a question_usage_by_activity object will be loaded using the usage id.  Otherwise a new
-     * question_usage_by_activity object is created.
+     * This function initializes the question_usage_by_activity object.
      *
+     * If an attempt unfinished attempt has a usage id, a question_usage_by_activity object will be loaded using the usage id.
+     * Otherwise, a new question_usage_by_activity object is created.
+     *
+     * @param context_module $context
+     * @return question_usage_by_activity
      * @throws moodle_exception Exception is thrown when required behaviour could not be found.
-     * @return question_usage_by_activity|null Returns a question usage by activity object or null.
      */
-    public function initialize_quba() {
+    public function initialize_quba(context_module $context): question_usage_by_activity {
         if (!$this->behaviour_exists()) {
             throw new moodle_exception('Missing '.self::ATTEMPTBEHAVIOUR.' behaviour', 'Behaviour: '.self::ATTEMPTBEHAVIOUR.
                 ' must exist in order to use this activity');
@@ -466,7 +464,7 @@ class attempt {
 
         if (0 == $this->adpqattempt->uniqueid) {
             // Init question usage and set default behaviour of usage.
-            $quba = question_engine::make_questions_usage_by_activity(self::MODULENAME, $this->adaptivequiz->context);
+            $quba = question_engine::make_questions_usage_by_activity(self::MODULENAME, $context);
             $quba->set_preferred_behaviour(self::ATTEMPTBEHAVIOUR);
 
             $this->quba = $quba;
@@ -670,5 +668,22 @@ class attempt {
         }
 
         return $exists;
+    }
+
+    /**
+     * Wraps obtaining difficulty of the question by its slot.
+     *
+     * @param int $slot
+     */
+    private function get_question_level(int $slot): int {
+        $question = $this->quba->get_question($slot);
+
+        $questiontags = core_tag_tag::get_item_tags('core_question', 'question', $question->id);
+        $questiontags = array_filter($questiontags, function (core_tag_tag $tag): bool {
+            return substr($tag->name, 0, strlen(ADAPTIVEQUIZ_QUESTION_TAG)) === ADAPTIVEQUIZ_QUESTION_TAG;
+        });
+        $questiontag = array_shift($questiontags);
+
+        return substr($questiontag->name, strlen(ADAPTIVEQUIZ_QUESTION_TAG));
     }
 }

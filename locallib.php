@@ -225,15 +225,17 @@ function adaptivequiz_update_attempt_data($uniqueid, $instance, $userid, $level,
 /**
  * This function sets the complete status for an attempt.
  *
- * @throws dml_exception
- * @throws coding_exception
+ * @param int $uniqueid
+ * @param stdClass $adaptivequiz
+ * @param context_module $context
+ * @param int $userid
+ * @param string $statusmessage
  */
 function adaptivequiz_complete_attempt(
     int $uniqueid,
     stdClass $adaptivequiz,
     context_module $context,
     int $userid,
-    string $standarderror,
     string $statusmessage
 ): void {
     global $DB;
@@ -247,7 +249,6 @@ function adaptivequiz_complete_attempt(
     $attempt->attemptstate = attempt_state::COMPLETED;
     $attempt->attemptstopcriteria = $statusmessage;
     $attempt->timemodified = time();
-    $attempt->standarderror = $standarderror;
     $DB->update_record('adaptivequiz_attempt', $attempt);
 
     adaptivequiz_update_grades($adaptivequiz, $userid);

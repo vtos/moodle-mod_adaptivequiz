@@ -17,6 +17,7 @@
 /**
  * This class contains information about the attempt parameters
  *
+ * @pacakage   mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,6 +26,7 @@
 namespace mod_adaptivequiz\local;
 
 use coding_exception;
+use core_tag_tag;
 use dml_exception;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use moodle_exception;
@@ -324,8 +326,19 @@ class attempt {
             return false;
         }
 
-        // If the slot property is set, then we have a question that is ready to be attempted.  No more process is required.
+        // If the slot property is set, then we have a question that is ready to be attempted. No more processing is required.
         if (!empty($this->slot)) {
+            $question = $this->quba->get_question($this->slot);
+
+            $questiontags = core_tag_tag::get_item_tags('core_question', 'question', $question->id);
+            $questiontags = array_filter($questiontags, function (core_tag_tag $tag): bool {
+                return substr($tag->name, 0, strlen(ADAPTIVEQUIZ_QUESTION_TAG)) === ADAPTIVEQUIZ_QUESTION_TAG;
+            });
+            $questiontag = array_shift($questiontags);
+
+            $level = substr($questiontag->name, strlen(ADAPTIVEQUIZ_QUESTION_TAG));
+            $this->level = $level;
+
             return true;
         }
 

@@ -17,6 +17,7 @@
 /**
  * Adaptive quiz attempt script.
  *
+ * @pacakage   mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -240,20 +241,8 @@ if (empty($attemptstatus)) {
 $slot = $adaptiveattempt->get_question_slot_number();
 // Retrieve the question_usage_by_activity object.
 $quba = $adaptiveattempt->get_quba();
-// If $nextdiff is null then this is either a new attempt or a continuation of an previous attempt.  Calculate the current
-// difficulty level the attempt should be at.
-if (is_null($nextdiff)) {
-    // Calculate the current difficulty level.
-    $adaptivequiz->lowestlevel = (int) $adaptivequiz->lowestlevel;
-    $adaptivequiz->highestlevel = (int) $adaptivequiz->highestlevel;
-    $adaptivequiz->startinglevel = (int) $adaptivequiz->startinglevel;
-    // Create an instance of the catalgo class, however constructor arguments are not important.
-    $algo = new catalgo($quba, 1, false, 1);
-    $level = $algo->get_current_diff_level($quba, $adaptivequiz->startinglevel, $adaptivequiz);
-} else {
-    // Retrieve the currently set difficulty level.
-    $level = $adaptiveattempt->get_level();
-}
+
+$level = $adaptiveattempt->get_level();
 
 $headtags = $output->init_metadata($quba, $slot);
 $PAGE->requires->js_init_call('M.mod_adaptivequiz.init_attempt_form', array($viewurl->out(), $adaptivequiz->browsersecurity),

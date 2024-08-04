@@ -22,8 +22,11 @@ global $CFG;
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
+use context_course;
 use context_module;
 use mod_adaptivequiz\local\attempt\attempt_state;
+use question_bank;
+use question_engine;
 use stdClass;
 
 /**
@@ -33,8 +36,7 @@ use stdClass;
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- *
- * @covers     \mod_adaptivequiz\local\attempt
+ * @coversDefaultClass  \mod_adaptivequiz\local\attempt
  */
 class attempt_test extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */
@@ -624,6 +626,114 @@ class attempt_test extends advanced_testcase {
             ->will($this->returnValue(0));
 
         $this->assertFalse($mockattemptthree->start_attempt());
+    }
+
+    public function test_it_returns_current_difficulty_level_when_continuing_attempt(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $datagenerator = $this->getDataGenerator();
+        $questionsgenerator = $datagenerator->get_plugin_generator('core_question');
+        $modgenerator = $datagenerator->get_plugin_generator('mod_adaptivequiz');
+
+        $course = $datagenerator->create_course();
+        $user = $datagenerator->create_user();
+
+        $qcategory = $questionsgenerator->create_question_category([
+            'contextid' => context_course::instance($course->id)->id,
+        ]);
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'questionpool' => [$qcategory->id],
+            'lowestlevel' => 1,
+            'highestlevel' => 15,
+            'startinglevel' => 1,
+            'minimumquestions' => 10,
+            'maximumquestions' => 18,
+            'standarderror' => 9,
+        ]);
+
+        // Generate questions of particular difficulties only.
+        $question1 = $questionsgenerator->create_question('truefalse', null, [
+            'category' => $qcategory->id,
+        ]);
+        $questionsgenerator->create_question_tag([
+            'questionid' => $question1->id,
+            'tag' => 'adpq_1',
+        ]);
+
+        $question2 = $questionsgenerator->create_question('truefalse', null, [
+            'category' => $qcategory->id,
+        ]);
+        $questionsgenerator->create_question_tag([
+            'questionid' => $question2->id,
+            'tag' => 'adpq_4',
+        ]);
+
+        $question3 = $questionsgenerator->create_question('truefalse', null, [
+            'category' => $qcategory->id,
+        ]);
+        $questionsgenerator->create_question_tag([
+            'questionid' => $question3->id,
+            'tag' => 'adpq_7',
+        ]);
+
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequiz->id, $course->id, false, MUST_EXIST);
+        $modcontext = context_module::instance($cm->id);
+
+        // Simulate user answering the first two questions, administration of the third question and continuation of the attempt
+        // on the third question.
+        $adaptivequiz->context = $modcontext;
+
+        $attempt = new attempt($adaptivequiz, $user->id);
+        $attemptrecord = $attempt->get_attempt();
+        $attempt->initialize_quba();
+
+        $quba = $attempt->get_quba();
+
+        $time = time();
+
+        $question = question_bank::load_question($question1->id);
+        $slot = $quba->add_question($question);
+        $quba->start_question($slot);
+        question_engine::save_questions_usage_by_activity($quba);
+
+        // Set quba id for the attempt in a hacky way, no public API for this historically.
+        $attemptrecord->uniqueid = $quba->get_id();
+        $DB->update_record('adaptivequiz_attempt', $attemptrecord);
+
+        $quba->process_all_actions($time, $quba->prepare_simulated_post_data([
+            $slot => ['answer' => true],
+        ]));
+        $quba->finish_all_questions($time);
+        question_engine::save_questions_usage_by_activity($quba);
+
+        $question = question_bank::load_question($question2->id);
+        $slot = $quba->add_question($question);
+        $quba->start_question($slot);
+        question_engine::save_questions_usage_by_activity($quba);
+
+        $quba->process_all_actions($time, $quba->prepare_simulated_post_data([
+            $slot => ['answer' => true],
+        ]));
+        $quba->finish_all_questions($time);
+        question_engine::save_questions_usage_by_activity($quba);
+
+        // Administer the third question, but do not answer it.
+        $question = question_bank::load_question($question3->id);
+        $slot = $quba->add_question($question);
+        $quba->start_question($slot);
+        question_engine::save_questions_usage_by_activity($quba);
+
+        // Simulate continuation of the attempt and make assertions.
+        $attempt = new attempt($adaptivequiz, $user->id);
+        $attempt->set_level((int) $adaptivequiz->startinglevel);
+        $attempt->set_last_difficulty_level(0);
+        $attempt->start_attempt();
+
+        self::assertEquals(7, $attempt->get_level());
     }
 
     /**

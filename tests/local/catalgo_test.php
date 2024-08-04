@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * PHPUnit tests for catalgo class.
- *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local;
 
 defined('MOODLE_INTERNAL') || die();
@@ -35,8 +27,13 @@ use question_usage_by_activity;
 use stdClass;
 
 /**
- * @group mod_adaptivequiz
- * @covers \mod_adaptivequiz\local\catalgo
+ * PHPUnit tests for catalgo class.
+ *
+ * @pacakage   mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @coversDefaultClass  \mod_adaptivequiz\local\catalgo
  */
 class catalgo_test extends advanced_testcase {
     /**
@@ -889,166 +886,6 @@ class catalgo_test extends advanced_testcase {
 
         $result = $catalgo->standard_error_within_parameters(0.01, 0.002);
         $this->assertFalse($result);
-    }
-
-    /**
-     * This function tests the return value from get_current_diff_level().
-     */
-    public function test_get_current_diff_level_using_level_zero() {
-        $this->resetAfterTest(true);
-
-        $dummy = new stdClass();
-        $dummy->lowestlevel = 1;
-        $dummy->highestlevel = 20;
-
-        $mockquba = $this->createMock(question_usage_by_activity::class);
-        $mockcatalgo = $this
-            ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
-                ['return_current_diff_level']
-            )
-            ->setConstructorArgs(
-                [$mockquba, 1, true, 50]
-            )
-            ->getMock();
-        $mockcatalgo->expects($this->never())
-            ->method('return_current_diff_level');
-
-        $this->expectException('coding_exception');
-        $mockcatalgo->get_current_diff_level($mockquba, 0, $dummy);
-    }
-
-    /**
-     * This function tests the return value from get_current_diff_level()
-     */
-    public function test_get_current_diff_level_using_no_quba() {
-        $this->resetAfterTest(true);
-
-        $dummy = new stdClass();
-        $dummy->lowestlevel = 1;
-        $dummy->highestlevel = 20;
-
-        $mockquba = $this->createMock(question_usage_by_activity::class);
-        $mockcatalgo = $this
-            ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
-                ['return_current_diff_level']
-            )
-            ->setConstructorArgs(
-                [$mockquba, 1, true, 50]
-            )
-            ->getMock();
-        $mockcatalgo->expects($this->never())
-            ->method('return_current_diff_level');
-
-        $this->expectException('coding_exception');
-        $mockcatalgo->get_current_diff_level($dummy, 1, $dummy);
-    }
-
-    /**
-     * This function tests the return value from get_current_diff_level()
-     */
-    public function test_get_current_diff_level_using_no_attempt_obj() {
-        $this->resetAfterTest(true);
-
-        $dummy = new stdClass();
-
-        $mockquba = $this->createMock(question_usage_by_activity::class);
-        $mockcatalgo = $this
-            ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
-                ['return_current_diff_level']
-            )
-            ->setConstructorArgs(
-                [$mockquba, 1, true, 50]
-            )
-            ->getMock();
-        $mockcatalgo->expects($this->never())
-            ->method('return_current_diff_level');
-
-        $this->expectException('coding_exception');
-        $mockcatalgo->get_current_diff_level($mockquba, 1, $dummy);
-    }
-
-    /**
-     * This function tests the return value from get_current_diff_level()
-     */
-    public function test_get_current_diff_level_using_attempt_obj_missing_lowestlevel() {
-        $this->resetAfterTest(true);
-
-        $dummy = new stdClass();
-        $dummy->highestlevel = 20;
-
-        $mockquba = $this->createMock(question_usage_by_activity::class);
-        $mockcatalgo = $this
-            ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
-                ['return_current_diff_level']
-            )
-            ->setConstructorArgs(
-                [$mockquba, 1, true, 50]
-            )
-            ->getMock();
-        $mockcatalgo->expects($this->never())
-            ->method('return_current_diff_level');
-
-        $this->expectException('coding_exception');
-        $mockcatalgo->get_current_diff_level($mockquba, 1, $dummy);
-    }
-
-    /**
-     * This function tests the return value from get_current_diff_level()
-     */
-    public function test_get_current_diff_level_using_attempt_obj_missing_highestlevel() {
-        $this->resetAfterTest(true);
-
-        $dummy = new stdClass();
-        $dummy->lowestlevel = 20;
-
-        $mockquba = $this->createMock(question_usage_by_activity::class);
-        $mockcatalgo = $this
-            ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
-                ['return_current_diff_level']
-            )
-            ->setConstructorArgs(
-                [$mockquba, 1, true, 50]
-            )
-            ->getMock();
-        $mockcatalgo->expects($this->never())
-            ->method('return_current_diff_level');
-
-        $this->expectException('coding_exception');
-        $mockcatalgo->get_current_diff_level($mockquba, 1, $dummy);
-    }
-
-    /**
-     * This function tests the return value from get_current_diff_level()
-     */
-    public function test_get_current_diff_level() {
-        $this->resetAfterTest(true);
-
-        $dummy = new stdClass();
-        $dummy->lowestlevel = 20;
-        $dummy->highestlevel = 21;
-
-        $mockquba = $this->createMock(question_usage_by_activity::class);
-        $mockcatalgo = $this
-            ->getMockBuilder(catalgo::class)
-            ->onlyMethods(
-                ['return_current_diff_level']
-            )
-            ->setConstructorArgs(
-                [$mockquba, 1, true, 50]
-            )
-            ->getMock();
-        $mockcatalgo->expects($this->once())
-            ->method('return_current_diff_level')
-            ->willReturn(3);
-
-        $result = $mockcatalgo->get_current_diff_level($mockquba, 1, $dummy);
-
-        $this->assertEquals(3, $result);
     }
 
     /**

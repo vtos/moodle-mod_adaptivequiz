@@ -16,8 +16,10 @@
 
 /**
  * This class performs the simple algorithm to determine the next level of difficulty a student should attempt.
+ *
  * It also recommends whether the calculation has reached an acceptable level of error.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -31,7 +33,6 @@ use moodle_exception;
 use question_state_gradedpartial;
 use question_state_gradedright;
 use question_state_gradedwrong;
-use question_state_todo;
 use question_usage_by_activity;
 use stdClass;
 
@@ -574,89 +575,6 @@ class catalgo {
 
         $this->print_debug('compute_right_answers() - Sum of incorrect answers: '.$incorrectanswers);
         return $incorrectanswers;
-    }
-
-    /**
-     * This function is a helper method to compute the current difficult level the attempt is at
-     * @throws coding_exception if any of the parameters contain invalid data
-     * @param question_usage_by_activity $quba a question usage by activity set to an attempt id
-     * @param int $startinglevel the starting level of difficulty for the attempt
-     * @param stdClass $attemptobj an object with the following properties: lowestlevel and highestlevel
-     * @return int the current level of difficulty
-     */
-    public function get_current_diff_level($quba, $level, $attemptobj) {
-        // Check if level is a positive integer.
-        if (!is_int($level) || 0 >= $level) {
-            throw new coding_exception('get_current_diff_level: Arg 2 needs to be a positive integer',
-                'Invalid level of :'.$level.' was passed');
-        }
-        // Check if quba is a valid instance of question_usage_by_activity.
-        if (!$quba instanceof question_usage_by_activity) {
-            throw new coding_exception('get_current_diff_level: Arg 1 needs to be an instance of question_usage_by_activity',
-                'Invalid quba of :'.get_class($quba));
-        }
-        // Check if attempt object has required properties defined.
-        if (!isset($attemptobj->lowestlevel) || !isset($attemptobj->highestlevel)) {
-            throw new coding_exception('get_current_diff_level: Arg 3 needs to have lowestlevel and highestlevel properties',
-                'Invalid attemptobj of :'.$this->vardump($attemptobj));
-        }
-        // Check if attempt object has required property value types.
-        $conditions = !is_int($attemptobj->lowestlevel) || 0 >= $attemptobj->lowestlevel || !is_int($attemptobj->highestlevel)
-                || 0 >= $attemptobj->highestlevel || $attemptobj->lowestlevel >= $attemptobj->highestlevel;
-        if ($conditions) {
-            throw new coding_exception('get_current_diff_level: Arg 3 lowestlevel and highestlevel properties must be positive '.
-                'integers', 'Invalid attemptobj of :'.$this->vardump($attemptobj));
-        }
-
-        return $this->return_current_diff_level($quba, $level, $attemptobj);
-    }
-
-    /**
-     * This function calculates the currently difficulty level of the attempt.
-     * @param question_usage_by_activity $quba a question usage by activity set to an attempt id
-     * @param int $level the starting level of difficulty for the attempt
-     * @param stdClass $attemptobj an object with the following properties: lowestlevel and highestlevel
-     * @return int the current level of difficulty
-     */
-    protected function return_current_diff_level($quba, $level, $attemptobj) {
-        $questattempted = 0;
-        $correct = false;
-        // Set current difficulty to the starting level.
-        $currdiff = $level;
-
-        // Get question slots for the attempt.
-        $slots = $quba->get_slots();
-
-        if (empty($slots)) {
-            return 0;
-        }
-
-        // Get the last question's state.
-        $state = $quba->get_question_state(end($slots));
-        // If the state of the last question in the attempt is 'todo' remove it from the array, as the user never submitted their
-        // answer.
-        if ($state instanceof question_state_todo) {
-            array_pop($slots);
-        }
-
-        // Reset the array pointer back to the beginning.
-        reset($slots);
-
-        // Iterate over slots and count correct answers.
-        foreach ($slots as $slot) {
-            $mark = $this->get_question_mark($quba, $slot);
-
-            if (is_null($mark) || 0.0 >= $mark) {
-                $correct = false;
-            } else {
-                $correct = true;
-            }
-
-            $questattempted++;
-            $currdiff = $this->compute_next_difficulty($currdiff, $questattempted, $correct, $attemptobj);
-        }
-
-        return $currdiff;
     }
 
     /**

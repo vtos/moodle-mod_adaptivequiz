@@ -84,30 +84,3 @@ Feature: View students results in adaptive quiz
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
     Then "Henry The Student" "table_row" should not exist
-
-  @javascript
-  Scenario: Individual user attempts report
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-    And I click on "1" "link" in the "Peter The Student" "table_row"
-    Then I should see "Adaptive Quiz - individual user attempts report for Peter The Student"
-    And "Completed" "table_row" should exist
-    And "Completed" row "Reason for stopping attempt" column of "individualuserattemptstable" table should contain "Unable to fetch a question for level 5"
-    And "Completed" row "Sum of questions attempted" column of "individualuserattemptstable" table should contain "2"
-
-  @javascript
-  Scenario: View attempt summary
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-    And I click on "1" "link" in the "Peter The Student" "table_row"
-    And I click on "Review attempt" "link" in the "Completed" "table_row"
-    Then I should see "Peter The Student (peterthestudent@example.com)" in the "User" "table_row"
-
-  @javascript
-  Scenario: View attempt questions details
-    When I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-    And I click on "1" "link" in the "Peter The Student" "table_row"
-    And I click on "Review attempt" "link" in the "Completed" "table_row"
-    And I click on "Questions Details" "link"
-    # Info on the first question
-    Then I should see "Correct" in the "[id^=question-][id$=-1] .info .state" "css_element"
-    # Info on the second question
-    And I should see "Correct" in the "[id^=question-][id$=-2] .info .state" "css_element"

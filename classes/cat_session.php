@@ -28,6 +28,7 @@ use mod_adaptivequiz\local\itemadministration\item_administration_factory;
 use moodle_exception;
 use question_bank;
 use question_engine;
+use question_usage_by_activity;
 use stdClass;
 
 /**
@@ -141,8 +142,10 @@ class cat_session {
         $qubahelper($quba);
         question_engine::save_questions_usage_by_activity($quba);
 
-        // If this is a custom CAT model, update the attempt and exit.
+        // If this is a custom CAT model, update the attempt, call the callback and exit.
         if ($adaptivequiz->catmodel) {
+            self::catmodel_post_process_item_result($quba, $adaptivequiz, $adaptiveattempt);
+
             adaptivequiz_update_attempt_data($uniqueid, $adaptivequiz->id, $USER->id, 0, 0, 0);
 
             return;
@@ -232,5 +235,29 @@ class cat_session {
         $classname = array_shift($classnames);
 
         return new $classname();
+    }
+
+    /**
+     * Calls custom CAT model's callback if it could be found.
+     *
+     * When the callback cannot be executed the method silently exits.
+     *
+     * @param question_usage_by_activity $quba
+     * @param stdClass $adaptivequiz
+     * @param attempt $attempt
+     */
+    private static function catmodel_post_process_item_result(
+        question_usage_by_activity $quba,
+        stdClass $adaptivequiz,
+        attempt $attempt
+    ): void {
+        $catmodelcomponentname = 'adaptivequizcatmodel_' . $adaptivequiz->catmodel;
+        $pluginswithfunction = get_plugin_list_with_function('adaptivequizcatmodel', 'post_process_item_result_callback');
+        if (!array_key_exists($catmodelcomponentname, $pluginswithfunction)) {
+            return;
+        }
+
+        $functionname = $pluginswithfunction[$catmodelcomponentname];
+        $functionname($quba, $adaptivequiz, $attempt);
     }
 }

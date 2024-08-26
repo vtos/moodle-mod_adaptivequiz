@@ -453,12 +453,13 @@ class attempt {
     }
 
     /**
-     * This function retrieves the most recent attempt, whose state is 'inprogress'. If no attempt is found
-     * it creates a new attempt.  Lastly $adpqattempt instance property gets set.
+     * This function retrieves the most recent attempt, whose state is 'inprogress'.
      *
-     * @return stdClass adaptivequiz_attempt data object
+     * If no attempt is found it creates a new attempt. Lastly, $adpqattempt instance property gets set.
+     *
+     * @return stdClass An adaptivequiz_attempt data object.
      */
-    public function get_attempt() {
+    public function get_attempt(): stdClass {
         global $DB;
 
         $param = ['instance' => $this->adaptivequiz->id, 'userid' => $this->userid, 'attemptstate' => attempt_state::IN_PROGRESS];
@@ -482,6 +483,17 @@ class attempt {
             $this->adpqattempt = $attempt;
 
             $this->print_debug('get_attempt() - new attempt created: '.$this->vardump($attempt));
+
+            if (!empty($this->adaptivequiz->catmodel)) {
+                // Run the callback for sub-plugins. Potentially must be moved out of this class.
+
+                $catmodelcomponentname = 'adaptivequizcatmodel_' . $this->adaptivequiz->catmodel;
+                $pluginswithfunction = get_plugin_list_with_function('adaptivequizcatmodel', 'post_create_attempt_callback');
+                if (array_key_exists($catmodelcomponentname, $pluginswithfunction)) {
+                    $functionname = $pluginswithfunction[$catmodelcomponentname];
+                    $functionname($this->adaptivequiz, $this);
+                }
+            }
         } else {
             $attempt = current($attempt);
             $this->adpqattempt = $attempt;

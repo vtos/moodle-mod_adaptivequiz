@@ -37,6 +37,7 @@ use mod_adaptivequiz\local\report\users_attempts\users_attempts_table;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_form;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_repository;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences;
+use mod_adaptivequiz\output\attempts_number;
 use mod_adaptivequiz\output\user_attempt_summary;
 
 $id = optional_param('id', 0, PARAM_INT);
@@ -66,8 +67,10 @@ $PAGE->add_body_class('limitedwidth');
 /** @var mod_adaptivequiz_renderer $renderer */
 $renderer = $PAGE->get_renderer('mod_adaptivequiz');
 
+$customcatmodelinuse = !empty($adaptivequiz->catmodel);
+
 $canviewattemptsreport = has_capability('mod/adaptivequiz:viewreport', $context);
-if ($canviewattemptsreport) {
+if ($canviewattemptsreport && !$customcatmodelinuse) {
     $reportuserprefs = user_preferences_repository::get();
 
     $reportuserprefsform = new user_preferences_form($PAGE->url->out());
@@ -140,6 +143,12 @@ $PAGE->set_heading(format_string($course->fullname));
 
 echo $OUTPUT->header();
 
+if ($canviewattemptsreport && $customcatmodelinuse) {
+    echo $renderer->container_start('text-center');
+    echo $renderer->attempts_number($adaptivequiz, $cm);
+    echo $renderer->container_end();
+}
+
 if (has_capability('mod/adaptivequiz:attempt', $context)) {
     $completedattemptscount = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
 
@@ -174,7 +183,7 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
     }
 }
 
-if ($canviewattemptsreport) {
+if ($canviewattemptsreport && !$customcatmodelinuse) {
     echo $renderer->heading(get_string('activityreports', 'adaptivequiz'), '3', 'text-center');
 
     groups_print_activity_menu($cm, new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]));

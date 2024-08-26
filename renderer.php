@@ -30,6 +30,7 @@ use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgo;
 use mod_adaptivequiz\output\ability_measure;
 use mod_adaptivequiz\output\attempt_progress;
+use mod_adaptivequiz\output\attempts_number;
 use mod_adaptivequiz\output\report\attempt_administration_report;
 use mod_adaptivequiz\output\report\attempt_answers_distribution_report;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_action;
@@ -793,6 +794,33 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     protected function render_attempt_administration_report(attempt_administration_report $report): string {
         return $this->render_from_template('mod_adaptivequiz/attempt_administration_report',
             $report->export_for_template($this));
+    }
+
+    /**
+     * A helper for the relevant renderer's method.
+     *
+     * @param stdClass $adaptivequiz
+     * @param stdClass $cm
+     */
+    public function attempts_number(stdClass $adaptivequiz, stdClass $cm): string {
+        return $this->render_attempts_number(attempts_number::when_custom_catmodel_in_use($adaptivequiz, $cm));
+    }
+
+    /**
+     * Renders the number of attempts for the view.php page.
+     *
+     * @param attempts_number $attemptsnumber
+     */
+    protected function render_attempts_number(attempts_number $attemptsnumber): string {
+        $text = get_string('attemptsnumber', 'adaptivequiz', $attemptsnumber->number);
+
+        if (!$attemptsnumber->reporturl) {
+            return $text;
+        }
+
+        return html_writer::link($attemptsnumber->reporturl, $text,
+            ['title' => get_string('attemptsnumberlinktitle', 'adaptivequiz')]
+        );
     }
 
     /**

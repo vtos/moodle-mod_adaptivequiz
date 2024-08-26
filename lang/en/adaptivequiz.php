@@ -17,6 +17,7 @@
 /**
  * Strings for the English language.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -31,6 +32,8 @@ $string['attemptquestion_ability'] = 'Ability Measure';
 $string['attemptquestionsprogress'] = 'Questions progress: {$a}';
 $string['attemptquestionsprogress_help'] = 'The maximum number of questions displayed here is not necessarily the number of questions you have to take during the quiz. It is the MAXIMUM POSSIBLE number of questions you might take, the quiz may finish earlier if the ability measure is sufficiently defined.';
 $string['attempt_summary'] = 'Attempt Summary';
+$string['attemptsnumber'] = 'Attempts: {$a}';
+$string['attemptsnumberlinktitle'] = 'View attempts report';
 $string['attemptsusernoprevious'] = 'You haven\'t attempted this quiz yet.';
 $string['attemptsuserprevious'] = 'Your previous attempts';
 $string['attemptnofirstquestion'] = 'Sorry, but couldn\'t define the first question to start the attempt, the quiz is possibly misconfigured. ';
@@ -78,6 +81,7 @@ $string['reportattemptsshowinitialbars'] = 'Show initials bar';
 $string['reportattemptsusersperpage'] = 'Number of users displayed:';
 $string['reportattemptsummarytab'] = 'Attempt Summary';
 $string['reportindividualuserattemptpageheading'] = '{$a->quizname} - individual user attempts report for {$a->username}';
+$string['reportpageunavailableforcustomcatmodel'] = 'Sorry,this page is not available when a custom CAT model is used.';
 $string['reportuserattemptstitleshort'] = '{$a}\'s attempts';
 $string['reportquestionanalysispageheading'] = '{$a} - questions report';
 $string['modulenameplural'] = 'Adaptive Quiz';

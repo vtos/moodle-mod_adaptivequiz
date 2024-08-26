@@ -624,14 +624,23 @@ function adaptivequiz_extend_navigation(navigation_node $navref, stdclass $cours
  * @param navigation_node $adaptivequiznode
  */
 function adaptivequiz_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $adaptivequiznode): void {
+    global $DB;
+
     if (!has_capability('mod/adaptivequiz:viewreport', $settingsnav->get_page()->cm->context)) {
         return;
     }
 
-    $node = navigation_node::create(get_string('questionanalysisbtn', 'adaptivequiz'),
-        new moodle_url('/mod/adaptivequiz/questionanalysis/overview.php', ['cmid' => $settingsnav->get_page()->cm->id]),
-        navigation_node::TYPE_SETTING, null, 'mod_adaptivequiz_question_analysis', new pix_icon('i/report', ''));
-    $adaptivequiznode->add_node($node);
+    if (!$adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $settingsnav->get_page()->cm->instance])) {
+        return;
+    }
+
+    // Show this link only when the default algorithm is used.
+    if (!$adaptivequiz->catmodel) {
+        $node = navigation_node::create(get_string('questionanalysisbtn', 'adaptivequiz'),
+            new moodle_url('/mod/adaptivequiz/questionanalysis/overview.php', ['cmid' => $settingsnav->get_page()->cm->id]),
+            navigation_node::TYPE_SETTING, null, 'mod_adaptivequiz_question_analysis', new pix_icon('i/report', ''));
+        $adaptivequiznode->add_node($node);
+    }
 }
 
 /**

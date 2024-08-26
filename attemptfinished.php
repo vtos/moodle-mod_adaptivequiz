@@ -17,6 +17,7 @@
 /**
  * Adaptive quiz attempt script
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -78,6 +79,20 @@ if (!empty($adaptivequiz->browsersecurity)) {
     $PAGE->set_heading(format_string($course->fullname));
 }
 
+$attemptfeedback = $adaptivequiz->attemptfeedback;
+if (!empty($adaptivequiz->catmodel)) {
+    // Try wire up the custom feedback from the sub-plugin being used. If it's implemented in a sub-plugin, it always has
+    // a precedence over the default feedback provided by the activity.
+    $pluginswithfunction = get_plugin_list_with_function('adaptivequizcatmodel', 'attempt_finished_feedback');
+    $catmodelcomponentname = 'adaptivequizcatmodel_' . $adaptivequiz->catmodel;
+    if (array_key_exists($catmodelcomponentname, $pluginswithfunction)) {
+        $functionname = $pluginswithfunction[$catmodelcomponentname];
+
+        $attempt = $DB->get_record('adaptivequiz_attempt', ['uniqueid' => $uniqueid], '*', MUST_EXIST);
+        $attemptfeedback = $functionname($adaptivequiz, $cm, $attempt);
+    }
+}
+
 echo $output->header();
-echo $output->attempt_feedback($adaptivequiz->attemptfeedback, $cm->id, $abilitymeasurerenderable, $popup);
+echo $output->attempt_feedback($attemptfeedback, $cm->id, $abilitymeasurerenderable, $popup);
 echo $output->footer();

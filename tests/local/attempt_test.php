@@ -107,6 +107,10 @@ class attempt_test extends advanced_testcase {
         $attempt = new attempt($dummy, $userid);
         $data = $attempt->get_attempt();
 
+        // Cast the float values to eliminate the data representation issues.
+        $data->difficultysum = (float) $data->difficultysum;
+        $data->measure = (float) $data->measure;
+
         $expected = new stdClass();
         $expected->id = '1';
         $expected->instance = '220';

@@ -14,30 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * A class to display a table with users either with attempts or without them.
- *
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\report\users_attempts;
 
-use coding_exception;
 use context;
-use dml_exception;
 use html_writer;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\sql\sql_resolver;
 use mod_adaptivequiz_renderer;
-use moodle_exception;
 use moodle_url;
 use stdClass;
 use table_sql;
 
+/**
+ * A class to display a table with users either with attempts or without them.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2022 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 final class users_attempts_table extends table_sql {
 
+    /**
+     * @var string Unique id for the table.
+     */
     private const UNIQUE_ID = 'usersattemptstable';
 
     /**
@@ -56,7 +56,14 @@ final class users_attempts_table extends table_sql {
     private $questionsdifficultyrange;
 
     /**
-     * @throws coding_exception
+     * The constructor.
+     *
+     * @param mod_adaptivequiz_renderer $renderer
+     * @param int $cmid
+     * @param questions_difficulty_range $questionsdifficultyrange
+     * @param moodle_url $baseurl
+     * @param context $context
+     * @param filter $filter
      */
     public function __construct(
         mod_adaptivequiz_renderer $renderer,
@@ -76,58 +83,10 @@ final class users_attempts_table extends table_sql {
     }
 
     /**
-     * {@inheritdoc}
-     * @throws dml_exception
+     * Formats the column's value.
+     *
+     * @param stdClass $row
      */
-    public function query_db($pagesize, $useinitialsbar = true): void {
-        global $DB;
-
-        if (!$this->is_downloading()) {
-            if ($this->countsql === null) {
-                $this->countsql = 'SELECT COUNT(1) FROM '.$this->sql->from.' WHERE '.$this->sql->where;
-                $this->countparams = $this->sql->params;
-            }
-            $grandtotal = $DB->count_records_sql($this->countsql, $this->countparams);
-            if ($useinitialsbar && !$this->is_downloading()) {
-                $this->initialbars(true);
-            }
-
-            list($wsql, $wparams) = $this->get_sql_where();
-            if ($wsql) {
-                $this->countsql .= ' AND ' . $wsql;
-                $this->countparams = array_merge($this->countparams, $wparams);
-
-                $this->sql->where .= ' AND ' . $wsql;
-                $this->sql->params = array_merge($this->sql->params, $wparams);
-
-                $total  = $DB->count_records_sql($this->countsql, $this->countparams);
-            } else {
-                $total = $grandtotal;
-            }
-
-            $this->pagesize($pagesize, $total);
-        }
-
-        $sort = $this->get_sql_sort();
-        if ($sort) {
-            $sort = "ORDER BY $sort";
-        }
-
-        $groupby = $this->sql->groupby ?? '';
-        if ($groupby) {
-            $groupby = "GROUP BY $groupby";
-        }
-
-        $sql = "SELECT {$this->sql->fields} FROM {$this->sql->from} WHERE {$this->sql->where} {$groupby} {$sort}";
-
-        if (!$this->is_downloading()) {
-            $this->rawdata = $DB->get_records_sql($sql, $this->sql->params, $this->get_page_start(),
-                $this->get_page_size());
-        } else {
-            $this->rawdata = $DB->get_records_sql($sql, $this->sql->params);
-        }
-    }
-
     protected function col_attemptsnum(stdClass $row): string {
         if (!$row->attemptsnum) {
             return '-';
@@ -147,7 +106,9 @@ final class users_attempts_table extends table_sql {
     }
 
     /**
-     * @throws moodle_exception
+     * Formats the column's value.
+     *
+     * @param stdClass $row
      */
     protected function col_measure(stdClass $row): string {
         $formatmeasureparams = new stdClass();
@@ -170,6 +131,11 @@ final class users_attempts_table extends table_sql {
         return $measure;
     }
 
+    /**
+     * Formats the column's value.
+     *
+     * @param stdClass $row
+     */
     protected function col_stderror(stdClass $row): string {
         $rendered = $this->renderer->format_standard_error($row);
         if (!$this->is_downloading()) {
@@ -180,7 +146,9 @@ final class users_attempts_table extends table_sql {
     }
 
     /**
-     * @throws coding_exception
+     * Formats the column's value.
+     *
+     * @param stdClass $row
      */
     protected function col_attempttimefinished(stdClass $row): string {
         return intval($row->attempttimefinished)
@@ -192,7 +160,8 @@ final class users_attempts_table extends table_sql {
      * A convenience method to call a bunch of init methods.
      *
      * @param moodle_url $baseurl
-     * @throws coding_exception
+     * @param context $context
+     * @param filter $filter
      */
     private function init(moodle_url $baseurl, context $context, filter $filter): void {
         $this->define_columns([
@@ -215,14 +184,12 @@ final class users_attempts_table extends table_sql {
 
         $sqlandparams = sql_resolver::sql_and_params($filter, $context);
         $this->set_sql($sqlandparams->fields(), $sqlandparams->from(), $sqlandparams->where(), $sqlandparams->params());
-        $this->set_group_by_sql($sqlandparams->group_by());
         $this->set_count_sql($sqlandparams->count_sql(), $sqlandparams->count_sql_params());
     }
 
-    private function set_group_by_sql(?string $clause): void {
-        $this->sql->groupby = $clause;
-    }
-
+    /**
+     * A helper method to set the alignment CSS.
+     */
     private function set_content_alignment_in_columns(): void {
         $this->column_class['attemptsnum'] .= ' text-center';
         $this->column_class['measure'] .= ' text-center';

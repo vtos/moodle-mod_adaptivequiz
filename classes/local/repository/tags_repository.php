@@ -14,26 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * A class to wrap all database queries which are specific to tags and their related data. Normally should contain
- * only static methods to call.
- *
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 namespace mod_adaptivequiz\local\repository;
 
-use coding_exception;
-use dml_exception;
 use stdClass;
 
+/**
+ * A class to wrap all database queries which are specific to tags and their related data.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2022 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 final class tags_repository {
+
     /**
+     * Gets a map of difficulty level => tag id for the given tags.
+     *
      * @param string[] $tagnames
-     * @return array Map of question difficulty level and tag id, same as what
-     * {@link moodle_database::get_records_menu()} would return.
-     * @throws dml_exception
-     * @throws coding_exception
+     * @return array Map of question difficulty level and tag id.
      */
     public static function get_question_level_to_tag_id_mapping_by_tag_names(array $tagnames): array {
         global $DB;
@@ -44,7 +42,7 @@ final class tags_repository {
              FROM {tag} t
              JOIN {tag_instance} ti ON t.id = ti.tagid AND ti.itemtype = ?
              WHERE t.name ' . $tagnameselect . '
-             GROUP BY t.id';
+             GROUP BY t.id, t.name';
         $params = array_merge(['question'], $tagnameparams);
 
         if (!$records = $DB->get_records_sql($sql, $params)) {
@@ -59,10 +57,10 @@ final class tags_repository {
     }
 
     /**
-     * @param string[] Array of tag names.
+     * Gets a list of tag id for the given tags.
+     *
+     * @param string[] $tagnames Array of tag names.
      * @return int[] Tag id list.
-     * @throws dml_exception
-     * @throws coding_exception
      */
     public static function get_tag_id_list_by_tag_names(array $tagnames): array {
         global $DB;

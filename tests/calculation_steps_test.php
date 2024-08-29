@@ -184,17 +184,19 @@ class calculation_steps_test extends advanced_testcase {
                 cat_session::process_administered_item_result($uniqueid, $adaptivequiz, $attempt, $qubahelper);
 
                 // Assertion. Reach out to the database directly.
+                // All values are being cast to handle storing specifics of the database.
+
                 $expectation = [
-                    'difficultysum' => $attemptstepfixtures['difficultysum'],
-                    'standarderror' => $attemptstepfixtures['standarderrorraw'],
-                    'measure' => $attemptstepfixtures['measureraw'],
+                    'difficultysum' => (float) $attemptstepfixtures['difficultysum'],
+                    'standarderror' => (float) $attemptstepfixtures['standarderrorraw'],
+                    'measure' => (float) $attemptstepfixtures['measureraw'],
                 ];
 
                 $attemptrecord = $DB->get_record('adaptivequiz_attempt', ['uniqueid' => $uniqueid], '*', MUST_EXIST);
                 $stepsresult = [
-                    'difficultysum' => $attemptrecord->difficultysum,
-                    'standarderror' => $attemptrecord->standarderror,
-                    'measure' => $attemptrecord->measure,
+                    'difficultysum' => (float) $attemptrecord->difficultysum,
+                    'standarderror' => (float) $attemptrecord->standarderror,
+                    'measure' => (float) $attemptrecord->measure,
                 ];
 
                 self::assertEquals($expectation, $stepsresult);
@@ -242,6 +244,7 @@ class calculation_steps_test extends advanced_testcase {
         // For a completed attempt, algorithm's parameters should be kept as the last fixture's value.
         $lastattemptstepfixtures = $calcstepsfixtures[count($calcstepsfixtures) - 1];
 
+        // Cast the float values to eliminate the data representation issues.
         $expectation = [
             'difficultysum' => $lastattemptstepfixtures['difficultysum'],
             'standarderror' => $lastattemptstepfixtures['standarderrorraw'],
@@ -249,9 +252,9 @@ class calculation_steps_test extends advanced_testcase {
         ];
 
         $laststepsresult = [
-            'difficultysum' => $attemptrecord->difficultysum,
-            'standarderror' => $attemptrecord->standarderror,
-            'measure' => $attemptrecord->measure,
+            'difficultysum' => (float) $attemptrecord->difficultysum,
+            'standarderror' => (float) $attemptrecord->standarderror,
+            'measure' => (float) $attemptrecord->measure,
         ];
 
         self::assertEquals($expectation, $laststepsresult);

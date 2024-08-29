@@ -14,24 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * A class to wrap all database queries which are specific to questions and their related data. Normally should contain
- * only static methods to call.
- *
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\repository;
 
-use coding_exception;
 use core_question\local\bank\question_version_status;
 use core_tag_tag;
-use dml_exception;
 use question_finder;
 use stdClass;
 
+/**
+ * A class to wrap all database queries which are specific to questions and their related data.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2022 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 final class questions_repository {
+
     /**
      * Counts all questions in the pool tagged as 'adaptive' with a certain difficulty level.
      *
@@ -61,11 +59,11 @@ final class questions_repository {
     }
 
     /**
+     * Gets a map of questions number per each difficulty level.
+     *
      * @param int[] $tagidlist
      * @param int[] $categoryidlist
      * @return questions_number_per_difficulty[]
-     * @throws coding_exception
-     * @throws dml_exception
      */
     public static function count_questions_number_per_difficulty(array $tagidlist, array $categoryidlist): array {
         global $DB;
@@ -84,7 +82,7 @@ final class questions_repository {
             JOIN {question} q ON q.id = ti.itemid
             JOIN {question_versions} qv ON qv.questionid = q.id
             JOIN (
-                SELECT questionbankentryid, MAX(version)
+                SELECT questionbankentryid, MAX(version) AS latestversion
                 FROM {question_versions}
                 WHERE status = ?
                 GROUP BY questionbankentryid
@@ -112,12 +110,12 @@ final class questions_repository {
     }
 
     /**
+     * Searches for questions by the given criteria.
+     *
      * @param int[] $tagidlist
      * @param int[] $categoryidlist
      * @param int[] $excludequestionidlist
      * @return stdClass[] A list of records from {question} table, the fields are id, name.
-     * @throws coding_exception
-     * @throws dml_exception
      */
     public static function find_questions_with_tags(
         array $tagidlist,

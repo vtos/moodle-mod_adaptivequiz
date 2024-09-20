@@ -60,7 +60,7 @@ class attempt_progress implements renderable, templatable {
      * @param string|null $helpiconcontent
      */
     public function __construct(int $questionsanswered, int $maximumquestions, bool $showprogressbar, ?string $helpiconcontent) {
-        $this->questionsanswered = $questionsanswered;
+        $this->questionsanswered = $questionsanswered + 1;
         $this->maximumquestions = $maximumquestions;
         $this->showprogressbar = $showprogressbar;
         $this->helpiconcontent = $helpiconcontent;

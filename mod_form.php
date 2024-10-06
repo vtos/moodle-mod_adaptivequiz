@@ -37,6 +37,8 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
     public function definition() {
         $mform = $this->_form;
 
+        $pluginconfig = get_config('adaptivequiz');
+
         // Adding the "general" fieldset, where all the common settings are showed.
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
@@ -100,6 +102,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addRule('startinglevel', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
         $mform->addRule('startinglevel', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
         $mform->setType('startinglevel', PARAM_INT);
+        $mform->setDefault('startinglevel', $pluginconfig->startinglevel);
 
         $mform->addElement('text', 'lowestlevel', get_string('lowestlevel', 'adaptivequiz'),
             ['size' => '3', 'maxlength' => '3']);
@@ -107,6 +110,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addRule('lowestlevel', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
         $mform->addRule('lowestlevel', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
         $mform->setType('lowestlevel', PARAM_INT);
+        $mform->setDefault('lowestlevel', $pluginconfig->lowestlevel);
 
         $mform->addElement('text', 'highestlevel', get_string('highestlevel', 'adaptivequiz'),
             ['size' => '3', 'maxlength' => '3']);
@@ -114,6 +118,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addRule('highestlevel', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
         $mform->addRule('highestlevel', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
         $mform->setType('highestlevel', PARAM_INT);
+        $mform->setDefault('highestlevel', $pluginconfig->highestlevel);
 
         $mform->addElement('textarea', 'attemptfeedback', get_string('attemptfeedback', 'adaptivequiz'),
             'wrap="virtual" rows="10" cols="50"');
@@ -138,6 +143,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addRule('minimumquestions', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
         $mform->addRule('minimumquestions', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
         $mform->setType('minimumquestions', PARAM_INT);
+        $mform->setDefault('minimumquestions', $pluginconfig->minimumquestions);
 
         $mform->addElement('text', 'maximumquestions', get_string('maximumquestions', 'adaptivequiz'),
             ['size' => '3', 'maxlength' => '3']);
@@ -145,6 +151,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addRule('maximumquestions', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
         $mform->addRule('maximumquestions', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
         $mform->setType('maximumquestions', PARAM_INT);
+        $mform->setDefault('maximumquestions', $pluginconfig->maximumquestions);
 
         $mform->addElement('text', 'standarderror', get_string('standarderror', 'adaptivequiz'),
             ['size' => '10', 'maxlength' => '10']);
@@ -153,6 +160,7 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addRule('standarderror', get_string('formelementdecimal', 'adaptivequiz'), 'numeric', null, 'client');
         $mform->setDefault('standarderror', 5.0);
         $mform->setType('standarderror', PARAM_FLOAT);
+        $mform->setDefault('standarderror', $pluginconfig->standarderror);
 
         // Grade settings.
         $this->standard_grading_coursemodule_elements();

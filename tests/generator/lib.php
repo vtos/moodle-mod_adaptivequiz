@@ -28,11 +28,12 @@ class mod_adaptivequiz_generator extends testing_module_generator {
      * Creates new module instance.
      *
      * For params description see the parent's method.
+     * IMPORTANT: do not throw any exceptions on missing data, as this method may be called by Moodle's core tests. Try to
+     * find a proper default value for each property.
      *
      * @param array|stdClass|null $record
      * @param array|null $options
      * @return stdClass
-     * @throws coding_exception
      */
     public function create_instance($record = null, array $options = null) {
         global $CFG;
@@ -42,8 +43,11 @@ class mod_adaptivequiz_generator extends testing_module_generator {
         $record = (object)(array)$record;
 
         if (!isset($record->questionpool) && !isset($record->questionpoolnamed)) {
-            throw new coding_exception('either \'questionpool\' or \'questionpoolnamed\' property must be specified when '.
-                'generating an adaptive quiz instance');
+            $context = context_course::instance($record->course);
+            $questioncat = question_get_top_category($context->id, $create = true);
+            $record->questionpool = [
+                $questioncat->id,
+            ];
         }
 
         // Named question pool takes precedence over the 'questionpool' setting.

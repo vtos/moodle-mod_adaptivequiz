@@ -101,14 +101,33 @@ function adaptivequiz_supports($feature) {
  * @return int The id of the newly inserted adaptivequiz record
  */
 function adaptivequiz_add_instance(stdClass $adaptivequiz, mod_adaptivequiz_mod_form $mform = null) {
-    global $DB;
+    global $CFG, $DB;
 
     $time = time();
     $adaptivequiz->timecreated = $time;
     $adaptivequiz->timemodified = $time;
-    $adaptivequiz->attemptfeedbackformat = 0;
+    $cmid = $adaptivequiz->coursemodule;
 
-    $instance = $DB->insert_record('adaptivequiz', $adaptivequiz);
+    $attemptfeedback = $adaptivequiz->attemptfeedbackeditor;
+    if ($mform) {
+        $adaptivequiz->attemptfeedback       = $attemptfeedback['text'];
+        $adaptivequiz->attemptfeedbackformat = $attemptfeedback['format'];
+    }
+
+    $adaptivequiz->id = $DB->insert_record('adaptivequiz', $adaptivequiz);
+    $instance = $adaptivequiz->id;
+
+    // we need to use context now, so we need to make sure all needed info is already in db
+    $DB->set_field('course_modules', 'instance', $instance, array('id'=>$cmid));
+    $context = context_module::instance($cmid);
+
+    if ($mform and !empty($attemptfeedback['itemid'])) {
+        $draftitemid = $attemptfeedback['itemid'];
+        $adaptivequiz->attemptfeedback = file_save_draft_area_files($draftitemid, $context->id, 'adaptivequiz', 'attemptfeedback', 0,
+        ['subdirs'=>1, 'maxbytes'=>$CFG->maxbytes, 'maxfiles'=>-1, 'changeformat'=>1, 'context'=>$context, 'noclean'=>1, 'trusttext'=>0],
+        $adaptivequiz->attemptfeedback);
+        $DB->update_record('adaptivequiz', $adaptivequiz);
+    }
 
     if (empty($instance) && is_int($instance)) {
         return $instance;
@@ -174,13 +193,33 @@ function adaptivequiz_update_questcat_association(int $instance, stdClass $adapt
  * @return boolean Success/Fail
  */
 function adaptivequiz_update_instance(stdClass $adaptivequiz, mod_adaptivequiz_mod_form $mform = null) {
-    global $DB;
+    global $CFG, $DB;
+
+    $cmid = $adaptivequiz->coursemodule;
 
     $adaptivequiz->timemodified = time();
     $adaptivequiz->id = $adaptivequiz->instance;
 
+    $attemptfeedback = $adaptivequiz->attemptfeedbackeditor;
+    $adaptivequiz->attemptfeedback       = $attemptfeedback['text'];
+    $adaptivequiz->attemptfeedbackformat = $attemptfeedback['format'];
+
     // Get the current value, so we can see what changed.
     $oldquiz = $DB->get_record('adaptivequiz', array('id' => $adaptivequiz->instance));
+
+    // When a custom CAT model is submitted, some settings should strictly acquire default values as they make sense only when
+    // using the default CAT algorithm.
+    if (!empty($adaptivequiz->catmodel)) {
+        $adaptivequiz->showabilitymeasure = 0;
+    }
+
+    $draftitemid = $attemptfeedback['itemid'];
+    $context = context_module::instance($cmid);
+    if ($draftitemid) {
+        $adaptivequiz->attemptfeedback = file_save_draft_area_files($draftitemid, $context->id, 'mod_adaptivequiz', 'attemptfeedback', 0,
+        ['subdirs'=>1, 'maxbytes'=>$CFG->maxbytes, 'maxfiles'=>-1, 'changeformat'=>1, 'context'=>$context, 'noclean'=>1, 'trusttext'=>0],
+        $adaptivequiz->attemptfeedback);
+    }
 
     $instanceid = $DB->update_record('adaptivequiz', $adaptivequiz);
 

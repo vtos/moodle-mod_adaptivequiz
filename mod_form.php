@@ -35,6 +35,8 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
      * Form definition.
      */
     public function definition() {
+        global $CFG;
+
         $mform = $this->_form;
 
         $pluginconfig = get_config('adaptivequiz');
@@ -120,10 +122,11 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->setType('highestlevel', PARAM_INT);
         $mform->setDefault('highestlevel', $pluginconfig->highestlevel);
 
-        $mform->addElement('textarea', 'attemptfeedback', get_string('attemptfeedback', 'adaptivequiz'),
-            'wrap="virtual" rows="10" cols="50"');
-        $mform->addHelpButton('attemptfeedback', 'attemptfeedback', 'adaptivequiz');
-        $mform->setType('attemptfeedback', PARAM_NOTAGS);
+        $context = $this->context;
+
+        $mform->addElement('editor', 'attemptfeedbackeditor', get_string('attemptfeedback', 'adaptivequiz'), null,
+            ['subdirs'=>1, 'maxbytes'=>$CFG->maxbytes, 'maxfiles'=>-1, 'changeformat'=>1, 'context'=>$context, 'noclean'=>1, 'trusttext'=>0]);
+        $mform->addHelpButton('attemptfeedbackeditor', 'attemptfeedback', 'adaptivequiz');
 
         $mform->addElement('select', 'showabilitymeasure', get_string('showabilitymeasure', 'adaptivequiz'),
             [get_string('no'), get_string('yes')]);
@@ -177,6 +180,29 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
 
         // Add standard buttons, common to all modules.
         $this->add_action_buttons();
+    }
+
+    /**
+     * Overriding of the parent's method, {@see moodleform_mod::data_preprocessing()}.
+     *
+     * @param array $defaultvalues
+     */
+    public function data_preprocessing(&$defaultvalues) {
+        global $CFG;
+        parent::data_preprocessing($defaultvalues);
+
+        if ($this->current->instance) {
+            $draftitemid = file_get_submitted_draft_itemid('adaptivequiz');
+            $attemptfeedback = $defaultvalues['attemptfeedback'];
+            $defaultvalues['attemptfeedbackeditor'] = [];
+            $defaultvalues['attemptfeedbackeditor']['format'] = $defaultvalues['attemptfeedbackformat'];
+            $defaultvalues['attemptfeedbackeditor']['text']   = file_prepare_draft_area($draftitemid, $this->context->id, 'mod_adaptivequiz',
+                    'attemptfeedback', 0,
+                    ['subdirs'=>1, 'maxbytes'=>$CFG->maxbytes, 'maxfiles'=>-1, 'changeformat'=>1, 'context'=>$this->context, 'noclean'=>1, 'trusttext'=>0],
+                    $attemptfeedback);
+            $defaultvalues['attemptfeedbackeditor']['itemid'] = $draftitemid;
+            $defaultvalues['attemptfeedbackeditor'] = $defaultvalues['attemptfeedbackeditor'];
+        }
     }
 
     public function add_completion_rules(): array {

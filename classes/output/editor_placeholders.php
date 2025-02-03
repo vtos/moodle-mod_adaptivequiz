@@ -16,60 +16,47 @@
 
 namespace mod_adaptivequiz\output;
 
-use help_icon;
-use mod_adaptivequiz\external\ability_measure_exporter;
+use mod_adaptivequiz\editor_placeholder_option;
+use mod_adaptivequiz\editor_placeholders as editor_placeholders_definition;
 use renderable;
 use renderer_base;
 use stdClass;
 use templatable;
 
 /**
- * A class to display a table with user's own attempts on the activity's view page.
+ * Output object to display a list of placeholders to be used in the editor form field.
  *
  * @package    mod_adaptivequiz
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @copyright  2025 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class ability_measure implements renderable, templatable {
+class editor_placeholders implements renderable, templatable {
 
     /**
-     * @var stdClass $adaptivequiz
+     * @var editor_placeholders_definition $definition Definition of the placeholders.
      */
-    private $adaptivequiz;
-
-    /**
-     * @var stdClass $attempt
-     */
-    private $attempt;
+    private editor_placeholders_definition $definition;
 
     /**
      * The constructor.
-     *
-     * @param stdClass $adaptivequiz
-     * @param stdClass $attempt
      */
-    public function __construct(stdClass $adaptivequiz, stdClass $attempt) {
-        $this->adaptivequiz = $adaptivequiz;
-        $this->attempt = $attempt;
+    public function __construct(editor_placeholders_definition $definition) {
+        $this->definition = $definition;
     }
 
     /**
      * Implements the interface.
      *
      * @param renderer_base $output
-     * @return \stdClass|array
+     * @return stdClass|array
      */
     public function export_for_template(renderer_base $output) {
-        $abilitymeasure = (array) (new ability_measure_exporter([
-            'highestlevel' => $this->adaptivequiz->highestlevel,
-            'lowestlevel' => $this->adaptivequiz->lowestlevel,
-        ], [
-            'attempt' => $this->attempt,
-        ]))
-            ->export($output);
-
-        return array_merge($abilitymeasure, [
-            'helpicon' => $output->render(new help_icon('abilityestimated', 'adaptivequiz')),
-        ]);
+        return [
+            'placeholders' => array_map(fn (editor_placeholder_option $option) => [
+                'placeholderid' => $option->id(),
+                'placeholderkey' => $option->key(),
+                'placeholderdesc' => $option->description(),
+            ], $this->definition->options()),
+        ];
     }
 }

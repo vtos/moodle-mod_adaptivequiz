@@ -17,6 +17,7 @@
 /**
  * Strings for the English language.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -39,9 +40,12 @@ $string['completionattemptcompletedform'] = 'Student must have al least one comp
 $string['eventattemptcompleted'] = 'Attempt completed';
 $string['modformshowattemptprogress'] = 'Show quiz progress to students';
 $string['modformshowattemptprogress_help'] = 'When selected, during attempt, a student will see a progress bar depicting how many questions are answered out of the maximum number.';
-$string['showabilitymeasure'] = 'Show ability measure to students';
-$string['showabilitymeasure_help'] = 'Sometimes it may be useful to reveal ability estimations to students after taking an adaptive quiz. With this setting enabled a student may see ability estimation in the attempts summary and right after finishing an attempt as well.';
+$string['placeholdercopied'] = 'Copied to clipboard';
+$string['showabilitymeasurefeedback'] = 'Show ability measure to students on the feedback page';
+$string['showabilitymeasurefeedback_help'] = 'With this setting enabled, a student may see the ability estimation as a standard widget on the attempt finished page. Please note, this does not interfere with displaying the measure value inside the custom feedback text when configured using placeholders.';
+$string['showabilitymeasuresummary'] = 'Show ability measure to students in their attempts overview';
 $string['questionspoolerrornovalidstartingquestions'] = 'The selected questions categories do not contain questions which are properly tagged to match the selected starting level of difficulty.';
+$string['showabilitymeasuresummary_help'] = 'With this setting enabled, a student may see the ability estimation in their attempts overview.';
 $string['reportanswersdistributionchartdisplaystacked'] = 'Display bars stacked';
 $string['reportanswersdistributionchartnumrightlabel'] = 'Number of correct answers';
 $string['reportanswersdistributionchartnumwronglabel'] = 'Number of wrong answers';
@@ -133,7 +137,11 @@ $string['standarderror'] = 'Standard Error to stop';
 $string['standarderror_help'] = 'When the amount of error in the measure of the user\'s ability drops below this amount, the quiz will stop. Tune this value from the default of 5% to require more or less precision in the ability measure';
 $string['formelementdecimal'] = 'Input a decimal number.  Maximum 10 digits long and maximum 5 digits to the right of the decimal point';
 $string['attemptfeedback'] = 'Attempt feedback';
-$string['attemptfeedback_help'] = 'The attempt feedback is displayed to the user once the attempt is finished';
+$string['attemptfeedback_help'] = 'The attempt feedback is displayed to the user once the attempt is finished.';
+$string['attemptfeedbackenable'] = 'Enable custom attempt feedback';
+$string['attemptfeedbackhdr'] = 'Attempt feedback';
+$string['attemptfeedbackplaceholdersdesc'] = 'Available placeholders';
+$string['attemptfeedbackplaceholdersdesc_help'] = 'Placeholders allow you to add a dynamic content, e.g. {{abilitymeasure}} placeholder will be replaced with the ability measure value in the feedback text displayed to user.';
 $string['formquestionpool'] = 'Select at least one question category';
 $string['submitanswer'] = 'Submit answer';
 $string['startattemptbtn'] = 'Start attempt';

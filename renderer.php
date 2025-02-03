@@ -29,6 +29,7 @@ use mod_adaptivequiz\form\requiredpassword;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgo;
 use mod_adaptivequiz\output\ability_measure;
+use mod_adaptivequiz\output\attempt_finished_page;
 use mod_adaptivequiz\output\attempt_progress;
 use mod_adaptivequiz\output\report\attempt_administration_report;
 use mod_adaptivequiz\output\report\attempt_answers_distribution_report;
@@ -173,44 +174,16 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * @throws coding_exception
+     * A wrapper method to render contents of the page displayed to the user when attempt is finished.
+     *
+     * The method accepts basic instances of data related to the activity and calls the rendering API.
+     *
+     * @param stdClass $adaptivequiz
+     * @param stdClass $cm
+     * @param stdClass $attempt
      */
-    public function attempt_feedback(string $attemptfeedback, int $cmid, ?ability_measure $abilitymeasure,
-        bool $popup = false): string {
-
-        $output = html_writer::start_div('text-center');
-
-        $url = new moodle_url('/mod/adaptivequiz/view.php');
-        $attr = ['action' => $url, 'method' => 'post', 'id' => 'attemptfeedback'];
-        $output .= html_writer::start_tag('form', $attr);
-
-        if (empty(trim($attemptfeedback))) {
-            $attemptfeedback = get_string('attemptfeedbackdefaulttext', 'adaptivequiz');
-        }
-        $output .= html_writer::tag('p', s($attemptfeedback), ['class' => 'submitbtns adaptivequizfeedback']);
-
-        if ($abilitymeasure) {
-            $output .= $this->render($abilitymeasure);
-        }
-
-        if (empty($popup)) {
-            $attr = ['type' => 'submit', 'name' => 'attemptfinished', 'value' => get_string('continue'),
-                'class' => 'btn btn-primary'];
-            $output .= html_writer::empty_tag('input', $attr);
-        } else {
-            // In a 'secure' popup window.
-            $this->page->requires->js_init_call('M.mod_adaptivequiz.secure_window.init_close_button', [$url],
-                $this->adaptivequiz_get_js_module());
-            $output .= html_writer::empty_tag('input', ['type' => 'button', 'value' => get_string('continue'),
-                'id' => 'secureclosebutton', 'class' => 'btn btn-primary']);
-        }
-
-        $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $cmid]);
-        $output .= html_writer::end_tag('form');
-
-        $output .= html_writer::end_div();
-
-        return $output;
+    public function attempt_finished_page(stdClass $adaptivequiz, stdClass $cm, stdClass $attempt): string {
+        return $this->render(attempt_finished_page::create($adaptivequiz, $cm, $attempt));
     }
 
     /**
@@ -799,6 +772,17 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
+     * Returns contents of the page displayed to the user when attempt is finished.
+     *
+     * To be potentially overridden by themes.
+     *
+     * @param attempt_finished_page $page
+     */
+    protected function render_attempt_finished_page(attempt_finished_page $page): string {
+        return $this->render_from_template('mod_adaptivequiz/attempt_finished_page', $page->export_for_template($this));
+    }
+
+    /**
      * This function returns HTML markup of questions and student's responses.
      * See {@link mod_adaptivequiz_renderer::attempt_report_page_by_tab} for partial parameters description.
      *
@@ -916,7 +900,15 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         return $output;
     }
 
+    /**
+     * Renders the user attempt summary.
+     *
+     * @param user_attempt_summary $summary
+     */
     protected function render_user_attempt_summary(user_attempt_summary $summary): string {
+        // For properties, see the definition of export_for_template()'s return structure.
+        $summaryexported = $summary->export_for_template($this);
+
         $table = new html_table();
         $table->attributes['class'] = 'generaltable attemptsummarytable';
 
@@ -925,7 +917,7 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $headercell = new html_table_cell(get_string('attempt_state', 'adaptivequiz'));
         $headercell->header = true;
 
-        $datacell = new html_table_cell(get_string('recent' . $summary->attemptstate, 'adaptivequiz'));
+        $datacell = new html_table_cell($summaryexported->attemptstate);
         $datacell->id = 'attemptstatecell';
 
         $row->cells = [$headercell, $datacell];
@@ -936,27 +928,22 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
         $headercell = new html_table_cell(get_string('attemptfinishedtimestamp', 'adaptivequiz'));
         $headercell->header = true;
 
-        $datacell = ($summary->attemptstate == attempt_state::COMPLETED)
-            ? userdate($summary->timefinished)
+        $datacell = ($summaryexported->attemptstateraw == attempt_state::COMPLETED)
+            ? userdate($summaryexported->attempttimefinished)
             : '-';
 
         $row->cells = [$headercell, $datacell];
         $table->data[] = $row;
 
-        if (!empty($summary->abilitymeasure)) {
+        if ($summaryexported->abilitymeasure) {
             $row = new html_table_row();
 
             $headercell = new html_table_cell(get_string('attemptquestion_ability', 'adaptivequiz') .
                 $this->help_icon('abilityestimated', 'adaptivequiz'));
             $headercell->header = true;
 
-            $formatmeasure = new stdClass();
-            $formatmeasure->measure = $summary->abilitymeasure;
-            $formatmeasure->lowestlevel = $summary->lowestquestiondifficulty;
-            $formatmeasure->highestlevel = $summary->highestquestiondifficulty;
-
-            $datacell = new html_table_cell(html_writer::tag('strong', $this->format_measure($formatmeasure))
-                . ' / ' . $summary->lowestquestiondifficulty . ' - ' . $summary->highestquestiondifficulty);
+            $datacell = new html_table_cell(html_writer::tag('strong', $summaryexported->abilitymeasure)
+                . ' / ' . $summaryexported->adaptivequizlowestlevel . ' - ' . $summaryexported->adaptivequizhighestlevel);
             $datacell->id = 'abilitymeasurecell';
 
             $row->cells = [$headercell, $datacell];

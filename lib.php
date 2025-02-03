@@ -89,24 +89,37 @@ function adaptivequiz_supports($feature) {
 }
 
 /**
- * Saves a new instance of the adaptivequiz into the database
+ * Saves a new instance of the adaptivequiz into the database.
  *
- * Given an object containing all the necessary data,
- * (defined by the form in mod_form.php) this function
- * will create a new instance and return the id number
- * of the new instance.
+ * Given an object containing all the necessary data (defined by the form in mod_form.php), this function will create
+ * a new instance and return the id number of the new instance.
  *
- * @param object $adaptivequiz: An object from the form in mod_form.php
- * @param mod_adaptivequiz_mod_form $mform: A formslib object
- * @return int The id of the newly inserted adaptivequiz record
+ * @param stdClass $adaptivequiz An object from the form in mod_form.php.
+ * @param mod_adaptivequiz_mod_form|null $mform
+ * @return int The id of the newly inserted adaptivequiz record.
  */
 function adaptivequiz_add_instance(stdClass $adaptivequiz, mod_adaptivequiz_mod_form $mform = null) {
     global $DB;
 
+    $context = context_module::instance($adaptivequiz->coursemodule);
+
     $time = time();
     $adaptivequiz->timecreated = $time;
     $adaptivequiz->timemodified = $time;
-    $adaptivequiz->attemptfeedbackformat = 0;
+
+    $attemptfeedbacktext = '';
+    $attemptfeedbackformat = FORMAT_MOODLE;
+    if ($adaptivequiz->attemptfeedbackenable) {
+        $attemptfeedbacktext = $adaptivequiz->attemptfeedbackeditor['text'];
+        if (isset($adaptivequiz->attemptfeedbackeditor['itemid'])) {
+            $attemptfeedbacktext = file_save_draft_area_files($adaptivequiz->attemptfeedbackeditor['itemid'], $context->id,
+                'mod_adaptivequiz', 'attemptfeedback', 0, ['subdirs' => true], $adaptivequiz->attemptfeedbackeditor['text']);
+        }
+
+        $attemptfeedbackformat = $adaptivequiz->attemptfeedbackeditor['format'];
+    }
+    $adaptivequiz->attemptfeedback = $attemptfeedbacktext;
+    $adaptivequiz->attemptfeedbackformat = $attemptfeedbackformat;
 
     $instance = $DB->insert_record('adaptivequiz', $adaptivequiz);
 
@@ -163,24 +176,36 @@ function adaptivequiz_update_questcat_association(int $instance, stdClass $adapt
 }
 
 /**
- * Updates an instance of the adaptivequiz in the database
+ * Updates an instance of the adaptivequiz in the database.
  *
- * Given an object containing all the necessary data,
- * (defined by the form in mod_form.php) this function
- * will update an existing instance with new data.
+ * Given an object containing all the necessary data (defined by the form in mod_form.php), this function will update
+ * an existing instance with new data.
  *
- * @param object $adaptivequiz: An object from the form in mod_form.php
- * @param mod_adaptivequiz_mod_form $mform: A formslib object
- * @return boolean Success/Fail
+ * @param stdClass $adaptivequiz An object from the form in mod_form.php.
+ * @param mod_adaptivequiz_mod_form|null $mform
+ * @return bool
  */
 function adaptivequiz_update_instance(stdClass $adaptivequiz, mod_adaptivequiz_mod_form $mform = null) {
     global $DB;
+
+    $context = context_module::instance($adaptivequiz->coursemodule);
 
     $adaptivequiz->timemodified = time();
     $adaptivequiz->id = $adaptivequiz->instance;
 
     // Get the current value, so we can see what changed.
-    $oldquiz = $DB->get_record('adaptivequiz', array('id' => $adaptivequiz->instance));
+    $oldquiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequiz->instance]);
+
+    if ($adaptivequiz->attemptfeedbackenable) {
+        $attemptfeedbacktext = $adaptivequiz->attemptfeedbackeditor['text'];
+        if (isset($adaptivequiz->attemptfeedbackeditor['itemid'])) {
+            $attemptfeedbacktext = file_save_draft_area_files($adaptivequiz->attemptfeedbackeditor['itemid'], $context->id,
+                'mod_adaptivequiz', 'attemptfeedback', 0, ['subdirs' => true], $adaptivequiz->attemptfeedbackeditor['text']);
+        }
+
+        $adaptivequiz->attemptfeedback = $attemptfeedbacktext;
+        $adaptivequiz->attemptfeedbackformat = $adaptivequiz->attemptfeedbackeditor['format'];
+    }
 
     $instanceid = $DB->update_record('adaptivequiz', $adaptivequiz);
 
@@ -687,6 +712,36 @@ function adaptivequiz_reset_gradebook($courseid) {
     foreach ($adaptivequizes as $adaptivequiz) {
         adaptivequiz_grade_item_update($adaptivequiz, 'reset');
     }
+}
+
+/**
+ * Serves the module's files.
+ *
+ * @param stdClass $course
+ * @param stdClass $cm
+ * @param stdClass $context
+ * @param string $filearea
+ * @param array $args Extra arguments.
+ * @param bool $forcedownload Whether force download.
+ * @param array $options Additional options affecting the file serving.
+ * @return bool|void
+ */
+function adaptivequiz_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options= []) {
+    require_login($course, false, $cm);
+
+    if ($filearea != 'attemptfeedback') {
+        return false;
+    }
+
+    $relativepath = implode('/', $args);
+    $fullpath = "/$context->id/mod_adaptivequiz/$filearea/$relativepath";
+
+    $fs = get_file_storage();
+    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        return false;
+    }
+
+    send_stored_file($file, 0, 0, true, $options);
 }
 
 /**

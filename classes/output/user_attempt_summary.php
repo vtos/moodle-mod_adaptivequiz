@@ -14,57 +14,70 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * A class to display a table with user's own attempts on the activity's view page.
- *
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\output;
 
+use mod_adaptivequiz\local\catalgo;
 use renderable;
+use renderer_base;
 use stdClass;
+use templatable;
 
-final class user_attempt_summary implements renderable {
-
-    /**
-     * @var string $attemptstate
-     */
-    public $attemptstate;
-    /**
-     * @var int $timefinished
-     */
-    public $timefinished;
-    /**
-     * @var float $abilitymeasure
-     */
-    public $abilitymeasure;
-    /**
-     * @var int $lowestquestiondifficulty
-     */
-    public $lowestquestiondifficulty;
-    /**
-     * @var int $highestquestiondifficulty
-     */
-    public $highestquestiondifficulty;
+/**
+ * Renders overview of a user's own single attempt on the view page.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2022 Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class user_attempt_summary implements renderable, templatable {
 
     /**
-     * @param stdClass $attempt A record from {adaptivequiz_attempt}. attemptstate, timemodified, measure are
-     * the expected fields.
-     * @param stdClass $adaptivequiz A record from {adaptivequiz}. lowestlevel, highestlevel, showabilitymeasure are
-     * the expected fields.
+     * @var stdClass $adaptivequiz
      */
-    public static function from_db_records(stdClass $attempt, stdClass $adaptivequiz): self {
-        $return = new self();
-        $return->attemptstate = !empty($attempt->attemptstate) ? $attempt->attemptstate : '';
-        $return->timefinished = !empty($attempt->timemodified) ? $attempt->timemodified : 0;
-        $return->abilitymeasure = !empty($attempt->measure) && $adaptivequiz->showabilitymeasure
-            ? $attempt->measure
-            : 0;
-        $return->lowestquestiondifficulty = !empty($adaptivequiz->lowestlevel) ? $adaptivequiz->lowestlevel : 0;
-        $return->highestquestiondifficulty = !empty($adaptivequiz->highestlevel) ? $adaptivequiz->highestlevel : 0;
+    private $adaptivequiz;
 
-        return $return;
+    /**
+     * @var stdClass $attempt
+     */
+    private $attempt;
+
+    /**
+     * The constructor.
+     *
+     * @param stdClass $adaptivequiz
+     * @param stdClass $attempt
+     */
+    public function __construct(stdClass $adaptivequiz, stdClass $attempt) {
+        $this->adaptivequiz = $adaptivequiz;
+        $this->attempt = $attempt;
+    }
+
+    /**
+     * Implements the interface.
+     *
+     * @param renderer_base $output
+     * @return stdClass|array
+     */
+    public function export_for_template(renderer_base $output) {
+        $return = [
+            'attemptstate' => get_string('recent' . $this->attempt->attemptstate, 'adaptivequiz'),
+            'attemptstateraw' => $this->attempt->attemptstate,
+            'attempttimefinished' => $this->attempt->timemodified,
+            'abilitymeasure' => null,
+            'adaptivequizhighestlevel' => null,
+            'adaptivequizlowestlevel' => null,
+        ];
+
+        if ($this->adaptivequiz->showabilitymeasuresummary) {
+            $return['abilitymeasure'] = !is_null($this->attempt->measure)
+                ? round(catalgo::map_logit_to_scale($this->attempt->measure, $this->adaptivequiz->highestlevel,
+                    $this->adaptivequiz->lowestlevel), 2)
+                : get_string('na', 'adaptivequiz');
+
+            $return['adaptivequizhighestlevel'] = $this->adaptivequiz->highestlevel;
+            $return['adaptivequizlowestlevel'] = $this->adaptivequiz->lowestlevel;
+        }
+
+        return (object) $return;
     }
 }

@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * PHPUnit tests for catalgo class.
- *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local;
 
 defined('MOODLE_INTERNAL') || die();
@@ -30,25 +22,22 @@ global $CFG;
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
-use coding_exception;
+use context_module;
 use question_usage_by_activity;
 use stdClass;
 
+
 /**
- * @group mod_adaptivequiz
+ * PHPUnit tests for catalgo class.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
  * @covers \mod_adaptivequiz\local\catalgo
  */
 class catalgo_test extends advanced_testcase {
-    /**
-     * This function loads data into the PHPUnit tables for testing
-     *
-     * @throws coding_exception
-     */
-    protected function setup_test_data_xml() {
-        $this->dataset_from_files(
-            [__DIR__.'/../fixtures/mod_adaptivequiz_catalgo.xml']
-        )->to_database();
-    }
 
     /**
      * This function tests instantiating the catalgo class without an instance of question_usage_by_activity.
@@ -85,42 +74,88 @@ class catalgo_test extends advanced_testcase {
     }
 
     /**
-     * This fuction tests the retrieval of an attempt record
+     * This function tests the retrieval of an attempt record.
      */
-    public function test_retrieve_attempt_record() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+    public function test_retrieve_attempt_record(): void {
+        $this->resetAfterTest();
 
-        $mockquba = $this->createMock('question_usage_by_activity', array(), array(), '', false);
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
 
-        $algo = new catalgo($mockquba, 1, true, 1);
+        $course = $this->getDataGenerator()->create_course();
 
-        $result = $algo->retrieve_attempt_record(1);
-        $expected = new stdClass();
-        $expected->id = 1;
-        $expected->questionsattempted = 0;
-        $expected->difficultysum = 99;
-        $expected->standarderror = 1.2;
-        $expected->lowestlevel = 1;
-        $expected->highestlevel = 100;
-        $expected->measure = 2.222;
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'questionpool' => [],
+        ]);
 
-        $this->assertEquals($expected, $result);
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+
+        $mockquba = $this->createMock('question_usage_by_activity');
+
+        // End of setup.
+
+        $attemptrecord = $attempt->get_attempt();
+
+        $algo = new catalgo($mockquba, $attemptrecord->id, true, 1);
+
+        $result = $algo->retrieve_attempt_record($attemptrecord->id);
+
+        // Cast the float values to eliminate the data representation issues.
+        $result->difficultysum = (float) $result->difficultysum;
+        $result->measure = (float) $result->measure;
+
+        $this->assertEquals((object) [
+            'id' => (string) $attemptrecord->id,
+            'highestlevel' => $adaptivequiz->highestlevel,
+            'lowestlevel' => $adaptivequiz->lowestlevel,
+            'difficultysum' => '0.0000000',
+            'questionsattempted' => '0',
+            'standarderror' => '999.00000',
+            'measure' => '0.00000',
+        ], $result);
     }
 
     /**
      * This function tests the retrieval of using illegible attempt id.
      */
-    public function test_retrieve_illegit_attempt_record_throw_except() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+    public function test_retrieve_illegit_attempt_record_throw_except(): void {
+        $this->resetAfterTest();
 
-        $mockquba = $this->createMock('question_usage_by_activity', array(), array(), '', false);
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
 
-        $algo = new catalgo($mockquba, 1, true, 1);
+        $course = $this->getDataGenerator()->create_course();
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'questionpool' => [],
+        ]);
+
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+
+        $mockquba = $this->createMock('question_usage_by_activity');
+
+        // End of setup.
+
+        $attemptrecord = $attempt->get_attempt();
+
+        $algo = new catalgo($mockquba, $attemptrecord->id, true, 1);
 
         $this->expectException('dml_missing_record_exception');
-        $result = $algo->retrieve_attempt_record(511);
+        $algo->retrieve_attempt_record($attemptrecord->id + 1);
     }
 
     /**
@@ -238,31 +273,74 @@ class catalgo_test extends advanced_testcase {
     /**
      * This function tests retrieve_standard_error(), retrieving the standard error value set for the activity.
      */
-    public function test_retrieve_standard_error() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+    public function test_retrieve_standard_error(): void {
+        $this->resetAfterTest();
 
-        $mockquba = $this->createMock(question_usage_by_activity::class);
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
 
-        $algo = new catalgo($mockquba, 1, true, 1);
+        $course = $this->getDataGenerator()->create_course();
 
-        $result = $algo->retrieve_standard_error(1);
-        $this->assertEquals(9.9, $result);
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'standarderror' => 15,
+            'questionpool' => [],
+        ]);
+
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+
+        $mockquba = $this->createMock('question_usage_by_activity');
+
+        // End of setup.
+
+        $attemptrecord = $attempt->get_attempt();
+
+        $algo = new catalgo($mockquba, $attemptrecord->id, true, 1);
+
+        $result = $algo->retrieve_standard_error($attemptrecord->id);
+        $this->assertEquals($adaptivequiz->standarderror, $result);
     }
 
     /**
      * This function tests retrieve_standard_error() with illegible attempt id.
      */
-    public function test_retrieve_standard_error_throw_excep() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+    public function test_retrieve_standard_error_throw_excep(): void {
+        $this->resetAfterTest();
+
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+
+        $course = $this->getDataGenerator()->create_course();
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'questionpool' => [],
+        ]);
+
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
 
         $mockquba = $this->createMock('question_usage_by_activity');
 
-        $algo = new catalgo($mockquba, 1, true, 1);
+        // End of setup.
+
+        $attemptrecord = $attempt->get_attempt();
+
+        $algo = new catalgo($mockquba, $attemptrecord->id, true, 1);
 
         $this->expectException('dml_missing_record_exception');
-        $result = $algo->retrieve_standard_error(511);
+        $algo->retrieve_standard_error($attemptrecord->id + 1);
     }
 
     /**

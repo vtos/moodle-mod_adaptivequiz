@@ -32,12 +32,12 @@ use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\filter_user_preferences;
-use mod_adaptivequiz\local\user_attempts_table;
 use mod_adaptivequiz\local\report\users_attempts\users_attempts_table;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_form;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences_repository;
 use mod_adaptivequiz\local\report\users_attempts\user_preferences\user_preferences;
 use mod_adaptivequiz\output\user_attempt_summary;
+use mod_adaptivequiz\output\user_attempts_overview;
 
 $id = optional_param('id', 0, PARAM_INT);
 $downloadusersattempts = optional_param('download', '', PARAM_ALPHA);
@@ -159,13 +159,13 @@ if (has_capability('mod/adaptivequiz:attempt', $context)) {
             $userattempt = $userattempts[array_key_first($userattempts)];
 
             echo $renderer->heading(get_string('attempt_summary', 'adaptivequiz'), 3, 'text-center');
-            echo $renderer->render(user_attempt_summary::from_db_records($userattempt, $adaptivequiz));
+            echo $renderer->render(new user_attempt_summary($adaptivequiz, $userattempt));
         }
     }
     if ($allattemptscount && $adaptivequiz->attempts != 1) {
         echo $renderer->heading(get_string('attemptsuserprevious', 'adaptivequiz'), 3);
 
-        $attemptstable = new user_attempts_table($renderer);
+        $attemptstable = new user_attempts_overview($renderer);
         $attemptstable->init($PAGE->url, $adaptivequiz, $USER->id);
         $attemptstable->out(10, false);
     }

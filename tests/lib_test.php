@@ -17,6 +17,7 @@
 /**
  * Adaptive lib.php PHPUnit tests
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -147,16 +148,23 @@ class lib_test extends advanced_testcase {
     public function test_adaptivequiz_delete_instance() {
         global $DB;
 
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+        $this->resetAfterTest();
 
-        $instance = 330;
-        adaptivequiz_delete_instance($instance);
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
 
-        $this->assertEquals(0, $DB->count_records('adaptivequiz', array('id' => $instance)));
-        $this->assertEquals(0, $DB->count_records('adaptivequiz_question', array('instance' => $instance)));
-        $this->assertEquals(0, $DB->count_records('adaptivequiz_attempt', array('instance' => $instance)));
-        $this->assertEquals(0, $DB->count_records('question_usages', array('id' => $instance)));
+        $course = $this->getDataGenerator()->create_course();
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'questionpool' => [],
+        ]);
+
+        adaptivequiz_delete_instance($adaptivequiz->id);
+
+        $this->assertEquals(0, $DB->count_records('adaptivequiz', ['id' => $adaptivequiz->id]));
+        $this->assertEquals(0, $DB->count_records('adaptivequiz_question', ['instance' => $adaptivequiz->id]));
+        $this->assertEquals(0, $DB->count_records('adaptivequiz_attempt', ['instance' => $adaptivequiz->id]));
+        $this->assertEquals(0, $DB->count_records('question_usages', ['id' => $adaptivequiz->id]));
     }
 
     /**

@@ -1,0 +1,48 @@
+
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_adaptivequiz/editor_placeholder
+
+    Renders a single placeholder's description for a text editor.
+
+    The template can be used for any text editor within the plugin.
+
+    Variables required for this template:
+    * placeholderid - string id of the placeholder
+    * placeholderkey - what will be replaced in the text editor's contents
+    * placeholderdesc - text description of the placeholder
+
+    Example context (json):
+    {
+        "placeholderid": "abilitimeasure",
+        "placeholderkey": "\{\{abilitimeasure\}\}",
+        "placeholderdesc": "Ability measure",
+    }
+}}
+<code><span id="copy-to-clipboard-{{placeholderid}}">{{{placeholderkey}}}</span></code> - {{{placeholderdesc}}}
+<a href="#"
+   data-action="copytoclipboard"
+   data-clipboard-target="#copy-to-clipboard-{{placeholderid}}"
+   data-clipboard-success-message="{{#str}} placeholdercopied, adaptivequiz {{/str}}"
+   title="{{#str}} copytoclipboard, core {{/str}}"
+>
+    {{#pix}} t/clipboard, core {{/pix}}
+</a>
+{{#js}}
+    require(['core/copy_to_clipboard']);
+{{/js}}

@@ -14,20 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace mod_adaptivequiz;
+
 /**
- * Plugin basic info.
+ * Defines an interface for placeholder options.
+ *
+ * The purpose is to define a single interface for placeholders to be used with any text editor within the plugin.
  *
  * @package    mod_adaptivequiz
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @copyright  2025 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+interface editor_placeholder_option {
 
-defined('MOODLE_INTERNAL') || die();
+    /**
+     * Returns an option's string value.
+     */
+    public function id(): string;
 
-$plugin->version = 2025092702;
-$plugin->release = '2.5.0dev';
-$plugin->maturity = MATURITY_BETA;
-$plugin->requires = 2024042200;
-$plugin->cron = 0;
-$plugin->component = 'mod_adaptivequiz';
+    /**
+     * Returns an option's string value enclosed in special symbols to identify it as a placeholder in a text.
+     */
+    public function key(): string;
+
+    /**
+     * Defines text for the given option to be used as an option's explanation on a page, in a form, etc.
+     */
+    public function description(): string;
+}

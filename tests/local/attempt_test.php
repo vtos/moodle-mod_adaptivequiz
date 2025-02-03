@@ -24,6 +24,7 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 use advanced_testcase;
 use context_module;
 use mod_adaptivequiz\local\attempt\attempt_state;
+use question_engine;
 use stdClass;
 
 /**
@@ -45,15 +46,6 @@ class attempt_test extends advanced_testcase {
 
     /** @var stdClass $user a user object */
     protected $user = null;
-
-    /**
-     * This function loads data into the PHPUnit tables for testing
-     */
-    protected function setup_test_data_xml() {
-        $this->dataset_from_files(
-            [__DIR__.'/../fixtures/mod_adaptivequiz_adaptiveattempt.xml']
-        )->to_database();
-    }
 
     /**
      * This function creates a default user and activity instance using generator classes
@@ -94,44 +86,79 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * This function tests retrieving an adaptivequiz attempt record
+     * This function tests retrieving an adaptivequiz attempt record.
      */
     public function test_get_attempt() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+        $this->resetAfterTest();
 
-        $dummy = new stdClass();
-        $dummy->id = 220;
-        $userid = 2;
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
 
-        $attempt = new attempt($dummy, $userid);
+        $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $questiongenerator->create_question_category([
+            'name' => 'My category',
+        ]);
+
+        $question = $questiongenerator->create_question('shortanswer', null, [
+            'category' => $questioncategory->id,
+        ]);
+
+        $startinglevel = 1;
+
+        $questiongenerator->create_question_tag([
+            'questionid' => $question->id,
+            'tag' => "adpq_$startinglevel",
+        ]);
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'startinglevel' => $startinglevel,
+            'lowestlevel' => 1,
+            'highestlevel' => 10,
+            'questionpool' => [
+                $questioncategory->id,
+            ],
+        ]);
+
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        // End of setup.
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+
+        $uniqueid = $attempt->get_quba()->get_id();
+
         $data = $attempt->get_attempt();
+        unset($data->id);
+        unset($data->timecreated);
+        unset($data->timemodified);
 
         // Cast the float values to eliminate the data representation issues.
         $data->difficultysum = (float) $data->difficultysum;
         $data->measure = (float) $data->measure;
 
-        $expected = new stdClass();
-        $expected->id = '1';
-        $expected->instance = '220';
-        $expected->userid = '2';
-        $expected->uniqueid = '1110';
-        $expected->attemptstate = attempt_state::IN_PROGRESS;
-        $expected->questionsattempted = '0';
-        $expected->attemptstopcriteria = '';
-        $expected->standarderror = '1.00000';
-        $expected->difficultysum = '0.0000000';
-        $expected->measure = '0.00000';
-        $expected->timemodified = '0';
-        $expected->timecreated = '0';
-
-        $this->assertEquals($expected, $data);
+        $this->assertEquals((object) [
+            'instance' => $adaptivequiz->id,
+            'userid' => $user->id,
+            'uniqueid' => (string) $uniqueid,
+            'attemptstate' => attempt_state::IN_PROGRESS,
+            'questionsattempted' => '0',
+            'attemptstopcriteria' => '',
+            'standarderror' => '999.00000',
+            'difficultysum' => '0.0000000',
+            'measure' => '0.00000',
+        ], $data);
     }
 
-    /*
-     * @test
-     */
-    public function it_fails_to_set_quba_for_an_attempt_with_an_invalid_argument(): void {
+    public function test_it_fails_to_set_quba_for_an_attempt_with_an_invalid_argument(): void {
         $this->resetAfterTest(true);
         $this->setup_generator_data();
 
@@ -167,67 +194,159 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * This function tests whether the user's attempt has exceeded the maximum number of questions attempted
+     * This function tests whether the user's attempt has exceeded the maximum number of questions attempted.
      */
-    public function test_max_questions_answered() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+    public function test_max_questions_answered(): void {
+        $this->resetAfterTest();
 
-        $dummy = new stdClass();
-        $dummy->id = 220;
-        $dummy->maximumquestions = 20;
-        $userid = 2;
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
 
-        $attempt = new attempt($dummy, $userid);
+        $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $questiongenerator->create_question_category([
+            'name' => 'My category',
+        ]);
+
+        $question = $questiongenerator->create_question('shortanswer', null, [
+            'category' => $questioncategory->id,
+        ]);
+
+        $startinglevel = 1;
+
+        $questiongenerator->create_question_tag([
+            'questionid' => $question->id,
+            'tag' => "adpq_$startinglevel",
+        ]);
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'startinglevel' => $startinglevel,
+            'lowestlevel' => 1,
+            'highestlevel' => 10,
+            'minimumquestions' => 1,
+            'maximumquestions' => 3,
+            'questionpool' => [
+                $questioncategory->id,
+            ],
+        ]);
+
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        // End of setup.
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+
+        $this->assertFalse($attempt->max_questions_answered());
+
+        $uniqueid = $attempt->get_quba()->get_id();
+
+        // These are not relevant for this test when updating an attempt.
+        $difflogit = 0;
+        $standarderror = 0;
+        $measure = 0;
+
+        adaptivequiz_update_attempt_data($uniqueid, $adaptivequiz->id, $user->id, $difflogit, $standarderror, $measure);
+
+        // This reloads the attempt.
         $attempt->get_attempt();
-        $this->assertEquals(false, $attempt->max_questions_answered());
 
-        $dummy->id = 221;
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(false, $attempt->max_questions_answered());
+        $this->assertFalse($attempt->max_questions_answered());
 
-        $dummy->id = 222;
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(true, $attempt->max_questions_answered());
+        adaptivequiz_update_attempt_data($uniqueid, $adaptivequiz->id, $user->id, $difflogit, $standarderror, $measure);
 
-        $dummy->id = 223;
-        $attempt = new attempt($dummy, $userid);
         $attempt->get_attempt();
-        $this->assertEquals(true, $attempt->max_questions_answered());
+        $this->assertFalse($attempt->max_questions_answered());
+
+        adaptivequiz_update_attempt_data($uniqueid, $adaptivequiz->id, $user->id, $difflogit, $standarderror, $measure);
+
+        $attempt->get_attempt();
+        $this->assertTrue($attempt->max_questions_answered());
     }
 
     /**
-     * This function tests whether the user's attempt has met the minimum number of questions attempted
+     * This function tests whether the user's attempt has met the minimum number of questions attempted.
      */
-    public function test_min_questions_answered() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+    public function test_min_questions_answered(): void {
+        $this->resetAfterTest();
 
-        $dummy = new stdClass();
-        $dummy->id = 220;
-        $dummy->minimumquestions = 21;
-        $userid = 2;
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
 
-        $attempt = new attempt($dummy, $userid);
+        $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $questiongenerator->create_question_category([
+            'name' => 'My category',
+        ]);
+
+        $question = $questiongenerator->create_question('shortanswer', null, [
+            'category' => $questioncategory->id,
+        ]);
+
+        $startinglevel = 1;
+
+        $questiongenerator->create_question_tag([
+            'questionid' => $question->id,
+            'tag' => "adpq_$startinglevel",
+        ]);
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'startinglevel' => $startinglevel,
+            'lowestlevel' => 1,
+            'highestlevel' => 10,
+            'minimumquestions' => 2,
+            'maximumquestions' => 10,
+            'questionpool' => [
+                $questioncategory->id,
+            ],
+        ]);
+
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        // End of setup.
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+
+        $this->assertFalse($attempt->min_questions_answered());
+
+        $uniqueid = $attempt->get_quba()->get_id();
+
+        // These are not relevant for this test when updating an attempt.
+        $difflogit = 0;
+        $standarderror = 0;
+        $measure = 0;
+
+        adaptivequiz_update_attempt_data($uniqueid, $adaptivequiz->id, $user->id, $difflogit, $standarderror, $measure);
+
+        // This reloads the attempt.
         $attempt->get_attempt();
-        $this->assertEquals(false, $attempt->min_questions_answered());
 
-        $dummy->id = 221;
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(false, $attempt->min_questions_answered());
+        $this->assertFalse($attempt->min_questions_answered());
 
-        $dummy->id = 222;
-        $attempt = new attempt($dummy, $userid);
-        $attempt->get_attempt();
-        $this->assertEquals(false, $attempt->min_questions_answered());
+        adaptivequiz_update_attempt_data($uniqueid, $adaptivequiz->id, $user->id, $difflogit, $standarderror, $measure);
 
-        $dummy->id = 223;
-        $attempt = new attempt($dummy, $userid);
         $attempt->get_attempt();
-        $this->assertEquals(true, $attempt->min_questions_answered());
+        $this->assertFalse($attempt->min_questions_answered());
+
+        adaptivequiz_update_attempt_data($uniqueid, $adaptivequiz->id, $user->id, $difflogit, $standarderror, $measure);
+
+        $attempt->get_attempt();
+        $this->assertTrue($attempt->min_questions_answered());
     }
 
     /**
@@ -271,51 +390,157 @@ class attempt_test extends advanced_testcase {
     /**
      * This function tests the re-using of the question_usage_by_activity object, due to an incomplete attempt
      */
-    public function test_initialize_quba_with_existing_attempt_uniqueid() {
-        global $DB;
+    public function test_initialize_quba_with_existing_attempt_uniqueid(): void {
+        $this->resetAfterTest();
 
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
 
-        $param = array('id' => 330);
-        $activityinstance = $DB->get_record('adaptivequiz', $param);
+        $course = $this->getDataGenerator()->create_course();
 
-        $adaptiveattempt = new attempt($activityinstance, 2);
+        $questioncategory = $questiongenerator->create_question_category([
+            'name' => 'My category',
+        ]);
+
+        $question = $questiongenerator->create_question('shortanswer', null, [
+            'category' => $questioncategory->id,
+        ]);
+
+        $startinglevel = 1;
+
+        $questiongenerator->create_question_tag([
+            'questionid' => $question->id,
+            'tag' => "adpq_$startinglevel",
+        ]);
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'startinglevel' => $startinglevel,
+            'lowestlevel' => 1,
+            'highestlevel' => 10,
+            'minimumquestions' => 2,
+            'maximumquestions' => 10,
+            'questionpool' => [
+                $questioncategory->id,
+            ],
+        ]);
+
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        // End of setup.
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+
+        $uniqueid = $attempt->get_quba()->get_id();
+
+        $adaptiveattempt = new attempt($adaptivequizforattempt, $user->id);
         $adaptiveattempt->get_attempt();
         $quba = $adaptiveattempt->initialize_quba();
 
         $this->assertInstanceOf('question_usage_by_activity', $quba);
-
-        // Check if the uniqueid of the adaptive attempt equals the id of the object loaded by quba class.
-        $this->assertEquals(330, $quba->get_id());
+        $this->assertEquals($uniqueid, $quba->get_id());
     }
 
     /**
-     * This function tests retrieving the last question viewed by the student for a given attempt
+     * This function tests retrieving the last question viewed by the student for a given attempt.
      */
-    public function test_find_last_quest_used_by_attempt() {
-        global $DB;
+    public function test_find_last_quest_used_by_attempt(): void {
+        $this->resetAfterTest();
 
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
 
-        $param = array('id' => 330);
-        $activityinstance = $DB->get_record('adaptivequiz', $param);
+        $course = $this->getDataGenerator()->create_course();
 
-        $adaptiveattempt = new attempt($activityinstance, 2);
-        $adaptiveattempt->get_attempt();
-        $quba = $adaptiveattempt->initialize_quba();
+        $questioncategory = $questiongenerator->create_question_category([
+            'name' => 'My category',
+        ]);
 
-        $result = $adaptiveattempt->find_last_quest_used_by_attempt($quba);
+        $question1 = $questiongenerator->create_question('shortanswer', null, [
+            'category' => $questioncategory->id,
+        ]);
 
-        $this->assertEquals(2, $result);
+        $question2 = $questiongenerator->create_question('shortanswer', null, [
+            'category' => $questioncategory->id,
+        ]);
+
+        $startinglevel = 1;
+
+        $questiongenerator->create_question_tag([
+            'questionid' => $question1->id,
+            'tag' => "adpq_$startinglevel",
+        ]);
+
+        $questiongenerator->create_question_tag([
+            'questionid' => $question2->id,
+            'tag' => "adpq_$startinglevel",
+        ]);
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'startinglevel' => $startinglevel,
+            'lowestlevel' => 1,
+            'highestlevel' => 10,
+            'minimumquestions' => 2,
+            'maximumquestions' => 10,
+            'questionpool' => [
+                $questioncategory->id,
+            ],
+        ]);
+
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        // End of setup.
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+        $attempt->get_attempt();
+        $quba = $attempt->initialize_quba();
+        $slot = $attempt->find_last_quest_used_by_attempt($quba);
+
+        self::assertEquals(1, $slot);
+
+        // 'Answer' the question as the user.
+
+        $time = time();
+        $quba->process_all_actions($time, $quba->prepare_simulated_post_data([
+            $slot => ['answer' => true],
+        ]));
+        $quba->finish_all_questions($time);
+        question_engine::save_questions_usage_by_activity($quba);
+
+        // These are not relevant for this test when updating an attempt.
+        $difflogit = 0;
+        $standarderror = 0;
+        $measure = 0;
+
+        adaptivequiz_update_attempt_data($quba->get_id(), $adaptivequiz->id, $user->id, $difflogit, $standarderror, $measure);
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+        $attempt->get_attempt();
+        $quba = $attempt->initialize_quba();
+        $slot = $attempt->find_last_quest_used_by_attempt($quba);
+
+        self::assertEquals(2, $slot);
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_to_find_the_last_question_used_by_attempt_with_an_invalid_argument() {
-        $this->resetAfterTest(true);
+    public function test_it_fails_to_find_the_last_question_used_by_attempt_with_an_invalid_argument(): void {
+        $this->resetAfterTest();
 
         $dummy = new stdClass();
 
@@ -651,40 +876,147 @@ class attempt_test extends advanced_testcase {
     }
 
     /**
-     * This function tests retrieving of question ids
+     * This function tests retrieving of question ids.
      */
-    public function test_get_all_questions_in_attempt() {
-        $this->resetAfterTest(true);
-        $this->setup_test_data_xml();
+    public function test_get_all_questions_in_attempt(): void {
+        $this->resetAfterTest();
 
-        $dummy = new stdClass();
-        $userid = 1;
-        $adaptiveattempt = new attempt($dummy, $userid);
-        $questids = $adaptiveattempt->get_all_questions_in_attempt(330);
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
 
-        $this->assertEquals(2, count($questids));
-        $this->assertEquals(array('1' => 1, '2' => 2), $questids);
+        $course = $this->getDataGenerator()->create_course();
+
+        $questioncategory = $questiongenerator->create_question_category([
+            'name' => 'My category',
+        ]);
+
+        $question1 = $questiongenerator->create_question('shortanswer', null, [
+            'category' => $questioncategory->id,
+        ]);
+
+        $question2 = $questiongenerator->create_question('shortanswer', null, [
+            'category' => $questioncategory->id,
+        ]);
+
+        $startinglevel = 1;
+
+        $questiongenerator->create_question_tag([
+            'questionid' => $question1->id,
+            'tag' => "adpq_$startinglevel",
+        ]);
+
+        $questiongenerator->create_question_tag([
+            'questionid' => $question2->id,
+            'tag' => "adpq_$startinglevel",
+        ]);
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'startinglevel' => $startinglevel,
+            'lowestlevel' => 1,
+            'highestlevel' => 10,
+            'minimumquestions' => 2,
+            'maximumquestions' => 10,
+            'questionpool' => [
+                $questioncategory->id,
+            ],
+        ]);
+
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        // End of setup.
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+        $attempt->get_attempt();
+        $quba = $attempt->initialize_quba();
+        $slot = $attempt->find_last_quest_used_by_attempt($quba);
+
+        // 'Answer' the question as the user.
+
+        $time = time();
+        $quba->process_all_actions($time, $quba->prepare_simulated_post_data([
+            $slot => ['answer' => true],
+        ]));
+        $quba->finish_all_questions($time);
+        question_engine::save_questions_usage_by_activity($quba);
+
+        // These are not relevant for this test when updating an attempt.
+        $difflogit = 0;
+        $standarderror = 0;
+        $measure = 0;
+
+        adaptivequiz_update_attempt_data($quba->get_id(), $adaptivequiz->id, $user->id, $difflogit, $standarderror, $measure);
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+
+        $questionidlist = $attempt->get_all_questions_in_attempt($quba->get_id());
+
+        $this->assertEquals(2, count($questionidlist));
+        $this->assertEqualsCanonicalizing([
+            (string) $question1->id,
+            (string) $question2->id,
+        ], array_values($questionidlist));
     }
 
-    /**
-     * @test
-     */
-    public function it_can_check_if_a_user_has_a_completed_attempt_on_a_quiz(): void {
-        global $DB;
-
+    public function test_it_can_check_if_a_user_has_a_completed_attempt_on_a_quiz(): void {
         $this->resetAfterTest();
-        $this->setup_test_data_xml();
 
-        $uniqueid = 330;
-        $adaptivequizid = 330;
-        $cmid = 5;
-        $userid = 2;
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
 
-        $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid]);
-        $context = context_module::instance($cmid);
+        $course = $this->getDataGenerator()->create_course();
 
-        adaptivequiz_complete_attempt($uniqueid, $adaptivequiz, $context, $userid, '', '');
+        $questioncategory = $questiongenerator->create_question_category([
+            'name' => 'My category',
+        ]);
 
-        $this->assertTrue(attempt::user_has_completed_on_quiz($adaptivequizid, $userid));
+        $question = $questiongenerator->create_question('shortanswer', null, [
+            'category' => $questioncategory->id,
+        ]);
+
+        $startinglevel = 1;
+
+        $questiongenerator->create_question_tag([
+            'questionid' => $question->id,
+            'tag' => "adpq_$startinglevel",
+        ]);
+
+        $adaptivequiz = $modgenerator->create_instance([
+            'course' => $course->id,
+            'startinglevel' => $startinglevel,
+            'lowestlevel' => 1,
+            'highestlevel' => 10,
+            'questionpool' => [
+                $questioncategory->id,
+            ],
+        ]);
+
+        $context = context_module::instance($adaptivequiz->cmid);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $user = $this->getDataGenerator()->create_user();
+
+        // End of setup.
+
+        $attempt = new attempt($adaptivequizforattempt, $user->id);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+
+        $uniqueid = $attempt->get_quba()->get_id();
+        adaptivequiz_complete_attempt(uniqueid: $uniqueid, adaptivequiz: $adaptivequiz, context: $context, userid: $user->id,
+            standarderror: '', statusmessage: '');
+
+        $this->assertTrue(attempt::user_has_completed_on_quiz($adaptivequiz->id, $user->id));
     }
 }

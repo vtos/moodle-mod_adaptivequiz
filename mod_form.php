@@ -17,6 +17,7 @@
 /**
  * Definition of activity settings form.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,14 +28,21 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/course/moodleform_mod.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
+use mod_adaptivequiz\attempt_feedback_placeholders_helper;
 use mod_adaptivequiz\local\repository\questions_repository;
+use mod_adaptivequiz\output\editor_placeholders;
 
 /**
  * Module instance settings form
  */
 class mod_adaptivequiz_mod_form extends moodleform_mod {
 
+    /**
+     * Form definition.
+     */
     public function definition() {
+        global $OUTPUT;
+
         $mform = $this->_form;
 
         // Adding the "general" fieldset, where all the common settings are showed.
@@ -115,20 +123,45 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addRule('highestlevel', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
         $mform->setType('highestlevel', PARAM_INT);
 
-        $mform->addElement('textarea', 'attemptfeedback', get_string('attemptfeedback', 'adaptivequiz'),
-            'wrap="virtual" rows="10" cols="50"');
-        $mform->addHelpButton('attemptfeedback', 'attemptfeedback', 'adaptivequiz');
-        $mform->setType('attemptfeedback', PARAM_NOTAGS);
-
-        $mform->addElement('select', 'showabilitymeasure', get_string('showabilitymeasure', 'adaptivequiz'),
-            [get_string('no'), get_string('yes')]);
-        $mform->addHelpButton('showabilitymeasure', 'showabilitymeasure', 'adaptivequiz');
-        $mform->setDefault('showabilitymeasure', 0);
-
         $mform->addElement('select', 'showattemptprogress', get_string('modformshowattemptprogress', 'adaptivequiz'),
             [get_string('no'), get_string('yes')]);
         $mform->addHelpButton('showattemptprogress', 'modformshowattemptprogress', 'adaptivequiz');
         $mform->setDefault('showattemptprogress', 0);
+
+        $mform->addElement('select', 'showabilitymeasuresummary', get_string('showabilitymeasuresummary', 'adaptivequiz'),
+            [get_string('no'), get_string('yes')]);
+        $mform->addHelpButton('showabilitymeasuresummary', 'showabilitymeasuresummary', 'adaptivequiz');
+        $mform->setDefault('showabilitymeasuresummary', 0);
+
+        $mform->addElement('header', 'attemptfeedbackhdr', get_string('attemptfeedbackhdr', 'adaptivequiz'));
+
+        $isnewinstance = !$this->current->instance;
+        if (!$isnewinstance) {
+            $customfeedbackenabled = $this->current->attemptfeedbackenable;
+            if ($customfeedbackenabled == 1 || $customfeedbackenabled == -1) {
+                $mform->setExpanded('attemptfeedbackhdr');
+            }
+        }
+
+        $mform->addElement('advcheckbox', 'attemptfeedbackenable', get_string('attemptfeedbackenable', 'adaptivequiz'));
+
+        $mform->addElement('editor', 'attemptfeedbackeditor', get_string('attemptfeedback', 'adaptivequiz'),
+            ['rows' => 10],
+            ['maxfiles' => EDITOR_UNLIMITED_FILES, 'noclean' => true, 'context' => $this->context, 'subdirs' => true]);
+        $mform->setType('attemptfeedbackeditor', PARAM_RAW);
+        $mform->addHelpButton('attemptfeedbackeditor', 'attemptfeedback', 'adaptivequiz');
+        $mform->disabledIf('attemptfeedbackeditor', 'attemptfeedbackenable', 'notchecked');
+
+        $feedbackplaceholders = new editor_placeholders(attempt_feedback_placeholders_helper::configured()->placeholder_options());
+        $feedbackplaceholderscontent = $OUTPUT->render_from_template('mod_adaptivequiz/editor_placeholders_desc',
+            $feedbackplaceholders->export_for_template($OUTPUT));
+        $mform->addElement('static', 'attemptfeedbackplaceholdersdesc', '', $feedbackplaceholderscontent);
+        $mform->addHelpButton('attemptfeedbackplaceholdersdesc', 'attemptfeedbackplaceholdersdesc', 'adaptivequiz');
+
+        $mform->addElement('select', 'showabilitymeasurefeedback', get_string('showabilitymeasurefeedback', 'adaptivequiz'),
+            [get_string('no'), get_string('yes')]);
+        $mform->addHelpButton('showabilitymeasurefeedback', 'showabilitymeasurefeedback', 'adaptivequiz');
+        $mform->setDefault('showabilitymeasurefeedback', 0);
 
         $mform->addElement('header', 'stopingconditionshdr', get_string('stopingconditionshdr', 'adaptivequiz'));
 
@@ -172,6 +205,9 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $this->add_action_buttons();
     }
 
+    /**
+     * Custom completion rules support.
+     */
     public function add_completion_rules(): array {
         $form = $this->_form;
         $form->addElement('checkbox', 'completionattemptcompleted', ' ',
@@ -180,6 +216,9 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         return ['completionattemptcompleted'];
     }
 
+    /**
+     * Custom completion rules support.
+     */
     public function completion_rule_enabled($data): bool {
         if (!isset($data['completionattemptcompleted'])) {
             return false;
@@ -250,6 +289,55 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
     }
 
     /**
+     * Overrides the parent's method.
+     *
+     * @param array $defaultvalues Passed by reference, the parameter's original name is changed to meet the code style.
+     */
+    public function data_preprocessing(&$defaultvalues) {
+        parent::data_preprocessing($defaultvalues);
+
+        $isnewinstance = !$this->current->instance;
+        if ($isnewinstance) {
+            return;
+        }
+
+        // Whether the instance is in 'transition state' to start using the editor-powered custom feedback.
+        $newcustomfeedbackpending = $this->current->attemptfeedbackenable == -1;
+        if ($newcustomfeedbackpending) {
+            $legacycustomfeedbackenabled = !empty($this->current->attemptfeedback);
+            if ($legacycustomfeedbackenabled) {
+                $defaultvalues['attemptfeedbackenable'] = 1;
+                $defaultvalues['attemptfeedbackeditor'] = [
+                    'text' => $defaultvalues['attemptfeedback'],
+                    'format' => FORMAT_HTML,
+                ];
+
+                return;
+            }
+
+            $defaultvalues['attemptfeedbackenable'] = 0;
+            $defaultvalues['attemptfeedbackeditor'] = [
+                'text' => '',
+                'format' => FORMAT_HTML,
+            ];
+
+            return;
+        }
+
+        $feedbackdraftitemid = file_get_submitted_draft_itemid('attemptfeedback');
+        if (!empty($defaultvalues['attemptfeedback'])) {
+            $defaultvalues['attemptfeedbackeditor'] = [
+                'text' => file_prepare_draft_area($feedbackdraftitemid, $this->context->id, 'mod_adaptivequiz', 'attemptfeedback',
+                    0, ['subdirs' => 0], $defaultvalues['attemptfeedback']),
+                'itemid' => $feedbackdraftitemid,
+                'format' => $defaultvalues['attemptfeedbackformat'],
+            ];
+        }
+    }
+
+    /**
+     * Wraps validation of the questions pool.
+     *
      * @param int[] $qcategoryidlist A list of id of selected questions categories.
      * @return string An error message if any.
      * @throws coding_exception

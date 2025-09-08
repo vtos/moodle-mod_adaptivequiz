@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * @copyright  2013 Middlebury College {@link http://www.middlebury.edu/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\output\questionanalysis;
 
 use html_table;
@@ -31,14 +25,21 @@ use question_display_options;
 use question_engine;
 use stdClass;
 
+/**
+ * A dedicated renderer for question analysis.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Middlebury College {@link http://www.middlebury.edu/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class renderer extends plugin_renderer_base {
-    /** @var string $sortdir the sorting direction being used */
-    protected $sortdir = '';
-    /** @var moodle_url $sorturl the current base url used for keeping the table sorted */
-    protected $sorturl = '';
+
     /** @var int $groupid variable used to reference the groupid that is currently being used to filter by */
     public $groupid = 0;
+
     /** @var array options that should be used for opening the secure popup. */
+
     protected static $popupoptions = array(
         'left' => 0,
         'top' => 0,
@@ -89,36 +90,37 @@ class renderer extends plugin_renderer_base {
     }
 
     /**
-     * This function creates the table header links that will be used to allow instructor to sort the data
-     * @param stdClass $cm a course module object set to the instance of the activity
-     * @param string $sort the column the the table is to be sorted by
-     * @param string $sortdir the direction of the sort
-     * @return array an array of column headers (firstname / lastname, number of attempts, standard error)
+     * This function creates the table header links that will be used to allow instructor to sort the data.
+     *
+     * @param array $headers
+     * @param stdClass $cm a course module object set to the instance of the activity.
+     * @param $baseurl
+     * @param string $sort the column the the table is to be sorted by.
+     * @param string $sortdir the direction of the sort.
+     * @return array An array of column headers (firstname / lastname, number of attempts, standard error).
      */
     public function format_report_table_headers($headers, $cm, $baseurl, $sort, $sortdir) {
         /* Create header links */
-        $contents = array();
+        $contents = [];
         foreach ($headers as $key => $name) {
             if ($sort == $key) {
                 $seperator = ' ';
                 if ($sortdir == 'DESC') {
-                    $sortdir = 'ASC';
-                    $imageparam = array('src' => $this->image_url('t/up'), 'alt' => '');
-                    $icon = html_writer::empty_tag('img', $imageparam);
+                    $icon = $this->pix_icon('t/sort_asc', get_string('asc'));
+                    $newsortdir = 'ASC';
                 } else {
-                    $sortdir = 'DESC';
-                    $imageparam = array('src' => $this->image_url('t/down'), 'alt' => '');
-                    $icon = html_writer::empty_tag('img', $imageparam);
+                    $icon = $this->pix_icon('t/sort_desc', get_string('desc'));
+                    $newsortdir = 'DESC';
                 }
             } else {
-                $sortdir = 'ASC';
+                $newsortdir = 'ASC';
                 $seperator = '';
                 $icon = '';
             }
 
-            $url = new moodle_url($baseurl, array('cmid' => $cm->id, 'sort' => $key, 'sortdir' => $sortdir));
+            $url = new moodle_url($baseurl, ['cmid' => $cm->id, 'sort' => $key, 'sortdir' => $newsortdir]);
 
-            $contents[] = html_writer::link($url, $name.$seperator.$icon);
+            $contents[] = html_writer::link($url, $name) . $seperator . $icon;
         }
         return $contents;
     }

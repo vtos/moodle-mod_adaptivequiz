@@ -84,16 +84,16 @@ final class questions_repository {
             JOIN {question} q ON q.id = ti.itemid
             JOIN {question_versions} qv ON qv.questionid = q.id
             JOIN (
-                SELECT questionbankentryid, MAX(version)
+                SELECT questionbankentryid, MAX(version) latestversion
                 FROM {question_versions}
                 WHERE status = ?
                 GROUP BY questionbankentryid
-            ) questionlatestversion ON questionlatestversion.questionbankentryid = qv.questionbankentryid
-            JOIN {question_bank_entries} qbe ON qbe.id = questionlatestversion.questionbankentryid
+            ) queslatver ON queslatver.questionbankentryid = qv.questionbankentryid AND qv.version = queslatver.latestversion
+            JOIN {question_bank_entries} qbe ON qbe.id = queslatver.questionbankentryid
             WHERE ti.itemtype = ?
             AND ti.tagid {$tagidlistsql}
             AND qbe.questioncategoryid {$categoryidlistsql}
-            GROUP BY t.name";
+            GROUP BY t.name;
 
         $params = array_merge([question_version_status::QUESTION_STATUS_READY, 'question'], $tagidlistparam,
             $categoryidlistparam);

@@ -93,7 +93,7 @@ final class questions_repository {
             WHERE ti.itemtype = ?
             AND ti.tagid {$tagidlistsql}
             AND qbe.questioncategoryid {$categoryidlistsql}
-            GROUP BY t.name;
+            GROUP BY t.name";
 
         $params = array_merge([question_version_status::QUESTION_STATUS_READY, 'question'], $tagidlistparam,
             $categoryidlistparam);

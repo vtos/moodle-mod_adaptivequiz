@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use mod_adaptivequiz\attempt as read_attempt;
+use mod_adaptivequiz\local\attempt as attempt_entity;
+
 /**
  * Generator for the module.
  *
@@ -85,6 +88,77 @@ class mod_adaptivequiz_generator extends testing_module_generator {
         }
 
         return parent::create_instance($record, $options);
+    }
+
+    /**
+     * Generates a 'fresh' attempt for user.
+     *
+     * Note, that this runs the entire logic of starting an attempt, etc. This means it's assumed that the adaptive quiz instance
+     * is set up with a proper questions pool containing a minimal number of actual questions, etc.
+     *
+     * @param int $userid
+     * @param int $adaptivequizid
+     * @param context_module $context
+     */
+    public function create_in_progress_attempt(int $userid, int $adaptivequizid, context_module $context): read_attempt {
+        global $DB;
+
+        $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid], '*', MUST_EXIST);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $attempt = new attempt_entity($adaptivequizforattempt, $userid);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+
+        $uniqueid = $attempt->get_quba()->get_id();
+
+        return read_attempt::get_record(['uniqueid' => $uniqueid], MUST_EXIST);
+    }
+
+    /**
+     * Generates a completed attempt for user.
+     *
+     * The note from {@see self::create_in_progress_attempt()} is applicable here as well.
+     *
+     * @param int $userid
+     * @param int $adaptivequizid
+     * @param context_module $context
+     * @param array $attemptdata Raw values for the following fields can be passed: 'standarderror', 'measure'.
+     * @param string $stoppagereason
+     */
+    public function create_completed_attempt(
+        int $userid,
+        int $adaptivequizid,
+        context_module $context,
+        array $attemptdata,
+        string $stoppagereason
+    ): read_attempt {
+        global $DB;
+
+        $adaptivequiz = $DB->get_record('adaptivequiz', ['id' => $adaptivequizid], '*', MUST_EXIST);
+
+        $adaptivequizforattempt = clone($adaptivequiz);
+        $adaptivequizforattempt->context = $context;
+
+        $attempt = new attempt_entity($adaptivequizforattempt, $userid);
+        $attempt->set_level($adaptivequiz->startinglevel);
+        $attempt->start_attempt();
+
+        $uniqueid = $attempt->get_quba()->get_id();
+
+        $standarderror = array_key_exists('standarderror', $attemptdata) ? $attemptdata['standarderror'] : 0.0;
+
+        if (array_key_exists('measure', $attemptdata)) {
+            adaptivequiz_update_attempt_data($uniqueid, $adaptivequizid, $userid, $difflogit = 0, $standarderror,
+                $attemptdata['measure']);
+        }
+
+        adaptivequiz_complete_attempt(uniqueid: $uniqueid, adaptivequiz: $adaptivequiz, context: $context, userid: $userid,
+            standarderror: $standarderror, statusmessage: $stoppagereason);
+
+        return read_attempt::get_record(['uniqueid' => $uniqueid], MUST_EXIST);
     }
 
     /**

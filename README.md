@@ -22,7 +22,7 @@ This Moodle activity module was originally created as a collaborative effort bet
 College][3] and [Remote Learner][4]. The current repository was forked from
 [https://github.com/middlebury/moodle-mod_adaptivequiz][5].
 
-The current branch of the repository is compatible with Moodle versions from 4.1 to 4.3.
+The current branch of the repository is compatible with Moodle 4.4 and 4.5.
 
 [3]: http://www.middlebury.edu/
 [4]: http://remote-learner.net/

@@ -18,21 +18,20 @@ namespace mod_adaptivequiz;
 
 use advanced_testcase;
 use coding_exception;
-use context_course;
 use context_module;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz_generator;
+use PHPUnit\Framework\Attributes\CoversClass;
 use stdClass;
 
 /**
  * A test class.
  *
- * @covers \mod_adaptivequiz\attempt
- *
  * @package    mod_adaptivequiz
  * @copyright  2025 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[CoversClass(\mod_adaptivequiz\attempt::class)]
 final class attempt_test extends advanced_testcase {
 
     public function test_it_does_not_allow_to_create_attempts_in_database(): void {
@@ -140,45 +139,47 @@ final class attempt_test extends advanced_testcase {
     }
 
     /**
-     * Wraps creation of an adaptive quiz instance with the question pool configured.
+     * Wraps creation of an adaptive quiz instance with the item bank configured.
      *
-     * Note, this is intended for a single call within a test - it'll create a new course and a new questions category with each
+     * Note, this is intended for a single call within a test - it'll create a new course, qbank mod, etc. with each
      * call.
      *
      * @return stdClass What mod generator's create_instance() returns.
      */
     private function create_adaptive_quiz(): stdClass {
-        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $coregenerator = $this->getDataGenerator();
+        /** @var \mod_adaptivequiz_generator $adaptivequizgenerator */
+        $modgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        /** @var  \core_question_generator $questionsgenerator */
+        $questiongenerator = $coregenerator->get_plugin_generator('core_question');
+        /** @var \mod_qbank_generator $qbankgenerator */
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
 
-        $course = $this->getDataGenerator()->create_course();
+        $course = $coregenerator->create_course();
 
-        $coursecontext = context_course::instance($course->id);
+        $qbank = $qbankgenerator->create_instance(['course' => $course->id]);
+        $qbankcm = get_coursemodule_from_instance('qbank', $qbank->id, 0, false, MUST_EXIST);
+        $qbankcontext = context_module::instance($qbankcm->id);
+        $qcat = question_get_default_category($qbankcontext->id);
 
-        $questioncategory = $questiongenerator->create_question_category([
-            'contextid' => $coursecontext->id,
-            'name' => 'My category',
-        ]);
-
-        $question = $questiongenerator->create_question('shortanswer', null, [
-            'category' => $questioncategory->id,
-        ]);
+        $question = $questiongenerator->create_question('truefalse', null, ['category' => $qcat->id]);
 
         $startinglevel = 1;
 
-        $questiongenerator->create_question_tag([
-            'questionid' => $question->id,
-            'tag' => "adpq_$startinglevel",
-        ]);
+        $questiongenerator->create_question_tag(['questionid' => $question->id, 'tag' => "adpq_$startinglevel"]);
 
         $adaptivequiz = $modgenerator->create_instance([
             'course' => $course->id,
             'startinglevel' => $startinglevel,
             'lowestlevel' => 1,
             'highestlevel' => 10,
-            'questionpool' => [
-                $questioncategory->id,
-            ],
+            'minimumquestions' => 1,
+            'maximumquestions' => 2,
+        ]);
+
+        $modgenerator->create_link_with_question_bank([
+            'adaptivequizid' => $adaptivequiz->id,
+            'qbankid' => $qbank->id,
         ]);
 
         return $adaptivequiz;

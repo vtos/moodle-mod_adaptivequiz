@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * PHPUnit tests for the renderer class.
- *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz;
 
 defined('MOODLE_INTERNAL') || die();
@@ -35,12 +27,18 @@ use advanced_testcase;
 use mod_adaptivequiz_renderer;
 use moodle_page;
 use moodle_url;
+use PHPUnit\Framework\Attributes\CoversClass;
 use stdClass;
 
 /**
- * @group mod_adaptivequiz
- * @covers \mod_adaptivequiz_renderer
+ * A test class.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[CoversClass(\mod_adaptivequiz_renderer::class)]
 class renderer_test extends advanced_testcase {
 
     /**

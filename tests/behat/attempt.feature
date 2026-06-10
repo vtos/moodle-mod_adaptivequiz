@@ -16,9 +16,12 @@ Feature: Attempt an adaptive quiz
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
+    And the following "activities" exist:
+      | activity | name    | course | idnumber |
+      | qbank    | Qbank 1 | C1     | qbank1   |
     And the following "question categories" exist:
-      | contextlevel | reference | name                    |
-      | Course       | C1        | Adaptive Quiz Questions |
+      | contextlevel    | reference | name                    |
+      | Activity module | qbank1    | Adaptive Quiz Questions |
     And the following "questions" exist:
       | questioncategory        | qtype     | name | questiontext    |
       | Adaptive Quiz Questions | truefalse | Q1   | First question  |
@@ -40,24 +43,27 @@ Feature: Attempt an adaptive quiz
       | standarderror     | 25                      |
       | questionpoolnamed | Adaptive Quiz Questions |
       | attempts          | 1                       |
+    And the following "mod_adaptivequiz > links with question banks" exist:
+      | adaptivequiz  | idnumber |
+      | Adaptive Quiz | qbank1   |
 
   @javascript
   Scenario: Attempt an adaptive quiz
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     Then I should see "First question"
 
   @javascript
   Scenario: A student cannot attempt an adaptive quiz if no more attempts are allowed
     Given I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
     And I press "Submit answer"
     And I press "Continue"
     When I am on the "adaptivequiz1" "Activity" page
-    Then "Start attempt" "link" should not be visible
+    Then "Start attempt" "button" should not be visible
     And I should see "No more attempts allowed at this activity"
 
   @javascript
@@ -70,20 +76,28 @@ Feature: Attempt an adaptive quiz
       | question | tag    |
       | Q3       | adpq_2 |
       | Q4       | adpq_3 |
-    And I am on the "adaptivequiz1" "Activity" page logged in as "teacher1"
-    And I click on "Settings" "link"
-    And I set the following fields to these values:
-      | Highest level of difficulty  | 3 |
-      | Minimum number of questions  | 1 |
-      | Maximum number of questions  | 3 |
-    And I click on "Save and return to course" "button"
-    And I log out
-    When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And the following "activity" exists:
+      | activity          | adaptivequiz            |
+      | idnumber          | adaptivequiz2           |
+      | course            | C1                      |
+      | name              | Adaptive Quiz 2         |
+      | startinglevel     | 1                       |
+      | lowestlevel       | 1                       |
+      | highestlevel      | 3                       |
+      | minimumquestions  | 1                       |
+      | maximumquestions  | 3                       |
+      | standarderror     | 25                      |
+      | questionpoolnamed | Adaptive Quiz Questions |
+      | attempts          | 1                       |
+    And the following "mod_adaptivequiz > links with question banks" exist:
+      | adaptivequiz    | idnumber |
+      | Adaptive Quiz 2 | qbank1   |
+    When I am on the "adaptivequiz2" "Activity" page logged in as "student1"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio"
     And I press "Submit answer"
-    And I am on the "adaptivequiz1" "Activity" page
-    And I click on "Start attempt" "link"
+    And I am on the "adaptivequiz2" "Activity" page
+    And I click on "Start attempt" "button"
     And I click on "True" "radio"
     And I press "Submit answer"
     Then I should see "Fourth question"

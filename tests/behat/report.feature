@@ -16,9 +16,12 @@ Feature: View students results in adaptive quiz
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
+    And the following "activities" exist:
+      | activity | name    | course | idnumber |
+      | qbank    | Qbank 1 | C1     | qbank1   |
     And the following "question categories" exist:
-      | contextlevel | reference | name                    |
-      | Course       | C1        | Adaptive Quiz Questions |
+      | contextlevel    | reference | name                    |
+      | Activity module | qbank1    | Adaptive Quiz Questions |
     And the following "questions" exist:
       | questioncategory        | qtype     | name | questiontext    | answer |
       | Adaptive Quiz Questions | truefalse | TF1  | First question  | True   |
@@ -33,14 +36,17 @@ Feature: View students results in adaptive quiz
       | course            | C1                      |
       | name              | Adaptive Quiz           |
       | startinglevel     | 2                       |
-      | lowestlevel       | 1                       |
-      | highestlevel      | 10                      |
+      | lowestlevel       | 2                       |
+      | highestlevel      | 3                       |
       | minimumquestions  | 2                       |
       | maximumquestions  | 20                      |
       | standarderror     | 5                       |
       | questionpoolnamed | Adaptive Quiz Questions |
+    And the following "mod_adaptivequiz > links with question banks" exist:
+      | adaptivequiz  | idnumber |
+      | Adaptive Quiz | qbank1   |
     And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -67,7 +73,7 @@ Feature: View students results in adaptive quiz
       | course       | C1       |
       | role         | student  |
     And I am on the "adaptivequiz1" "Activity" page logged in as "student2"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -91,7 +97,7 @@ Feature: View students results in adaptive quiz
     And I click on "1" "link" in the "Peter The Student" "table_row"
     Then I should see "Adaptive Quiz - individual user attempts report for Peter The Student"
     And "Completed" "table_row" should exist
-    And "Completed" row "Reason for stopping attempt" column of "individualuserattemptstable" table should contain "Unable to fetch a question for level 5"
+    And "Completed" row "Reason for stopping attempt" column of "individualuserattemptstable" table should contain "Unable to fetch a question for level 3"
     And "Completed" row "Sum of questions attempted" column of "individualuserattemptstable" table should contain "2"
 
   @javascript

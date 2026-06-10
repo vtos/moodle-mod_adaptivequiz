@@ -1,0 +1,58 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_adaptivequiz/start_attempt
+
+    Renders the attempt widget with either a button to start/continue an attempt or an unavailability notification.
+
+    Context variables required for this template:
+    * startbutton - when attempt is available, an object/array containing all vars for core/single_button
+    * startnotification - when attempt is not available, an object/array with all the vars for core/notification
+
+    Example context (json):
+    {
+        "startbutton": {
+            "id": "button",
+            "method": "get",
+            "url": "#",
+            "primary": true,
+            "tooltip": "This is a tooltip",
+            "label": "Button",
+            "attributes": []
+        },
+        "startnotification": {
+            "message": "",
+            "extraclasses": "",
+            "announce": false,
+            "closebutton": false,
+            "issuccess": false,
+            "isinfo": true,
+            "iswarning": false,
+            "iserror": false
+        }
+    }
+}}
+{{#startbutton}}
+    <div class="mb-2">
+        {{> core/single_button }}
+    </div>
+{{/startbutton}}
+{{#startnotification}}
+    <div class="mb-2">
+        {{> core/notification }}
+    </div>
+{{/startnotification}}

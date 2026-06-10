@@ -27,6 +27,10 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
+use core\output\notification;
+use core_question\local\bank\question_bank_helper;
+use mod_adaptivequiz\item_administration_params_helper;
+use mod_adaptivequiz\item_bank;
 use mod_adaptivequiz\local\report\questions_difficulty_range;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_form;
@@ -138,15 +142,75 @@ $event->trigger();
 $PAGE->set_title(format_string($adaptivequiz->name));
 $PAGE->set_heading(format_string($course->fullname));
 
+$hasqbanks = false;
+$hasitemadmparams = false;
+
+$qbankmigrated = question_bank_helper::has_bank_migration_task_completed_successfully();
+if ($qbankmigrated) {
+    $hasqbanks = item_bank::adaptive_quiz_instance_has_question_banks_or_categories_linked($adaptivequiz->id);
+    $hasitemadmparams = item_administration_params_helper::is_all_valid_for_adaptivequiz($adaptivequiz);
+}
+
+$itembankconfigured = $hasqbanks && $hasitemadmparams;
+
 echo $OUTPUT->header();
 
-if (has_capability('mod/adaptivequiz:attempt', $context)) {
-    $completedattemptscount = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
+if ($canviewattemptsreport) {
+    if (!$qbankmigrated) {
+        $defaultqbankmod = question_bank_helper::get_default_question_bank_activity_name();
 
-    echo $renderer->container_start('attempt-controls-or-notification-container pb-3');
-    echo $renderer->attempt_controls_or_notification($cm->id,
-        adaptivequiz_allowed_attempt($adaptivequiz->attempts, $completedattemptscount), $adaptivequiz->browsersecurity);
-    echo $renderer->container_end();
+        echo $renderer->notification(
+            message: get_string('transfernotfinished', 'mod_' . $defaultqbankmod),
+            type: notification::NOTIFY_WARNING,
+            closebutton: false
+        );
+    }
+
+    if ($qbankmigrated && !$itembankconfigured) {
+        echo $renderer->notification(
+            message: get_string('itembanknotconfiguredinfomanager', 'adaptivequiz'),
+            type: notification::NOTIFY_WARNING,
+            closebutton: false
+        );
+    }
+}
+
+if (has_capability('mod/adaptivequiz:attempt', $context)) {
+    $attemptallowedbycount = false;
+    if ($qbankmigrated && $itembankconfigured) {
+        // Counting attempts makes sense only when item bank is verified.
+        $completedattemptscount = adaptivequiz_count_user_previous_attempts($adaptivequiz->id, $USER->id);
+        $attemptallowedbycount = adaptivequiz_allowed_attempt($adaptivequiz->attempts, $completedattemptscount);
+    }
+
+    $attempturl = null;
+    $attemptnotification = '';
+
+    if (!$qbankmigrated) {
+        // Managers have their own message in case question bank tasks haven't completed.
+        if (!$canviewattemptsreport) {
+            $attemptnotification = get_string('itembanknotconfiguredinfostudent', 'adaptivequiz');
+        }
+    }
+
+    if ($qbankmigrated) {
+        if ($itembankconfigured && $attemptallowedbycount) {
+            $attempturl = new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cm->id]);
+        }
+
+        if ($itembankconfigured && !$attemptallowedbycount) {
+            $attemptnotification = get_string('noattemptsallowed', 'adaptivequiz');
+        }
+
+        if (!$itembankconfigured) {
+            // Managers have their own message in case item bank is not configured.
+            if (!$canviewattemptsreport) {
+                $attemptnotification = get_string('itembanknotconfiguredinfostudent', 'adaptivequiz');
+            }
+        }
+    }
+
+    echo $renderer->start_attempt($attempturl, $attemptnotification);
 
     $allattemptscount = $DB->count_records('adaptivequiz_attempt',
         ['instance' => $adaptivequiz->id, 'userid' => $USER->id]);

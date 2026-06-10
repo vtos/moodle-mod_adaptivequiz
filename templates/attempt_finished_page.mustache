@@ -23,12 +23,14 @@
     * feedbacktext - text's content/HTML
     * continuebutton - button's HTML
     * browsersecurityenabled - whether the 'secure' mode is requested
+    * debuginfo - pre-rendered debugging info (when avaialble)
 
     Example context (json):
     {
         "feedbacktext": "<p>Thank you for an attempt!</p>",
         "continuebutton": "<a class="..">..</a>",
-        "browsersecurityenabled": true
+        "browsersecurityenabled": true,
+        "debuginfo": "<div>..</div>"
     }
 }}
 <div class="text-center">
@@ -48,4 +50,10 @@
             <input type="button" id="secureclosebutton" class="btn btn-primary" value="{{#str}} continue {{/str}}" />
         {{/browsersecurityenabled}}
     </div>
+
+    {{#debuginfo}}
+        <div class="mt-2">
+            {{{debuginfo}}}
+        </div>
+    {{/debuginfo}}
 </div>

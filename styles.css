@@ -50,10 +50,6 @@ table.adpq_answers_table thead:first-child th.section {
     margin-bottom: 0.75rem !important;
 }
 
-.attempt-controls-or-notification-container {
-    padding-top: 10px;
-}
-
 #page-mod-adaptivequiz-view .attempt-progress-container {
     margin-bottom: 25px;
     padding-top: 10px;

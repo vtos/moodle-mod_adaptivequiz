@@ -123,5 +123,38 @@ function xmldb_adaptivequiz_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025092702, 'adaptivequiz');
     }
 
+    if ($oldversion < 2026030100) {
+        $table = new xmldb_table('adaptivequiz_qbank');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+        $table->add_field('adaptivequizid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+        $table->add_field('qbankid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+        $table->add_field('qbankcontextid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('adaptivequizid', XMLDB_KEY_FOREIGN, ['adaptivequizid'], 'adaptivequiz', ['id']);
+        $table->add_key('qbankid', XMLDB_KEY_FOREIGN, ['qbankid'], 'qbank', ['id']);
+        $table->add_key('qbankcontextid', XMLDB_KEY_FOREIGN, ['qbankcontextid'], 'context', ['id']);
+
+        $table->add_index('adaptivequiz-qbank', XMLDB_INDEX_UNIQUE, ['adaptivequizid', 'qbankid', 'qbankcontextid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_mod_savepoint(true, 2026030100, 'adaptivequiz');
+    }
+
+    if ($oldversion < 2026030101) {
+        $table = new xmldb_table('adaptivequiz');
+        $field = new xmldb_field('debuginfoenable', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL,
+            null, '0', 'completionattemptcompleted');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026030101, 'adaptivequiz');
+    }
+
     return true;
 }

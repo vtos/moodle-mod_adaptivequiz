@@ -29,7 +29,6 @@ require_once($CFG->dirroot . '/course/moodleform_mod.php');
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
 use mod_adaptivequiz\attempt_feedback_placeholders_helper;
-use mod_adaptivequiz\local\repository\questions_repository;
 use mod_adaptivequiz\output\editor_placeholders;
 
 /**
@@ -91,38 +90,6 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addHelpButton('browsersecurity', 'browsersecurity', 'adaptivequiz');
         $mform->setDefault('browsersecurity', 0);
 
-        // Retireve a list of available course categories.
-        adaptivequiz_make_default_categories($this->context);
-        $options = adaptivequiz_get_question_categories($this->context);
-        $selquestcat = adaptivequiz_get_selected_question_cateogires($this->_instance);
-
-        $select = $mform->addElement('select', 'questionpool', get_string('questionpool', 'adaptivequiz'), $options);
-        $mform->addHelpButton('questionpool', 'questionpool', 'adaptivequiz');
-        $select->setMultiple(true);
-        $mform->addRule('questionpool', null, 'required', null, 'client');
-        $mform->getElement('questionpool')->setSelected($selquestcat);
-
-        $mform->addElement('text', 'startinglevel', get_string('startinglevel', 'adaptivequiz'),
-            ['size' => '3', 'maxlength' => '3']);
-        $mform->addHelpButton('startinglevel', 'startinglevel', 'adaptivequiz');
-        $mform->addRule('startinglevel', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('startinglevel', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('startinglevel', PARAM_INT);
-
-        $mform->addElement('text', 'lowestlevel', get_string('lowestlevel', 'adaptivequiz'),
-            ['size' => '3', 'maxlength' => '3']);
-        $mform->addHelpButton('lowestlevel', 'lowestlevel', 'adaptivequiz');
-        $mform->addRule('lowestlevel', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('lowestlevel', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('lowestlevel', PARAM_INT);
-
-        $mform->addElement('text', 'highestlevel', get_string('highestlevel', 'adaptivequiz'),
-            ['size' => '3', 'maxlength' => '3']);
-        $mform->addHelpButton('highestlevel', 'highestlevel', 'adaptivequiz');
-        $mform->addRule('highestlevel', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('highestlevel', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('highestlevel', PARAM_INT);
-
         $mform->addElement('select', 'showattemptprogress', get_string('modformshowattemptprogress', 'adaptivequiz'),
             [get_string('no'), get_string('yes')]);
         $mform->addHelpButton('showattemptprogress', 'modformshowattemptprogress', 'adaptivequiz');
@@ -163,29 +130,9 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         $mform->addHelpButton('showabilitymeasurefeedback', 'showabilitymeasurefeedback', 'adaptivequiz');
         $mform->setDefault('showabilitymeasurefeedback', 0);
 
-        $mform->addElement('header', 'stopingconditionshdr', get_string('stopingconditionshdr', 'adaptivequiz'));
-
-        $mform->addElement('text', 'minimumquestions', get_string('minimumquestions', 'adaptivequiz'),
-            ['size' => '3', 'maxlength' => '3']);
-        $mform->addHelpButton('minimumquestions', 'minimumquestions', 'adaptivequiz');
-        $mform->addRule('minimumquestions', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('minimumquestions', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('minimumquestions', PARAM_INT);
-
-        $mform->addElement('text', 'maximumquestions', get_string('maximumquestions', 'adaptivequiz'),
-            ['size' => '3', 'maxlength' => '3']);
-        $mform->addHelpButton('maximumquestions', 'maximumquestions', 'adaptivequiz');
-        $mform->addRule('maximumquestions', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('maximumquestions', get_string('formelementnumeric', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setType('maximumquestions', PARAM_INT);
-
-        $mform->addElement('text', 'standarderror', get_string('standarderror', 'adaptivequiz'),
-            ['size' => '10', 'maxlength' => '10']);
-        $mform->addHelpButton('standarderror', 'standarderror', 'adaptivequiz');
-        $mform->addRule('standarderror', get_string('formelementempty', 'adaptivequiz'), 'required', null, 'client');
-        $mform->addRule('standarderror', get_string('formelementdecimal', 'adaptivequiz'), 'numeric', null, 'client');
-        $mform->setDefault('standarderror', 5.0);
-        $mform->setType('standarderror', PARAM_FLOAT);
+        $mform->addElement('header', 'advancedhdr', get_string('advanced'));
+        $mform->addElement('advcheckbox', 'debuginfoenable', get_string('debuginfoenable', 'adaptivequiz'));
+        $mform->addHelpButton('debuginfoenable', 'debuginfoenable', 'adaptivequiz');
 
         // Grade settings.
         $this->standard_grading_coursemodule_elements();
@@ -225,67 +172,6 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
         }
 
         return $data['completionattemptcompleted'] != 0;
-    }
-
-    /**
-     * Perform extra validation. @see validation() in moodleform_mod.php.
-     *
-     * @param array $data Array of submitted form values.
-     * @param array $files Array of file data.
-     * @return array Array of form elements that didn't pass validation.
-     * @throws coding_exception
-     * @throws dml_exception
-     */
-    public function validation($data, $files) {
-        $errors = parent::validation($data, $files);
-
-        if (empty($data['questionpool'])) {
-            $errors['questionpool'] = get_string('formquestionpool', 'adaptivequiz');
-        }
-
-        // Validate for positivity.
-        if (0 >= $data['minimumquestions']) {
-            $errors['minimumquestions'] = get_string('formelementnegative', 'adaptivequiz');
-        }
-
-        if (0 >= $data['maximumquestions']) {
-            $errors['maximumquestions'] = get_string('formelementnegative', 'adaptivequiz');
-        }
-
-        if (0 >= $data['startinglevel']) {
-            $errors['startinglevel'] = get_string('formelementnegative', 'adaptivequiz');
-        }
-
-        if (0 >= $data['lowestlevel']) {
-            $errors['lowestlevel'] = get_string('formelementnegative', 'adaptivequiz');
-        }
-
-        if (0 >= $data['highestlevel']) {
-            $errors['highestlevel'] = get_string('formelementnegative', 'adaptivequiz');
-        }
-
-        if ((float) 0 > (float) $data['standarderror'] || (float) 50 <= (float) $data['standarderror']) {
-            $errors['standarderror'] = get_string('formstderror', 'adaptivequiz');
-        }
-
-        // Validate higher and lower values.
-        if ($data['minimumquestions'] >= $data['maximumquestions']) {
-            $errors['minimumquestions'] = get_string('formminquestgreaterthan', 'adaptivequiz');
-        }
-
-        if ($data['lowestlevel'] >= $data['highestlevel']) {
-            $errors['lowestlevel'] = get_string('formlowlevelgreaterthan', 'adaptivequiz');
-        }
-
-        if (!($data['startinglevel'] >= $data['lowestlevel'] && $data['startinglevel'] <= $data['highestlevel'])) {
-            $errors['startinglevel'] = get_string('formstartleveloutofbounds', 'adaptivequiz');
-        }
-
-        if ($questionspoolerrormsg = $this->validate_questions_pool($data['questionpool'], $data['startinglevel'])) {
-            $errors['questionpool'] = $questionspoolerrormsg;
-        }
-
-        return $errors;
     }
 
     /**
@@ -333,18 +219,5 @@ class mod_adaptivequiz_mod_form extends moodleform_mod {
                 'format' => $defaultvalues['attemptfeedbackformat'],
             ];
         }
-    }
-
-    /**
-     * Wraps validation of the questions pool.
-     *
-     * @param int[] $qcategoryidlist A list of id of selected questions categories.
-     * @return string An error message if any.
-     * @throws coding_exception
-     */
-    private function validate_questions_pool(array $qcategoryidlist, int $startinglevel): string {
-        return questions_repository::count_adaptive_questions_in_pool_with_level($qcategoryidlist, $startinglevel) > 0
-            ? ''
-            : get_string('questionspoolerrornovalidstartingquestions', 'adaptivequiz');
     }
 }

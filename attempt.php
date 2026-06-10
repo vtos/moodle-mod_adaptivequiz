@@ -29,6 +29,7 @@ require_once($CFG->dirroot . '/tag/lib.php');
 use mod_adaptivequiz\local\attempt;
 use mod_adaptivequiz\local\catalgo;
 use mod_adaptivequiz\local\fetchquestion;
+use mod_adaptivequiz\output\attempt_debug_info;
 
 $id = required_param('cmid', PARAM_INT); // Course module id.
 $uniqueid  = optional_param('uniqueid', 0, PARAM_INT);  // Unique id of the attempt.
@@ -288,6 +289,12 @@ if (!empty($adaptivequiz->password) && empty($condition)) {
     }
 
     echo $output->question_submit_form($id, $quba, $slot, $level, $attemptrecord->questionsattempted + 1);
+
+    if ($adaptivequiz->debuginfoenable) {
+        echo $output->container_start();
+        echo $output->render(new attempt_debug_info($attemptrecord));
+        echo $output->container_end();
+    }
 }
 
 echo $output->print_footer();

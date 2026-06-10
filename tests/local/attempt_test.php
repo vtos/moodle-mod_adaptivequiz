@@ -24,6 +24,7 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 use advanced_testcase;
 use context_module;
 use mod_adaptivequiz\local\attempt\attempt_state;
+use PHPUnit\Framework\Attributes\CoversClass;
 use question_engine;
 use stdClass;
 
@@ -34,10 +35,9 @@ use stdClass;
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- *
- * @covers     \mod_adaptivequiz\local\attempt
  */
-class attempt_test extends advanced_testcase {
+#[CoversClass(\mod_adaptivequiz\local\attempt::class)]
+final class attempt_test extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */
     protected $activityinstance = null;
 
@@ -91,34 +91,39 @@ class attempt_test extends advanced_testcase {
     public function test_get_attempt() {
         $this->resetAfterTest();
 
-        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
-        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $coregenerator = $this->getDataGenerator();
+        /** @var \mod_adaptivequiz_generator $adaptivequizgenerator */
+        $modgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        /** @var  \core_question_generator $questionsgenerator */
+        $questiongenerator = $coregenerator->get_plugin_generator('core_question');
+        /** @var \mod_qbank_generator $qbankgenerator */
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
 
-        $course = $this->getDataGenerator()->create_course();
+        $course = $coregenerator->create_course();
 
-        $questioncategory = $questiongenerator->create_question_category([
-            'name' => 'My category',
-        ]);
+        $qbank = $qbankgenerator->create_instance(['course' => $course->id]);
+        $qbankcm = get_coursemodule_from_instance('qbank', $qbank->id, 0, false, MUST_EXIST);
+        $qbankcontext = context_module::instance($qbankcm->id);
+        $qcat = question_get_default_category($qbankcontext->id);
 
-        $question = $questiongenerator->create_question('shortanswer', null, [
-            'category' => $questioncategory->id,
-        ]);
+        $question = $questiongenerator->create_question('truefalse', null, ['category' => $qcat->id]);
 
         $startinglevel = 1;
 
-        $questiongenerator->create_question_tag([
-            'questionid' => $question->id,
-            'tag' => "adpq_$startinglevel",
-        ]);
+        $questiongenerator->create_question_tag(['questionid' => $question->id, 'tag' => "adpq_$startinglevel"]);
 
         $adaptivequiz = $modgenerator->create_instance([
             'course' => $course->id,
             'startinglevel' => $startinglevel,
             'lowestlevel' => 1,
             'highestlevel' => 10,
-            'questionpool' => [
-                $questioncategory->id,
-            ],
+            'minimumquestions' => 1,
+            'maximumquestions' => 2,
+        ]);
+
+        $modgenerator->create_link_with_question_bank([
+            'adaptivequizid' => $adaptivequiz->id,
+            'qbankid' => $qbank->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -199,25 +204,26 @@ class attempt_test extends advanced_testcase {
     public function test_max_questions_answered(): void {
         $this->resetAfterTest();
 
-        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $coregenerator = $this->getDataGenerator();
+        /** @var \mod_adaptivequiz_generator $adaptivequizgenerator */
+        $modgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        /** @var  \core_question_generator $questionsgenerator */
+        $questiongenerator = $coregenerator->get_plugin_generator('core_question');
+        /** @var \mod_qbank_generator $qbankgenerator */
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
 
-        $course = $this->getDataGenerator()->create_course();
+        $course = $coregenerator->create_course();
 
-        $questioncategory = $questiongenerator->create_question_category([
-            'name' => 'My category',
-        ]);
+        $qbank = $qbankgenerator->create_instance(['course' => $course->id]);
+        $qbankcm = get_coursemodule_from_instance('qbank', $qbank->id, 0, false, MUST_EXIST);
+        $qbankcontext = context_module::instance($qbankcm->id);
+        $qcat = question_get_default_category($qbankcontext->id);
 
-        $question = $questiongenerator->create_question('shortanswer', null, [
-            'category' => $questioncategory->id,
-        ]);
+        $question = $questiongenerator->create_question('truefalse', null, ['category' => $qcat->id]);
 
         $startinglevel = 1;
 
-        $questiongenerator->create_question_tag([
-            'questionid' => $question->id,
-            'tag' => "adpq_$startinglevel",
-        ]);
+        $questiongenerator->create_question_tag(['questionid' => $question->id, 'tag' => "adpq_$startinglevel"]);
 
         $adaptivequiz = $modgenerator->create_instance([
             'course' => $course->id,
@@ -226,9 +232,11 @@ class attempt_test extends advanced_testcase {
             'highestlevel' => 10,
             'minimumquestions' => 1,
             'maximumquestions' => 3,
-            'questionpool' => [
-                $questioncategory->id,
-            ],
+        ]);
+
+        $modgenerator->create_link_with_question_bank([
+            'adaptivequizid' => $adaptivequiz->id,
+            'qbankid' => $qbank->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -236,7 +244,7 @@ class attempt_test extends advanced_testcase {
         $adaptivequizforattempt = clone($adaptivequiz);
         $adaptivequizforattempt->context = $context;
 
-        $user = $this->getDataGenerator()->create_user();
+        $user = $coregenerator->create_user();
 
         // End of setup.
 
@@ -277,25 +285,26 @@ class attempt_test extends advanced_testcase {
     public function test_min_questions_answered(): void {
         $this->resetAfterTest();
 
-        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $coregenerator = $this->getDataGenerator();
+        /** @var \mod_adaptivequiz_generator $adaptivequizgenerator */
+        $modgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        /** @var  \core_question_generator $questionsgenerator */
+        $questiongenerator = $coregenerator->get_plugin_generator('core_question');
+        /** @var \mod_qbank_generator $qbankgenerator */
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
 
-        $course = $this->getDataGenerator()->create_course();
+        $course = $coregenerator->create_course();
 
-        $questioncategory = $questiongenerator->create_question_category([
-            'name' => 'My category',
-        ]);
+        $qbank = $qbankgenerator->create_instance(['course' => $course->id]);
+        $qbankcm = get_coursemodule_from_instance('qbank', $qbank->id, 0, false, MUST_EXIST);
+        $qbankcontext = context_module::instance($qbankcm->id);
+        $qcat = question_get_default_category($qbankcontext->id);
 
-        $question = $questiongenerator->create_question('shortanswer', null, [
-            'category' => $questioncategory->id,
-        ]);
+        $question = $questiongenerator->create_question('truefalse', null, ['category' => $qcat->id]);
 
         $startinglevel = 1;
 
-        $questiongenerator->create_question_tag([
-            'questionid' => $question->id,
-            'tag' => "adpq_$startinglevel",
-        ]);
+        $questiongenerator->create_question_tag(['questionid' => $question->id, 'tag' => "adpq_$startinglevel"]);
 
         $adaptivequiz = $modgenerator->create_instance([
             'course' => $course->id,
@@ -304,9 +313,11 @@ class attempt_test extends advanced_testcase {
             'highestlevel' => 10,
             'minimumquestions' => 2,
             'maximumquestions' => 10,
-            'questionpool' => [
-                $questioncategory->id,
-            ],
+        ]);
+
+        $modgenerator->create_link_with_question_bank([
+            'adaptivequizid' => $adaptivequiz->id,
+            'qbankid' => $qbank->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -314,7 +325,7 @@ class attempt_test extends advanced_testcase {
         $adaptivequizforattempt = clone($adaptivequiz);
         $adaptivequizforattempt->context = $context;
 
-        $user = $this->getDataGenerator()->create_user();
+        $user = $coregenerator->create_user();
 
         // End of setup.
 
@@ -393,25 +404,26 @@ class attempt_test extends advanced_testcase {
     public function test_initialize_quba_with_existing_attempt_uniqueid(): void {
         $this->resetAfterTest();
 
-        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $coregenerator = $this->getDataGenerator();
+        /** @var \mod_adaptivequiz_generator $adaptivequizgenerator */
+        $modgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        /** @var  \core_question_generator $questionsgenerator */
+        $questiongenerator = $coregenerator->get_plugin_generator('core_question');
+        /** @var \mod_qbank_generator $qbankgenerator */
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
 
         $course = $this->getDataGenerator()->create_course();
 
-        $questioncategory = $questiongenerator->create_question_category([
-            'name' => 'My category',
-        ]);
+        $qbank = $qbankgenerator->create_instance(['course' => $course->id]);
+        $qbankcm = get_coursemodule_from_instance('qbank', $qbank->id, 0, false, MUST_EXIST);
+        $qbankcontext = context_module::instance($qbankcm->id);
+        $qcat = question_get_default_category($qbankcontext->id);
 
-        $question = $questiongenerator->create_question('shortanswer', null, [
-            'category' => $questioncategory->id,
-        ]);
+        $question = $questiongenerator->create_question('truefalse', null, ['category' => $qcat->id]);
 
         $startinglevel = 1;
 
-        $questiongenerator->create_question_tag([
-            'questionid' => $question->id,
-            'tag' => "adpq_$startinglevel",
-        ]);
+        $questiongenerator->create_question_tag(['questionid' => $question->id, 'tag' => "adpq_$startinglevel"]);
 
         $adaptivequiz = $modgenerator->create_instance([
             'course' => $course->id,
@@ -420,9 +432,11 @@ class attempt_test extends advanced_testcase {
             'highestlevel' => 10,
             'minimumquestions' => 2,
             'maximumquestions' => 10,
-            'questionpool' => [
-                $questioncategory->id,
-            ],
+        ]);
+
+        $modgenerator->create_link_with_question_bank([
+            'adaptivequizid' => $adaptivequiz->id,
+            'qbankid' => $qbank->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -454,34 +468,28 @@ class attempt_test extends advanced_testcase {
     public function test_find_last_quest_used_by_attempt(): void {
         $this->resetAfterTest();
 
-        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $coregenerator = $this->getDataGenerator();
+        /** @var \mod_adaptivequiz_generator $adaptivequizgenerator */
+        $modgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        /** @var  \core_question_generator $questionsgenerator */
+        $questiongenerator = $coregenerator->get_plugin_generator('core_question');
+        /** @var \mod_qbank_generator $qbankgenerator */
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
 
-        $course = $this->getDataGenerator()->create_course();
+        $course = $coregenerator->create_course();
 
-        $questioncategory = $questiongenerator->create_question_category([
-            'name' => 'My category',
-        ]);
+        $qbank = $qbankgenerator->create_instance(['course' => $course->id]);
+        $qbankcm = get_coursemodule_from_instance('qbank', $qbank->id, 0, false, MUST_EXIST);
+        $qbankcontext = context_module::instance($qbankcm->id);
+        $qcat = question_get_default_category($qbankcontext->id);
 
-        $question1 = $questiongenerator->create_question('shortanswer', null, [
-            'category' => $questioncategory->id,
-        ]);
-
-        $question2 = $questiongenerator->create_question('shortanswer', null, [
-            'category' => $questioncategory->id,
-        ]);
+        $question1 = $questiongenerator->create_question('truefalse', null, ['category' => $qcat->id]);
+        $question2 = $questiongenerator->create_question('truefalse', null, ['category' => $qcat->id]);
 
         $startinglevel = 1;
 
-        $questiongenerator->create_question_tag([
-            'questionid' => $question1->id,
-            'tag' => "adpq_$startinglevel",
-        ]);
-
-        $questiongenerator->create_question_tag([
-            'questionid' => $question2->id,
-            'tag' => "adpq_$startinglevel",
-        ]);
+        $questiongenerator->create_question_tag(['questionid' => $question1->id, 'tag' => "adpq_$startinglevel"]);
+        $questiongenerator->create_question_tag(['questionid' => $question2->id, 'tag' => "adpq_$startinglevel"]);
 
         $adaptivequiz = $modgenerator->create_instance([
             'course' => $course->id,
@@ -490,9 +498,11 @@ class attempt_test extends advanced_testcase {
             'highestlevel' => 10,
             'minimumquestions' => 2,
             'maximumquestions' => 10,
-            'questionpool' => [
-                $questioncategory->id,
-            ],
+        ]);
+
+        $modgenerator->create_link_with_question_bank([
+            'adaptivequizid' => $adaptivequiz->id,
+            'qbankid' => $qbank->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -500,7 +510,7 @@ class attempt_test extends advanced_testcase {
         $adaptivequizforattempt = clone($adaptivequiz);
         $adaptivequizforattempt->context = $context;
 
-        $user = $this->getDataGenerator()->create_user();
+        $user = $coregenerator->create_user();
 
         // End of setup.
 
@@ -593,7 +603,7 @@ class attempt_test extends advanced_testcase {
         $mockquba->expects($this->once())
             ->method('get_question_state')
             ->with(1)
-            ->will($this->returnValue($mockstate));
+            ->willReturn($mockstate);
 
         $mockquba->expects($this->never())
             ->method('get_id');
@@ -619,7 +629,7 @@ class attempt_test extends advanced_testcase {
         $mockquba->expects($this->once())
             ->method('get_question_state')
             ->with(1)
-            ->will($this->returnValue($mockstate));
+            ->willReturn($mockstate);
 
         $mockquba->expects($this->never())
             ->method('get_id');
@@ -645,7 +655,7 @@ class attempt_test extends advanced_testcase {
         $mockquba->expects($this->once())
             ->method('get_question_state')
             ->with(1)
-            ->will($this->returnValue($mockstate));
+            ->willReturn($mockstate);
 
         $mockquba->expects($this->never())
             ->method('get_id');
@@ -671,7 +681,7 @@ class attempt_test extends advanced_testcase {
         $mockquba->expects($this->once())
             ->method('get_question_state')
             ->with(1)
-            ->will($this->returnValue($mockstate));
+            ->willReturn($mockstate);
 
         $mockquba->expects($this->never())
             ->method('get_id');
@@ -697,11 +707,11 @@ class attempt_test extends advanced_testcase {
         $mockquba->expects($this->once())
             ->method('get_question_state')
             ->with(1)
-            ->will($this->returnValue($mockstate));
+            ->willReturn($mockstate);
 
         $mockquba->expects($this->once())
             ->method('get_id')
-            ->will($this->returnValue(1));
+            ->willReturn(1);
 
         $result = $adaptiveattempt->was_answer_submitted_to_question($mockquba, 1);
         $this->assertFalse($result);
@@ -750,7 +760,7 @@ class attempt_test extends advanced_testcase {
 
         $mockquba->expects($this->once())
             ->method('get_question_mark')
-            ->will($this->returnValue(1.0));
+            ->willReturn(1.0);
 
         $dummy = new stdClass();
         $userid = 1;
@@ -770,7 +780,7 @@ class attempt_test extends advanced_testcase {
 
         $mockqubatwo->expects($this->once())
             ->method('get_question_mark')
-            ->will($this->returnValue(0));
+            ->willReturn(0);
 
         $dummy = new stdClass();
         $userid = 1;
@@ -790,7 +800,7 @@ class attempt_test extends advanced_testcase {
 
         $mockqubathree->expects($this->once())
             ->method('get_question_mark')
-            ->will($this->returnValue(null));
+            ->willReturn(null);
 
         $dummy = new stdClass();
         $userid = 1;
@@ -839,18 +849,18 @@ class attempt_test extends advanced_testcase {
 
         $mockattemptthree->expects($this->once())
             ->method('get_attempt')
-            ->will($this->returnValue($dummyattempt));
+            ->willReturn($dummyattempt);
         $mockattemptthree->expects($this->once())
             ->method('level_in_bounds')
-            ->will($this->returnValue(true));
+            ->willReturn(true);
         $mockattemptthree->expects($this->once())
             ->method('max_questions_answered')
-            ->will($this->returnValue(false));
+            ->willReturn(false);
         $mockattemptthree->expects($this->once())
             ->method('initialize_quba');
         $mockattemptthree->expects($this->once())
             ->method('find_last_quest_used_by_attempt')
-            ->will($this->returnValue(0));
+            ->willReturn(0);
 
         $this->assertFalse($mockattemptthree->start_attempt());
     }
@@ -881,34 +891,28 @@ class attempt_test extends advanced_testcase {
     public function test_get_all_questions_in_attempt(): void {
         $this->resetAfterTest();
 
-        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $coregenerator = $this->getDataGenerator();
+        /** @var \mod_adaptivequiz_generator $adaptivequizgenerator */
+        $modgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        /** @var  \core_question_generator $questionsgenerator */
+        $questiongenerator = $coregenerator->get_plugin_generator('core_question');
+        /** @var \mod_qbank_generator $qbankgenerator */
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
 
-        $course = $this->getDataGenerator()->create_course();
+        $course = $coregenerator->create_course();
 
-        $questioncategory = $questiongenerator->create_question_category([
-            'name' => 'My category',
-        ]);
+        $qbank = $qbankgenerator->create_instance(['course' => $course->id]);
+        $qbankcm = get_coursemodule_from_instance('qbank', $qbank->id, 0, false, MUST_EXIST);
+        $qbankcontext = context_module::instance($qbankcm->id);
+        $qcat = question_get_default_category($qbankcontext->id);
 
-        $question1 = $questiongenerator->create_question('shortanswer', null, [
-            'category' => $questioncategory->id,
-        ]);
-
-        $question2 = $questiongenerator->create_question('shortanswer', null, [
-            'category' => $questioncategory->id,
-        ]);
+        $question1 = $questiongenerator->create_question('truefalse', null, ['category' => $qcat->id]);
+        $question2 = $questiongenerator->create_question('truefalse', null, ['category' => $qcat->id]);
 
         $startinglevel = 1;
 
-        $questiongenerator->create_question_tag([
-            'questionid' => $question1->id,
-            'tag' => "adpq_$startinglevel",
-        ]);
-
-        $questiongenerator->create_question_tag([
-            'questionid' => $question2->id,
-            'tag' => "adpq_$startinglevel",
-        ]);
+        $questiongenerator->create_question_tag(['questionid' => $question1->id, 'tag' => "adpq_$startinglevel"]);
+        $questiongenerator->create_question_tag(['questionid' => $question2->id, 'tag' => "adpq_$startinglevel"]);
 
         $adaptivequiz = $modgenerator->create_instance([
             'course' => $course->id,
@@ -917,9 +921,11 @@ class attempt_test extends advanced_testcase {
             'highestlevel' => 10,
             'minimumquestions' => 2,
             'maximumquestions' => 10,
-            'questionpool' => [
-                $questioncategory->id,
-            ],
+        ]);
+
+        $modgenerator->create_link_with_question_bank([
+            'adaptivequizid' => $adaptivequiz->id,
+            'qbankid' => $qbank->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -927,7 +933,7 @@ class attempt_test extends advanced_testcase {
         $adaptivequizforattempt = clone($adaptivequiz);
         $adaptivequizforattempt->context = $context;
 
-        $user = $this->getDataGenerator()->create_user();
+        $user = $coregenerator->create_user();
 
         // End of setup.
 
@@ -970,42 +976,47 @@ class attempt_test extends advanced_testcase {
     public function test_it_can_check_if_a_user_has_a_completed_attempt_on_a_quiz(): void {
         $this->resetAfterTest();
 
-        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $modgenerator = $this->getDataGenerator()->get_plugin_generator('mod_adaptivequiz');
+        $coregenerator = $this->getDataGenerator();
+        /** @var \mod_adaptivequiz_generator $adaptivequizgenerator */
+        $modgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        /** @var  \core_question_generator $questionsgenerator */
+        $questiongenerator = $coregenerator->get_plugin_generator('core_question');
+        /** @var \mod_qbank_generator $qbankgenerator */
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
 
-        $course = $this->getDataGenerator()->create_course();
+        $course = $coregenerator->create_course();
 
-        $questioncategory = $questiongenerator->create_question_category([
-            'name' => 'My category',
-        ]);
+        $qbank = $qbankgenerator->create_instance(['course' => $course->id]);
+        $qbankcm = get_coursemodule_from_instance('qbank', $qbank->id, 0, false, MUST_EXIST);
+        $qbankcontext = context_module::instance($qbankcm->id);
+        $qcat = question_get_default_category($qbankcontext->id);
 
-        $question = $questiongenerator->create_question('shortanswer', null, [
-            'category' => $questioncategory->id,
-        ]);
+        $question = $questiongenerator->create_question('truefalse', null, ['category' => $qcat->id]);
 
         $startinglevel = 1;
 
-        $questiongenerator->create_question_tag([
-            'questionid' => $question->id,
-            'tag' => "adpq_$startinglevel",
-        ]);
+        $questiongenerator->create_question_tag(['questionid' => $question->id, 'tag' => "adpq_$startinglevel"]);
 
         $adaptivequiz = $modgenerator->create_instance([
             'course' => $course->id,
             'startinglevel' => $startinglevel,
             'lowestlevel' => 1,
             'highestlevel' => 10,
-            'questionpool' => [
-                $questioncategory->id,
-            ],
+            'minimumquestions' => 1,
+            'maximumquestions' => 2,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
 
+        $modgenerator->create_link_with_question_bank([
+            'adaptivequizid' => $adaptivequiz->id,
+            'qbankid' => $qbank->id,
+        ]);
+
         $adaptivequizforattempt = clone($adaptivequiz);
         $adaptivequizforattempt->context = $context;
 
-        $user = $this->getDataGenerator()->create_user();
+        $user = $coregenerator->create_user();
 
         // End of setup.
 

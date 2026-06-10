@@ -17,6 +17,7 @@
 namespace mod_adaptivequiz\external;
 
 use basic_testcase;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Testing exporting of the ability measure data.
@@ -24,9 +25,8 @@ use basic_testcase;
  * @package    mod_adaptivequiz
  * @copyright  2025 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- *
- * @covers     \mod_adaptivequiz\external\ability_measure_exporter
  */
+#[CoversClass(\mod_adaptivequiz\external\ability_measure_exporter::class)]
 final class ability_measure_exporter_test extends basic_testcase {
 
     public function test_it_exports_the_required_data(): void {

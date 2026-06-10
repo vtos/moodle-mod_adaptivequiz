@@ -1,4 +1,4 @@
-@mod @mod_adaptivequiz
+@mod @mod_adaptivequiz @mod_adaptivequiz_attempt_feedback
 Feature: Attempt feedback
   In order to get inspired and engaged
   As a student
@@ -16,9 +16,12 @@ Feature: Attempt feedback
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
+    And the following "activities" exist:
+      | activity | name    | course | idnumber |
+      | qbank    | Qbank 1 | C1     | qbank1   |
     And the following "question categories" exist:
-      | contextlevel | reference | name                    |
-      | Course       | C1        | Adaptive Quiz Questions |
+      | contextlevel    | reference | name                    |
+      | Activity module | qbank1    | Adaptive Quiz Questions |
     And the following "questions" exist:
       | questioncategory        | qtype     | name | questiontext    | answer |
       | Adaptive Quiz Questions | truefalse | Q1   | First question  | True   |
@@ -39,11 +42,14 @@ Feature: Attempt feedback
       | maximumquestions           | 2                       |
       | standarderror              | 20                      |
       | questionpoolnamed          | Adaptive Quiz Questions |
+    And the following "mod_adaptivequiz > links with question banks" exist:
+      | adaptivequiz  | idnumber |
+      | Adaptive Quiz | qbank1   |
 
   @javascript
   Scenario: Get default textual feedback after an attempt is finished
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -60,7 +66,7 @@ Feature: Attempt feedback
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -76,7 +82,7 @@ Feature: Attempt feedback
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -93,7 +99,7 @@ Feature: Attempt feedback
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -113,13 +119,13 @@ Feature: Attempt feedback
     And I click on "Save and return to course" "button"
     And I log out
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
     And I press "Submit answer"
     And I press "Continue"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -137,7 +143,7 @@ Feature: Attempt feedback
   @javascript
   Scenario: Estimated ability after an attempt is finished is not visible by default
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -153,7 +159,7 @@ Feature: Attempt feedback
     And I click on "Save and return to course" "button"
     And I log out
     And I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
@@ -165,13 +171,13 @@ Feature: Attempt feedback
   @javascript
   Scenario: Estimated ability is not visible for a student in attempts summary by default
     When I am on the "adaptivequiz1" "Activity" page logged in as "student1"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"
     And I press "Submit answer"
     And I press "Continue"
-    And I click on "Start attempt" "link"
+    And I click on "Start attempt" "button"
     And I click on "True" "radio" in the "First question" "question"
     And I press "Submit answer"
     And I click on "True" "radio" in the "Second question" "question"

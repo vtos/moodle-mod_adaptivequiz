@@ -17,6 +17,7 @@
 /**
  * Some utility functions for the adaptive quiz activity.
  *
+ * @package    mod_adaptivequiz
  * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -56,11 +57,11 @@ define('ADAPTIVEQUIZ_STOPCRI_MAXLEVEL', 'maxlevel');
 define('ADAPTIVEQUIZ_STOPCRI_MINLEVEL', 'minlevel');
 
 /**
- * This function returns an array of question bank categories accessible to the
- * current user in the given context
- * @param context $context A context object
- * @return array An array whose keys are the question category ids and values
- * are the name of the question category
+ * This function returns an array of question bank categories accessible to the current user in the given context.
+ *
+ * @param context $context A context object.
+ * @return array An array whose keys are the question category ids and values are the name of the question category.
+ * @deprecated Since version 2.6.0.
  */
 function adaptivequiz_get_question_categories(context $context) {
     if (empty($context)) {
@@ -87,9 +88,11 @@ function adaptivequiz_get_question_categories(context $context) {
 }
 
 /**
- * This function is healper method to create default
- * @param object $context A context object
- * @return mixed The default category in the course context or false
+ * This function is helper method to create default.
+ *
+ * @param object $context A context object.
+ * @return mixed The default category in the course context or false.
+ * @deprecated Since version 2.6.0.
  */
 function adaptivequiz_make_default_categories($context) {
     if (empty($context)) {
@@ -103,10 +106,11 @@ function adaptivequiz_make_default_categories($context) {
 }
 
 /**
- * This function returns an array of question categories that were
- * selected for use for the activity instance
- * @param int $instance Instance id
- * @return array an array of question category ids
+ * This function returns an array of question categories that were selected for use for the activity instance.
+ *
+ * @param int $instance Instance id.
+ * @return array An array of question category ids.
+ * @deprecated Since version 2.6.0.
  */
 function adaptivequiz_get_selected_question_cateogires($instance) {
     global $DB;

@@ -1,0 +1,47 @@
+{{< mod_adaptivequiz/item_bank_settings_block}}
+    {{$title}}{{#str}} itembankassignedqbanks, adaptivequiz {{/str}}{{/title}}
+    {{$body}}
+        {{#hasthiscourseqbanks}}
+            {{< mod_adaptivequiz/question_banks_block }}
+                {{$qbankstitle}}
+                    {{#str}} itembankthiscourseqbanks, adaptivequiz {{/str}}
+                {{/qbankstitle}}
+                {{$qbanks}}
+                    {{#thiscourseqbanks}}
+                        {{> mod_adaptivequiz/question_bank }}
+                    {{/thiscourseqbanks}}
+                {{/qbanks}}
+            {{/ mod_adaptivequiz/question_banks_block }}
+        {{/hasthiscourseqbanks}}
+        {{#hasothercoursesqbanks}}
+            {{< mod_adaptivequiz/question_banks_block }}
+                {{$qbankstitle}}
+                    {{#str}} itembankothercoursesqbanks, adaptivequiz {{/str}}
+                {{/qbankstitle}}
+                {{$qbanks}}
+                    {{#othercoursesqbanks}}
+                        {{> mod_adaptivequiz/question_bank }}
+                    {{/othercoursesqbanks}}
+                {{/qbanks}}
+            {{/ mod_adaptivequiz/question_banks_block }}
+        {{/hasothercoursesqbanks}}
+        {{^hasanyqbanks}}
+            <p>{{#str}} noquestionbanks, adaptivequiz {{/str}}</p>
+        {{/hasanyqbanks}}
+    {{/body}}
+    {{$footer}}
+        <button
+                class="btn btn-secondary"
+                data-action="show-question-banks-dialog"
+                data-id="{{id}}"
+                data-course-id="{{courseid}}"
+        >
+            {{#str}} itembankassignqbank, adaptivequiz {{/str}}
+        </button>
+    {{/footer}}
+    {{$js}}
+        require(['mod_adaptivequiz/item_bank'], function(ItemBank) {
+        ItemBank.init();
+        });
+    {{/js}}
+{{/mod_adaptivequiz/item_bank_settings_block}}

@@ -1,0 +1,41 @@
+{{< mod_adaptivequiz/item_bank_settings_block}}
+    {{$title}}{{#str}} itembankitemadmparams, adaptivequiz {{/str}}{{/title}}
+    {{$body}}
+        {{^hasqbanks}}
+            {{#noqbanksnotification}}
+                {{> core/notification_info}}
+            {{/noqbanksnotification}}
+        {{/hasqbanks}}
+        {{#hasqbanks}}
+            {{#noparamsnotification}}
+                {{> core/notification_warning}}
+            {{/noparamsnotification}}
+            {{#invalidparamsnotification}}
+                {{> core/notification_error}}
+            {{/invalidparamsnotification}}
+            {{#paramset}}
+                <div class="mb-4">
+                    {{#itemadministrationparams}}
+                        {{> mod_adaptivequiz/item_administration_parameter}}
+                    {{/itemadministrationparams}}
+                </div>
+            {{/paramset}}
+        {{/hasqbanks}}
+    {{/body}}
+    {{$footer}}
+        {{#hasqbanks}}
+            <button
+                    class="btn btn-secondary"
+                    data-action="show-edit-params-dialog"
+                    data-id="{{id}}"
+            >
+                {{#str}} itembankitemadmparamsedit, adaptivequiz {{/str}}
+            </button>
+        {{/hasqbanks}}
+    {{/footer}}
+    {{$js}}
+        require(['mod_adaptivequiz/item_administration_params'], function(ItemBank) {
+            ItemBank.init();
+        });
+    {{/js}}
+{{/mod_adaptivequiz/item_bank_settings_block}}

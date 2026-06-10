@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use core\exception\coding_exception;
 use mod_adaptivequiz\attempt as read_attempt;
+use mod_adaptivequiz\item_bank;
 use mod_adaptivequiz\local\attempt as attempt_entity;
 
 /**
@@ -45,24 +47,6 @@ class mod_adaptivequiz_generator extends testing_module_generator {
 
         $record = (object)(array)$record;
 
-        if (!isset($record->questionpool) && !isset($record->questionpoolnamed)) {
-            $context = context_course::instance($record->course);
-            $questioncat = question_get_top_category($context->id, $create = true);
-            $record->questionpool = [
-                $questioncat->id,
-            ];
-        }
-
-        // Named question pool takes precedence over the 'questionpool' setting.
-        if (isset($record->questionpoolnamed)) {
-            if (is_string($record->questionpoolnamed)) {
-                $record->questionpoolnamed = [$record->questionpoolnamed];
-            }
-
-            $record->questionpool = $this->get_question_category_id_list_by_names($record->questionpoolnamed);
-            unset($record->questionpoolnamed);
-        }
-
         $defaultsettings = [
             'introformat' => FORMAT_MOODLE,
             'attempts' => 0,
@@ -82,6 +66,7 @@ class mod_adaptivequiz_generator extends testing_module_generator {
             'startinglevel' => 11,
             'timecreated' => time(),
             'timemodified' => time(),
+            'debuginfoenable' => 0,
         ];
 
         foreach ($defaultsettings as $name => $value) {
@@ -91,6 +76,49 @@ class mod_adaptivequiz_generator extends testing_module_generator {
         }
 
         return parent::create_instance($record, $options);
+    }
+
+    /**
+     * Generates links between the given adaptive quiz instance and question banks.
+     *
+     * Note, the question banks data passed is not validated.
+     *
+     * @param array $data 'adaptivequizid' and 'qbankid' are the required keys.
+     */
+    public function create_link_with_question_bank(array $data): void {
+        if (!array_key_exists('adaptivequizid', $data)) {
+            throw new coding_exception("Id of an 'adaptivequiz' instance is required when linking qbanks");
+        }
+
+        if (!array_key_exists('qbankid', $data)) {
+            throw new coding_exception("Id of a 'qbank' instance is required when linking qbanks");
+        }
+
+        item_bank::assign_qbanks_to_adaptivequiz($data['adaptivequizid'], [$data['qbankid']]);
+    }
+
+    /**
+     * Generates links between the given adaptive quiz instance and a single question category.
+     *
+     * Note, the passed data is not validated.
+     *
+     * @param array $data 'adaptivequizid' and 'qcategoryid' are the required keys.
+     */
+    public function create_link_with_question_category(array $data): void {
+        global $DB;
+
+        if (!array_key_exists('adaptivequizid', $data)) {
+            throw new coding_exception("Id of an 'adaptivequiz' instance is required when linking question categories");
+        }
+
+        if (!array_key_exists('qcategoryid', $data)) {
+            throw new coding_exception("Id of a question category is required when linking question categories");
+        }
+
+        $DB->insert_record('adaptivequiz_question', [
+            'instance' => $data['adaptivequizid'],
+            'questioncategory' => $data['qcategoryid'],
+        ]);
     }
 
     /**
@@ -162,19 +190,5 @@ class mod_adaptivequiz_generator extends testing_module_generator {
             standarderror: $standarderror, statusmessage: $stoppagereason);
 
         return read_attempt::get_record(['uniqueid' => $uniqueid], MUST_EXIST);
-    }
-
-    /**
-     * Fetches a list of id for the given names of question categories.
-     *
-     * @param string[] $names
-     * @return int[]
-     */
-    private function get_question_category_id_list_by_names(array $names): array {
-        global $DB;
-
-        [$namesql, $nameparams] = $DB->get_in_or_equal($names);
-
-        return $DB->get_fieldset_select('question_categories', 'id', "name $namesql", $nameparams);
     }
 }

@@ -14,19 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local\report\users_attempts\user_preferences;
 
 use basic_testcase;
 use mod_adaptivequiz\local\report\users_attempts\filter\filter_options;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
- * @covers \mod_adaptivequiz\local\report\users_attempts\user_preferences\filter_user_preferences
+ * A test class.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[CoversClass(\mod_adaptivequiz\local\report\users_attempts\user_preferences\filter_user_preferences::class)]
 class filter_user_preferences_test extends basic_testcase {
 
     public function test_it_acquires_correct_default_values_when_unexpected_parameters_provided(): void {

@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * fetch question PHPUnit tests
- *
- * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local;
 
 defined('MOODLE_INTERNAL') || die();
@@ -32,13 +24,20 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 use advanced_testcase;
 use coding_exception;
 use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use stdClass;
 
 /**
- * @group mod_adaptivequiz
- * @covers \mod_adaptivequiz\local\fetchquestion
+ * Fetch question PHPUnit tests.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class fetchquestion_test extends advanced_testcase {
+#[CoversClass(\mod_adaptivequiz\local\fetchquestion::class)]
+final class fetchquestion_test extends advanced_testcase {
     /** @var stdClass $activityinstance adaptivequiz activity instance object */
     protected $activityinstance = null;
 
@@ -248,30 +247,21 @@ class fetchquestion_test extends advanced_testcase {
         $fetchquestion->set_level(-22);
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_when_instantiated_with_a_zero_difficulty_level(): void {
+    public function test_it_fails_when_instantiated_with_a_zero_difficulty_level(): void {
         $this->resetAfterTest(true);
 
         $this->expectException('coding_exception');
         (new fetchquestion(new stdClass(), 0, 1, 100, ['phpunittag_']));
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_when_instantiated_with_a_negative_difficulty_level(): void {
+    public function test_it_fails_when_instantiated_with_a_negative_difficulty_level(): void {
         $this->resetAfterTest(true);
 
         $this->expectException('coding_exception');
         (new fetchquestion(new stdClass(), -11, 1, 100, ['phpunittag_']));
     }
 
-    /**
-     * @test
-     */
-    public function it_fails_when_instantiated_with_a_difficulty_level_as_a_string(): void {
+    public function test_it_fails_when_instantiated_with_a_difficulty_level_as_a_string(): void {
         $this->resetAfterTest(true);
 
         $this->expectException('coding_exception');
@@ -511,10 +501,7 @@ class fetchquestion_test extends advanced_testcase {
         $this->assertEquals([], $result);
     }
 
-    /**
-     * @test
-     */
-    public function it_retrieves_all_tag_ids(): void {
+    public function test_it_retrieves_all_tag_ids(): void {
         $this->resetAfterTest();
         $this->setup_test_data_xml();
 
@@ -527,10 +514,7 @@ class fetchquestion_test extends advanced_testcase {
         );
     }
 
-    /**
-     * @test
-     */
-    public function it_throws_an_exception_when_retrieves_all_tag_ids_for_an_empty_tag_prefix(): void {
+    public function test_it_throws_an_exception_when_retrieves_all_tag_ids_for_an_empty_tag_prefix(): void {
         $fetchquestion = new fetchquestion(new stdClass(), 5, 1, 100);
 
         $this->expectException('invalid_parameter_exception');
@@ -538,27 +522,26 @@ class fetchquestion_test extends advanced_testcase {
     }
 
     /**
-     * This is a data provider for
-     * @return $data - an array with arrays of data
+     * A data provider.
+     *
+     * @return array
      */
-    public function constructor_throw_coding_exception_provider() {
-        $data = array(
-            array(0, 1, 100),
-            array(1, 100, 100),
-            array(1, 100, 99)
-        );
-
-        return $data;
+    public static function constructor_throw_coding_exception_provider() {
+        return [
+            [0, 1, 100],
+            [1, 100, 100],
+            [1, 100, 99],
+        ];
     }
 
     /**
-     * This function tests throwing an exception by passing incorrect parameters
+     * This function tests throwing an exception by passing incorrect parameters.
      *
      * @param int $level the difficulty level
      * @param int $min the minimum level of the attempt
      * @param int $max the maximum level of the attempt
-     * @dataProvider constructor_throw_coding_exception_provider
      */
+    #[DataProvider('constructor_throw_coding_exception_provider')]
     public function test_constructor_throw_coding_exception($level, $min, $max) {
         $this->resetAfterTest(true);
 

@@ -23,9 +23,9 @@ require_once($CFG->dirroot.'/mod/adaptivequiz/locallib.php');
 
 use advanced_testcase;
 use context_module;
+use PHPUnit\Framework\Attributes\CoversClass;
 use question_usage_by_activity;
 use stdClass;
-
 
 /**
  * PHPUnit tests for catalgo class.
@@ -34,10 +34,9 @@ use stdClass;
  * @copyright  2013 Remote-Learner {@link http://www.remote-learner.ca/}
  * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- *
- * @covers \mod_adaptivequiz\local\catalgo
  */
-class catalgo_test extends advanced_testcase {
+#[CoversClass(\mod_adaptivequiz\local\catalgo::class)]
+final class catalgo_test extends advanced_testcase {
 
     /**
      * This function tests instantiating the catalgo class without an instance of question_usage_by_activity.
@@ -412,7 +411,7 @@ class catalgo_test extends advanced_testcase {
 
         $mockquba->expects($this->once())
             ->method('get_question_mark')
-            ->will($this->returnValue(1.0));
+            ->willReturn(1.0);
 
         $catalgo = new catalgo($mockquba, 1, true, 1);
         $result = $catalgo->get_question_mark($mockquba, 1);
@@ -423,7 +422,7 @@ class catalgo_test extends advanced_testcase {
 
         $mockqubatwo->expects($this->once())
             ->method('get_question_mark')
-            ->will($this->returnValue(1));
+            ->willReturn(1);
 
         $catalgo = new catalgo($mockqubatwo, 1, true, 1);
         $result = $catalgo->get_question_mark($mockqubatwo, 1);
@@ -462,11 +461,11 @@ class catalgo_test extends advanced_testcase {
 
         $mockquba->expects($this->exactly(5))
             ->method('get_question_mark')
-            ->will($this->returnValue(0));
+            ->willReturn(0);
 
         $mockquba->expects($this->once())
             ->method('get_slots')
-            ->will($this->returnValue(array(1, 2, 3, 4, 5)));
+            ->willReturn([1, 2, 3, 4, 5]);
 
         $catalgo = new catalgo($mockquba, 1, true, 1);
         $result = $catalgo->compute_right_answers($mockquba);
@@ -483,11 +482,11 @@ class catalgo_test extends advanced_testcase {
 
         $mockquba->expects($this->once())
             ->method('get_question_mark')
-            ->will($this->returnValue(null));
+            ->willReturn(null);
 
         $mockquba->expects($this->once())
             ->method('get_slots')
-            ->will($this->returnValue(array(1)));
+            ->willReturn([1]);
 
         $catalgo = new catalgo($mockquba, 1, true, 1);
         $result = $catalgo->compute_right_answers($mockquba);
@@ -505,11 +504,11 @@ class catalgo_test extends advanced_testcase {
 
         $mockquba->expects($this->exactly(5))
             ->method('get_question_mark')
-            ->will($this->returnValue(0));
+            ->willReturn(0);
 
         $mockquba->expects($this->once())
             ->method('get_slots')
-            ->will($this->returnValue(array(1, 2, 3, 4, 5)));
+            ->willReturn([1, 2, 3, 4, 5]);
 
         $catalgo = new catalgo($mockquba, 1, true, 1);
         $result = $catalgo->compute_wrong_answers($mockquba);
@@ -527,11 +526,11 @@ class catalgo_test extends advanced_testcase {
 
         $mockquba->expects($this->exactly(5))
             ->method('get_question_mark')
-            ->will($this->returnValue(1.0));
+            ->willReturn(1.0);
 
         $mockquba->expects($this->once())
             ->method('get_slots')
-            ->will($this->returnValue(array(1, 2, 3, 4, 5)));
+            ->willReturn([1, 2, 3, 4, 5]);
 
         $catalgo = new catalgo($mockquba, 1, true, 1);
         $result = $catalgo->compute_wrong_answers($mockquba);
@@ -548,11 +547,11 @@ class catalgo_test extends advanced_testcase {
 
         $mockquba->expects($this->once())
             ->method('get_question_mark')
-            ->will($this->returnValue(null));
+            ->willReturn(null);
 
         $mockquba->expects($this->once())
             ->method('get_slots')
-            ->will($this->returnValue(array(1)));
+            ->willReturn([1]);
 
         $catalgo = new catalgo($mockquba, 1, true, 1);
         $result = $catalgo->compute_wrong_answers($mockquba);

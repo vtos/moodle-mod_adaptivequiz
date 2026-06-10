@@ -14,27 +14,27 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * This class does the work of fetching a questions associated with a level of difficulty and within
- * a question category.
- *
- * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
- * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_adaptivequiz\local;
 
 use coding_exception;
 use dml_exception;
 use dml_read_exception;
 use invalid_parameter_exception;
+use mod_adaptivequiz\item_bank_helper;
 use mod_adaptivequiz\local\repository\questions_number_per_difficulty;
 use mod_adaptivequiz\local\repository\questions_repository;
 use mod_adaptivequiz\local\repository\tags_repository;
 use moodle_exception;
 use stdClass;
 
+/**
+ * This class does the work of fetching questions associated with a level of difficulty in the item bank.
+ *
+ * @package    mod_adaptivequiz
+ * @copyright  2013 onwards Remote-Learner {@link http://www.remote-learner.ca/}
+ * @copyright  2022 onwards Vitaly Potenko <potenkov@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class fetchquestion {
     /**
      * The maximum number of attempts at finding a tag containing questions
@@ -63,8 +63,8 @@ class fetchquestion {
     /** @var int $level the level of difficutly that will be used to fetch questions */
     protected $level = 1;
 
-    /** @var string $questcatids a string of comma separated question category ids */
-    protected $questcatids = '';
+    /** @var int[] $questcatids An array of question category ID. */
+    protected $questcatids = [];
 
     /** @var int $minimumlevel the minimum level achievable in the attempt */
     protected $minimumlevel;
@@ -443,27 +443,21 @@ class fetchquestion {
 
     /**
      * This function retrieves all of the question categories used the activity.
-     * @return array an array of quesiton category ids
+     *
+     * @return int[] An array of quesiton category ids.
      */
-    protected function retrieve_question_categories() {
-        global $DB;
-
+    protected function retrieve_question_categories(): array {
         // Check cached result.
         if (!empty($this->questcatids)) {
-            $this->print_debug('retrieve_question_categories() - question category ids (from cache): '.
-                $this->vardump($this->questcatids));
             return $this->questcatids;
         }
 
-        $param = array('instance' => $this->adaptivequiz->id);
-        $records = $DB->get_records_menu('adaptivequiz_question', $param, 'questioncategory ASC', 'id,questioncategory');
+        $qcategoryidlist = item_bank_helper::get_question_categories($this->adaptivequiz->id);
 
         // Cache the results.
-        $this->questcatids = $records;
+        $this->questcatids = $qcategoryidlist;
 
-        $this->print_debug('retrieve_question_categories() - question category ids: '.$this->vardump($records));
-
-        return $records;
+        return $qcategoryidlist;
     }
 
     /**

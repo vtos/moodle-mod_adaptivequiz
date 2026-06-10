@@ -25,6 +25,7 @@ use advanced_testcase;
 use cm_info;
 use context_module;
 use mod_adaptivequiz\local\attempt;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * A test class.
@@ -32,12 +33,11 @@ use mod_adaptivequiz\local\attempt;
  * @package    mod_adaptivequiz
  * @copyright  2022 Vitaly Potenko <potenkov@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- *
- * @covers \mod_adaptivequiz\completion\custom_completion
  */
+#[CoversClass(\mod_adaptivequiz\completion\custom_completion::class)]
 final class custom_completion_test extends advanced_testcase {
 
-    public function test_it_defines_completion_state_based_on_attempt_completion():void {
+    public function test_it_defines_completion_state_based_on_attempt_completion(): void {
         global $DB;
 
         $this->resetAfterTest();

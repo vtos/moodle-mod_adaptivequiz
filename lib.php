@@ -128,9 +128,6 @@ function adaptivequiz_add_instance(stdClass $adaptivequiz, mod_adaptivequiz_mod_
     }
     $adaptivequiz->id = $instance;
 
-    // Save question tag association data.
-    adaptivequiz_add_questcat_association($adaptivequiz->id, $adaptivequiz);
-
     // Update related grade item.
     adaptivequiz_grade_item_update($adaptivequiz);
 
@@ -138,8 +135,34 @@ function adaptivequiz_add_instance(stdClass $adaptivequiz, mod_adaptivequiz_mod_
 }
 
 /**
+ * Updates fields related to item administration settings.
+ *
+ * @param stdClass $adaptivequiz An instance of the 'adaptivequiz' activity.
+ */
+function adaptivequiz_update_item_administration_params(stdClass $adaptivequiz): void {
+    global $DB;
+
+    // Clean up the passed data to contain only what's related to the function's scope.
+    $settings = ['highestlevel', 'lowestlevel', 'startinglevel',
+        'minimumquestions', 'maximumquestions', 'standarderror'];
+
+    foreach ($adaptivequiz as $field => $unused) {
+        if ($field == 'id') {
+            continue;
+        }
+
+        if (!in_array($field, $settings)) {
+            unset($adaptivequiz->{$field});
+        }
+    }
+
+    $DB->update_record('adaptivequiz', $adaptivequiz);
+}
+
+/**
  * This function creates question category association record(s).
  *
+ * @deprecated Since version 2.6.0.
  * @param int $instance Activity instance id.
  * @param stdClass $adaptivequiz An object from the form in mod_form.php.
  */
@@ -560,9 +583,22 @@ function adaptivequiz_extend_settings_navigation(settings_navigation $settingsna
         return;
     }
 
-    $node = navigation_node::create(get_string('questionanalysisbtn', 'adaptivequiz'),
-        new moodle_url('/mod/adaptivequiz/questionanalysis/overview.php', ['cmid' => $settingsnav->get_page()->cm->id]),
-        navigation_node::TYPE_SETTING, null, 'mod_adaptivequiz_question_analysis', new pix_icon('i/report', ''));
+    $cmid = $settingsnav->get_page()->cm->id;
+
+    $node = navigation_node::create(
+        get_string('itembankbtn', 'adaptivequiz'),
+        new moodle_url('/mod/adaptivequiz/itembank.php', ['id' => $cmid]),
+        navigation_node::TYPE_SETTING, null, 'mod_adaptivequiz_item_bank', new pix_icon('i/report', '')
+    );
+
+    $adaptivequiznode->add_node($node);
+
+    $node = navigation_node::create(
+        get_string('questionanalysisbtn', 'adaptivequiz'),
+        new moodle_url('/mod/adaptivequiz/questionanalysis/overview.php', ['cmid' => $cmid]),
+        navigation_node::TYPE_SETTING, null, 'mod_adaptivequiz_question_analysis', new pix_icon('i/report', '')
+    );
+
     $adaptivequiznode->add_node($node);
 }
 
@@ -582,15 +618,15 @@ function adaptivequiz_grade_item_delete(stdClass $adaptivequiz) {
 }
 
 /**
- * Create or update the grade item for given quiz
+ * Create or update the grade item for given quiz.
  *
- * @category grade
- * @param object $adaptivequiz object
- * @param mixed $grades optional array/object of grade(s); 'reset' means reset grades in gradebook
- * @return int 0 if ok, error code otherwise
+ * @param stdClass $adaptivequiz
+ * @param mixed $grades Optional array/object of grade(s); 'reset' means reset grades in gradebook.
+ * @return int 0 if ok, error code otherwise.
  */
 function adaptivequiz_grade_item_update(stdClass $adaptivequiz, $grades = null) {
     global $CFG;
+
     require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
     require_once($CFG->libdir . '/gradelib.php');
 
@@ -600,13 +636,14 @@ function adaptivequiz_grade_item_update(stdClass $adaptivequiz, $grades = null) 
         $params = array('itemname' => $adaptivequiz->name);
     }
 
-    if ($adaptivequiz->highestlevel > 0) {
-        $params['gradetype'] = GRADE_TYPE_VALUE;
-        $params['grademax']  = $adaptivequiz->highestlevel;
-        $params['grademin']  = $adaptivequiz->lowestlevel;
-
-    } else {
-        $params['gradetype'] = GRADE_TYPE_NONE;
+    if (isset($adaptivequiz->highestlevel)) {
+        if ($adaptivequiz->highestlevel > 0) {
+            $params['gradetype'] = GRADE_TYPE_VALUE;
+            $params['grademax']  = $adaptivequiz->highestlevel;
+            $params['grademin']  = $adaptivequiz->lowestlevel;
+        } else {
+            $params['gradetype'] = GRADE_TYPE_NONE;
+        }
     }
 
     if ($grades === 'reset') {

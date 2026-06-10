@@ -16,6 +16,10 @@
 
 namespace mod_adaptivequiz\local\repository;
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
+
 use core_question\local\bank\question_version_status;
 use core_tag_tag;
 use question_finder;

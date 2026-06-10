@@ -22,7 +22,11 @@ This Moodle activity module was originally created as a collaborative effort bet
 College][3] and [Remote Learner][4]. The current repository was forked from
 [https://github.com/middlebury/moodle-mod_adaptivequiz][5].
 
-The current branch of the repository is compatible with Moodle 4.4 and 4.5.
+The current branch of the repository is compatible with Moodle 5.0, 5.1 and 5.2.
+
+**<span style="font-size:1.25em">IMPORTANT: the current branch is not an official plugin release for Moodle 5! It is
+an alpha and is intended for test sites only. Use the current branch at your own risk for any public Moodle
+sites.</span>**
 
 [3]: http://www.middlebury.edu/
 [4]: http://remote-learner.net/
@@ -60,6 +64,15 @@ Questions must be tagged with a 'difficulty score' using the format
 of the scale is arbitrary (e.g. 1-10, 0-99, 1-1000), but should have enough levels to
 distinguish between
 question difficulties.
+
+### Moodle 5 updates ###
+The current version allows to start operating with entire question banks in Moodle. This means a quiz manager
+can link an entire question bank or several question banks to use them as an item bank for the adaptive quiz.
+This is the key difference from any previous plugin version where the item bank consisted of linked question
+categories. For the upgraded sites however, all question categories linked as an item bank (or 'questions pool')
+in previous plugin versions remain linked with no changes. Please note, that quiz managers won't be able to
+link more separate question categories in the new plugin version, this is a temporary limitation in the new
+item bank management. As a new item bank, only entire question banks can be linked.
 
 The Testing Process
 -------------------

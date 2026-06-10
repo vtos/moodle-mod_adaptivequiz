@@ -25,16 +25,25 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core\output\notification;
+use core\output\single_button;
 use mod_adaptivequiz\form\requiredpassword;
 use mod_adaptivequiz\local\attempt\attempt_state;
 use mod_adaptivequiz\local\catalgo;
 use mod_adaptivequiz\output\ability_measure;
+use mod_adaptivequiz\output\attempt_debug_info;
 use mod_adaptivequiz\output\attempt_finished_page;
 use mod_adaptivequiz\output\attempt_progress;
+use mod_adaptivequiz\output\item_administration_params;
+use mod_adaptivequiz\output\item_bank_notification;
+use mod_adaptivequiz\output\item_bank_page;
+use mod_adaptivequiz\output\item_bank_qbanks;
+use mod_adaptivequiz\output\item_bank_qcategories;
 use mod_adaptivequiz\output\report\attempt_administration_report;
 use mod_adaptivequiz\output\report\attempt_answers_distribution_report;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_action;
 use mod_adaptivequiz\output\report\individual_user_attempts\individual_user_attempt_actions;
+use mod_adaptivequiz\output\start_attempt;
 use mod_adaptivequiz\output\user_attempt_summary;
 
 /**
@@ -65,24 +74,43 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     );
 
     /**
-     * Returns content for a button to start an adaptive quiz attempt or a notification when starting an attempt is not available.
+     * Returns content for the attempting widget.
      *
-     * @param int $cmid
-     * @param bool $attemptallowed
+     * Renders either a button to start/continue as attempt or a notification with reasoning why attempting is not
+     * available for the current adaptive quiz instance.
+     *
+     * @param moodle_url|null $attempturl URL of the start attempt script, null when attempting is not available.
+     * @param string $notificationtext Attempt unavailability notification string, empty when no restrictions.
      * @param bool $browsersecurityenabled
-     * @return string
      */
-    public function attempt_controls_or_notification(int $cmid, bool $attemptallowed, bool $browsersecurityenabled): string {
-        if (!$attemptallowed) {
-            return html_writer::div(get_string('noattemptsallowed', 'adaptivequiz'), 'alert alert-info text-center');
+    public function start_attempt(
+        ?moodle_url $attempturl = null,
+        string $notificationtext = '',
+        bool $browsersecurityenabled = false
+    ): string {
+        if ($browsersecurityenabled && $attempturl) {
+            return $this->display_start_attempt_form_secured($attempturl);
         }
 
-        if ($browsersecurityenabled) {
-            return $this->display_start_attempt_form_secured($cmid);
+        $button = null;
+        if ($attempturl) {
+            $button = new single_button(
+                url: $attempturl,
+                label: get_string('startattemptbtn', 'adaptivequiz'),
+                type: single_button::BUTTON_PRIMARY
+            );
         }
 
-        return html_writer::link(new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cmid, 'sesskey' => sesskey()]),
-            get_string('startattemptbtn', 'adaptivequiz'), ['class' => 'btn btn-primary']);
+        $notification = null;
+        if ($notificationtext) {
+            $notification = new notification(
+                message: $notificationtext,
+                messagetype: notification::NOTIFY_INFO,
+                closebutton: false
+            );
+        }
+
+        return $this->render(new start_attempt($button, $notification));
     }
 
     /**
@@ -184,6 +212,23 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      */
     public function attempt_finished_page(stdClass $adaptivequiz, stdClass $cm, stdClass $attempt): string {
         return $this->render(attempt_finished_page::create($adaptivequiz, $cm, $attempt));
+    }
+
+    /**
+     * A wrapper method to render contents of the item bank management page.
+     *
+     * @param stdClass $adaptivequiz An instance of the adaptive quiz activity.
+     * @param cm_info $cminfo The course module.
+     */
+    public function item_bank_page(stdClass $adaptivequiz, cm_info $cminfo): string {
+        return $this->render(
+            new item_bank_page(
+                new item_bank_notification($adaptivequiz),
+                new item_bank_qbanks($adaptivequiz, $cminfo),
+                new item_bank_qcategories($adaptivequiz, $cminfo),
+                new item_administration_params($adaptivequiz)
+            )
+        );
     }
 
     /**
@@ -672,6 +717,18 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
+     * To be overridden by a theme to render start attempt controls or an unavailability notification.
+     *
+     * @param start_attempt $attemptwidget
+     */
+    protected function render_start_attempt(start_attempt $attemptwidget): string {
+        return $this->render_from_template(
+            'mod_adaptivequiz/start_attempt',
+            $attemptwidget->export_for_template($this)
+        );
+    }
+
+    /**
      * Renders an attempt progress object, to be overridden by a theme if required.
      */
     protected function render_attempt_progress(attempt_progress $progress): string {
@@ -750,6 +807,21 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     }
 
     /**
+     * Renders debugging info for an attempt.
+     *
+     * @return string
+     */
+    protected function render_attempt_debug_info(attempt_debug_info $info): string {
+        $output = print_collapsible_region_start(classes: '', id: 'attemptdebuginfo',
+            caption: get_string('attemptdebuginfocaption', 'adaptivequiz'), default: true, return: true);
+
+        $output .= $this->render_from_template('mod_adaptivequiz/attempt_debug_info', $info->export_for_template($this));
+        $output .= print_collapsible_region_end(return: true);
+
+        return $output;
+    }
+
+    /**
      * Renders answers distribution report.
      *
      * @param attempt_answers_distribution_report $report
@@ -780,6 +852,17 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
      */
     protected function render_attempt_finished_page(attempt_finished_page $page): string {
         return $this->render_from_template('mod_adaptivequiz/attempt_finished_page', $page->export_for_template($this));
+    }
+
+    /**
+     * Returns contents of the item bank management page.
+     *
+     * Suitable for theme overrides.
+     *
+     * @param item_bank_page $page
+     */
+    protected function render_item_bank_page(item_bank_page $page): string {
+        return $this->render_from_template('mod_adaptivequiz/item_bank_page', $page->export_for_template($this));
     }
 
     /**
@@ -956,21 +1039,18 @@ class mod_adaptivequiz_renderer extends plugin_renderer_base {
     /**
      * This functions returns content for the start attempt button to start a secured browser attempt.
      *
-     * @param int $cmid
-     * @return string
+     * @param moodle_url $attempturl
      */
-    private function display_start_attempt_form_secured(int $cmid): string {
-        $url = new moodle_url('/mod/adaptivequiz/attempt.php', ['cmid' => $cmid]);
-
-        $startlink = new action_link($url, get_string('startattemptbtn', 'adaptivequiz'), null, ['class' => 'btn btn-primary']);
+    private function display_start_attempt_form_secured(moodle_url $attempturl): string {
+        $startlink = new action_link($attempturl, get_string('startattemptbtn', 'adaptivequiz'), null, ['class' => 'btn btn-primary']);
 
         $this->page->requires->js_module($this->adaptivequiz_get_js_module());
         $this->page->requires->js('/mod/adaptivequiz/module.js');
 
-        $popupaction = new popup_action('click', $url, 'adaptivequizpopup', self::$popupoptions);
+        $popupaction = new popup_action('click', $attempturl, 'adaptivequizpopup', self::$popupoptions);
         $startlink->add_action(new component_action('click',
             'M.mod_adaptivequiz.secure_window.start_attempt_action', [
-                'url' => $url->out(false),
+                'url' => $attempturl->out(false),
                 'windowname' => 'adaptivequizpopup',
                 'options' => $popupaction->get_js_options(),
                 'fullscreen' => true,

@@ -1,0 +1,32 @@
+{{< mod_adaptivequiz/item_bank_settings_block}}
+    {{$title}}{{#str}} itembankassignedqcats, adaptivequiz {{/str}}{{/title}}
+    {{$body}}
+        {{#hasthiscourseqcats}}
+            {{< mod_adaptivequiz/question_banks_block }}
+                {{$qbankstitle}}
+                    {{#str}} itembankthiscourseqcats, adaptivequiz {{/str}}
+                {{/qbankstitle}}
+                {{$qbanks}}
+                    {{#thiscourseqcats}}
+                        {{> mod_adaptivequiz/question_bank }}
+                    {{/thiscourseqcats}}
+                {{/qbanks}}
+            {{/ mod_adaptivequiz/question_banks_block }}
+        {{/hasthiscourseqcats}}
+        {{#hasothercoursesqcats}}
+            {{< mod_adaptivequiz/question_banks_block }}
+                {{$qbankstitle}}
+                    {{#str}} itembankothercoursesqcats, adaptivequiz {{/str}}
+                {{/qbankstitle}}
+                {{$qbanks}}
+                    {{#othercoursesqcats}}
+                        {{> mod_adaptivequiz/question_bank }}
+                    {{/othercoursesqcats}}
+                {{/qbanks}}
+            {{/ mod_adaptivequiz/question_banks_block }}
+        {{/hasothercoursesqcats}}
+        {{^hasanyqcats}}
+            <p>{{#str}} itembanknoqcats, adaptivequiz {{/str}}</p>
+        {{/hasanyqcats}}
+    {{/body}}
+{{/mod_adaptivequiz/item_bank_settings_block}}

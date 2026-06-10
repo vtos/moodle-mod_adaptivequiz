@@ -47,6 +47,11 @@ class attempt_finished_page implements renderable, templatable {
     private $continueurl;
 
     /**
+     * @var attempt_debug_info|null $debuginfo
+     */
+    private $debuginfo = null;
+
+    /**
      * Empty and closed, the factory method must be used instead.
      */
     private function __construct() {
@@ -65,6 +70,10 @@ class attempt_finished_page implements renderable, templatable {
         $page->attemptfeedback = attempt_feedback::create($adaptivequiz, $cm, $attempt);
         $page->continueurl = new moodle_url('/mod/adaptivequiz/view.php', ['id' => $cm->id]);
 
+        if ($adaptivequiz->debuginfoenable) {
+            $page->debuginfo = new attempt_debug_info($attempt);
+        }
+
         return $page;
     }
 
@@ -78,6 +87,7 @@ class attempt_finished_page implements renderable, templatable {
         return array_merge([
             'browsersecurityenabled' => $this->browsersecurityenabled,
             'continuebutton' => $output->continue_button($this->continueurl),
+            'debuginfo' => $this->debuginfo ? $output->render($this->debuginfo) : null,
         ], $this->attemptfeedback->export_for_template($output));
     }
 }

@@ -79,26 +79,35 @@ final class questions_repository {
         list($tagidlistsql, $tagidlistparam) = $DB->get_in_or_equal($tagidlist);
         list($categoryidlistsql, $categoryidlistparam) = $DB->get_in_or_equal($categoryidlist);
 
-        $difficultyselect = $DB->sql_substr('t.name', strlen(ADAPTIVEQUIZ_QUESTION_TAG) + 1);
+        $difficultyselect = $DB->sql_substr('name', strlen(ADAPTIVEQUIZ_QUESTION_TAG) + 1);
         $sql = "SELECT {$difficultyselect} AS difficultylevel, COUNT(*) AS questionsnumber
+            FROM (
+            SELECT
+              t.name,
+              qv.questionbankentryid,
+              qv.version,
+              qv.questionid,
+              ROW_NUMBER() OVER (PARTITION BY qv.questionbankentryid ORDER BY qv.version DESC) AS rownumber
             FROM {tag} t
             JOIN {tag_instance} ti ON t.id = ti.tagid
             JOIN {question} q ON q.id = ti.itemid
             JOIN {question_versions} qv ON qv.questionid = q.id
-            JOIN (
-                SELECT questionbankentryid, MAX(version) AS latestversion
-                FROM {question_versions}
-                WHERE status = ?
-                GROUP BY questionbankentryid
-            ) questionlatestversion ON questionlatestversion.questionbankentryid = qv.questionbankentryid
-            JOIN {question_bank_entries} qbe ON qbe.id = questionlatestversion.questionbankentryid
+            JOIN {question_bank_entries} qbe ON qbe.id = qv.questionbankentryid
             WHERE ti.itemtype = ?
             AND ti.tagid {$tagidlistsql}
             AND qbe.questioncategoryid {$categoryidlistsql}
-            GROUP BY t.name";
+            AND qv.status = ?
+            ) candidatequestions
+            WHERE rownumber = 1
+            GROUP BY name
+            ORDER BY difficultylevel ASC";
 
-        $params = array_merge([question_version_status::QUESTION_STATUS_READY, 'question'], $tagidlistparam,
-            $categoryidlistparam);
+        $params = array_merge(
+            ['question'],
+            $tagidlistparam,
+            $categoryidlistparam,
+            [question_version_status::QUESTION_STATUS_READY],
+        );
 
         $records = $DB->get_records_sql($sql, $params);
         if (empty($records)) {
@@ -148,26 +157,26 @@ final class questions_repository {
             $params += $tempparam;
         }
 
-        $sql = "SELECT q.id, q.name
+        $sql = "SELECT id, name
+            FROM (
+            SELECT
+                qv.questionbankentryid,
+                qv.version,
+                q.id,
+                q.name,
+                ROW_NUMBER() OVER (PARTITION BY qv.questionbankentryid ORDER BY qv.version DESC) AS rownumber
             FROM {question} q
             JOIN {tag_instance} ti ON q.id = ti.itemid
             JOIN {question_versions} qv ON qv.questionid = q.id
             JOIN {question_bank_entries} qbe ON qbe.id = qv.questionbankentryid
-            JOIN (
-                SELECT qv.questionid
-                FROM {question_versions} qv
-                JOIN (
-                    SELECT questionbankentryid, MAX(version) latestversion
-                    FROM {question_versions}
-                    WHERE status = :questionstatus
-                    GROUP BY questionbankentryid
-                ) qbelv ON qv.version = qbelv.latestversion AND qv.questionbankentryid = qbelv.questionbankentryid
-            ) qlv ON q.id = qlv.questionid
             WHERE ti.itemtype = :itemtype
               AND ti.tagid {$tagswhere}
               AND qbe.questioncategoryid {$categorywhere}
                   {$excludequestionsclause}
-            ORDER BY q.id ASC";
+            AND qv.status = :questionstatus
+            ) candidatequestions
+            WHERE rownumber = 1
+            ORDER BY id ASC";
 
         $params += ['questionstatus' => question_version_status::QUESTION_STATUS_READY, 'itemtype' => 'question'];
 

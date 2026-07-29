@@ -215,6 +215,62 @@ class item_bank {
     }
 
     /**
+     * Creates new links between the given adaptive quiz instance and question categories.
+     *
+     * @param int $adaptivequizid ID of the adaptive quiz instance to link the question categories to.
+     * @param array $qcategoryidlist List of category IDs (in format 'categoryid,contextid') to link.
+     */
+    public static function assign_question_categories_to_adaptivequiz(int $adaptivequizid, array $qcategoryidlist): void {
+        global $DB;
+
+        if (empty($qcategoryidlist)) {
+            return;
+        }
+
+        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequizid, 0, false, MUST_EXIST);
+        $context = context_module::instance($cm->id);
+
+        // Parse the categoryid,contextid format and validate each category.
+        $validcategoryids = [];
+        foreach ($qcategoryidlist as $categoryidcontextid) {
+            [$categoryid, $contextid] = explode(',', $categoryidcontextid);
+            $categoryid = (int) $categoryid;
+            $contextid = (int) $contextid;
+
+            // Verify the category exists and is in a valid context.
+            if ($DB->record_exists('question_categories', ['id' => $categoryid, 'contextid' => $contextid])) {
+                $validcategoryids[] = $categoryid;
+            }
+        }
+
+        if (empty($validcategoryids)) {
+            return;
+        }
+
+        // Filter out what's already added.
+        $linkedcategoryidlist = $DB->get_fieldset(
+            'adaptivequiz_question',
+            'questioncategory',
+            ['instance' => $adaptivequizid]
+        );
+        $newcategoryidlist = array_diff($validcategoryids, $linkedcategoryidlist);
+
+        if (empty($newcategoryidlist)) {
+            return;
+        }
+
+        // Insert new category assignments.
+        $insert = array_map(function (int $categoryid) use ($adaptivequizid): stdClass {
+            return (object) [
+                'instance' => $adaptivequizid,
+                'questioncategory' => $categoryid,
+            ];
+        }, $newcategoryidlist);
+
+        $DB->insert_records('adaptivequiz_question', $insert);
+    }
+
+    /**
      * A wrapper method to know whether the adaptive quiz has any question banks or single question categories assigned.
      *
      * @param int $adaptivequizid ID of the adaptive quiz instance.

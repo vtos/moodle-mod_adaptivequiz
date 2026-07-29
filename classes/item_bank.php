@@ -35,7 +35,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class item_bank {
-
     /**
      * Creates new links between the given adaptive quiz instance and questions banks.
      *
@@ -45,27 +44,21 @@ class item_bank {
     public static function assign_qbanks_to_adaptivequiz(int $adaptivequizid, array $qbankidlist): void {
         global $DB;
 
-        $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequizid, 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
+        // Ensure the adaptive quiz instance exists.
+        get_coursemodule_from_instance('adaptivequiz', $adaptivequizid, 0, false, MUST_EXIST);
 
-        // A way to validate the questions banks being assigned. We fetch what's available to match the passed
-        // question banks against.
-
-        $availableqbanks = question_bank_helper::get_activity_instances_with_shareable_questions(
-            filtercontext: $context
-        );
-
-        $qbankidlist = array_intersect(
-            $qbankidlist,
-            array_map(fn($qbank): int => $qbank->cminfo->instance, $availableqbanks)
-        );
+        // Validate each submitted question bank ID directly, instead of calling
+        // question_bank_helper::get_activity_instances_with_shareable_questions(), which loads every shareable
+        // question bank on the whole site: on large sites (many courses/question banks), that causes a request
+        // timeout for site administrators when assigning question banks here.
+        $qbankidlist = array_filter($qbankidlist, self::is_valid_shareable_qbank(...));
 
         // Filter out what's added already.
 
         $linkedqbankidlist = $DB->get_fieldset('adaptivequiz_qbank', 'qbankid', ['adaptivequizid' => $adaptivequizid]);
         $qbankidlist = array_diff($qbankidlist, $linkedqbankidlist);
 
-        $insert = array_map(function(int $qbankid) use ($adaptivequizid): stdClass {
+        $insert = array_map(function (int $qbankid) use ($adaptivequizid): stdClass {
             $qbankcm = get_coursemodule_from_instance('qbank', $qbankid, 0, false, MUST_EXIST);
             $qbankcontext = context_module::instance($qbankcm->id);
 
@@ -77,6 +70,37 @@ class item_bank {
         }, $qbankidlist);
 
         $DB->insert_records('adaptivequiz_qbank', $insert);
+    }
+
+    /**
+     * Checks whether the given ID belongs to an existing, shareable question bank instance.
+     *
+     * Validates the ID directly against the question bank activity's table and course modules, instead of loading
+     * every shareable question bank in the site via
+     * {@see question_bank_helper::get_activity_instances_with_shareable_questions()}: on large sites (many
+     * courses/question banks) that method call times out for site administrators, freezing the "Add selected
+     * question banks" action in the item bank UI.
+     *
+     * This duplicates, at a single-ID level, the "shareable question bank" criteria that
+     * {@see question_bank_helper} applies internally (course module exists, not pending deletion, and not a
+     * TYPE_PREVIEW bank). There is no core API to check a single ID this cheaply; if that core logic changes, this
+     * method will need to be revisited to stay in sync.
+     *
+     * @param int $qbankid ID of the question bank instance to validate.
+     */
+    private static function is_valid_shareable_qbank(int $qbankid): bool {
+        global $DB;
+
+        $qbankmodname = question_bank_helper::get_default_question_bank_activity_name();
+
+        $qbank = $DB->get_record($qbankmodname, ['id' => $qbankid]);
+        if (!$qbank || $qbank->type === question_bank_helper::TYPE_PREVIEW) {
+            return false;
+        }
+
+        $qbankcm = get_coursemodule_from_instance($qbankmodname, $qbankid, 0, false, IGNORE_MISSING);
+
+        return $qbankcm !== false && !$qbankcm->deletioninprogress;
     }
 
     /**

@@ -32,7 +32,6 @@ use moodle_url;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class assign_question_category_form extends dynamic_form {
-
     /**
      * Implements the abstract method. Defines the form fields for bank and category selection.
      */
@@ -87,7 +86,7 @@ class assign_question_category_form extends dynamic_form {
 
         // Debug: Log what we're receiving.
         $categoryidlist = $data->categoryids ?? null;
-        
+
         // Ensure we have an array.
         if (!is_array($categoryidlist)) {
             if (is_string($categoryidlist) && !empty($categoryidlist)) {
@@ -130,7 +129,7 @@ class assign_question_category_form extends dynamic_form {
      * Implements the abstract method. Validates access for dynamic submission.
      */
     protected function check_access_for_dynamic_submission(): void {
-        // MDL-0: Add capability check for manage permission.
+        require_capability('mod/adaptivequiz:manage', $this->get_context_for_dynamic_submission());
     }
 
     /**

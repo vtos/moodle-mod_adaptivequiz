@@ -30,7 +30,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
  */
 #[CoversClass(\mod_adaptivequiz\item_bank::class)]
 class item_bank_test extends advanced_testcase {
-
     public function test_it_assigns_question_banks_to_an_adaptive_quiz_instance(): void {
         global $DB;
 
@@ -73,6 +72,64 @@ class item_bank_test extends advanced_testcase {
                 (object) ['qbankid' => $qbank2->id, 'qbankcontextid' => $qbank2context->id],
             ],
             $result
+        );
+    }
+
+    public function test_it_only_reads_the_submitted_question_banks_regardless_of_how_many_others_exist(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $coregenerator = $this->getDataGenerator();
+        /** @var mod_adaptivequiz_generator $adaptivequizgenerator */
+        $adaptivequizgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
+
+        $course = $coregenerator->create_course();
+
+        // Two independent targets, created upfront, so neither call below warms a cache the other one benefits from.
+        $target1 = $qbankgenerator->create_instance(['course' => $course->id]);
+        $target2 = $qbankgenerator->create_instance(['course' => $course->id]);
+
+        $adaptivequiz1 = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+        $adaptivequiz2 = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+
+        // Warm up any one-off, per-request caches (e.g. capability/config caches) with a throwaway call, so neither
+        // of the two measured calls below benefits from a head start the other one doesn't also get.
+        $warmuptarget = $qbankgenerator->create_instance(['course' => $course->id]);
+        $warmupadaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course->id]);
+        item_bank::assign_qbanks_to_adaptivequiz($warmupadaptivequiz->id, [$warmuptarget->id]);
+
+        // A handful of unrelated question banks already exist in the site.
+        for ($i = 0; $i < 5; $i++) {
+            $qbankgenerator->create_instance(['course' => $course->id]);
+        }
+
+        $readsbefore = $DB->perf_get_reads();
+        item_bank::assign_qbanks_to_adaptivequiz($adaptivequiz1->id, [$target1->id, 999999999]);
+        $readswithfewqbanks = $DB->perf_get_reads() - $readsbefore;
+
+        // Simulate a much larger site by adding many more unrelated question banks.
+        for ($i = 0; $i < 25; $i++) {
+            $qbankgenerator->create_instance(['course' => $course->id]);
+        }
+
+        $readsbefore = $DB->perf_get_reads();
+        item_bank::assign_qbanks_to_adaptivequiz($adaptivequiz2->id, [$target2->id, 999999999]);
+        $readswithmanyqbanks = $DB->perf_get_reads() - $readsbefore;
+
+        // The number of DB reads must depend only on the 2 submitted IDs, not on how many other question banks
+        // exist in the site.
+        self::assertEquals($readswithfewqbanks, $readswithmanyqbanks);
+
+        // Both calls must have linked only the valid, submitted question bank, ignoring the non-existent ID.
+        self::assertEquals(
+            [$target1->id],
+            $DB->get_fieldset('adaptivequiz_qbank', 'qbankid', ['adaptivequizid' => $adaptivequiz1->id])
+        );
+        self::assertEquals(
+            [$target2->id],
+            $DB->get_fieldset('adaptivequiz_qbank', 'qbankid', ['adaptivequizid' => $adaptivequiz2->id])
         );
     }
 

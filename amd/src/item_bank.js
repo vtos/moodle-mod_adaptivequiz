@@ -32,30 +32,78 @@ import {getString} from 'core/str';
  */
 const SELECTORS = {
     showQuestionBanksDialog: '[data-action="show-question-banks-dialog"]',
+    showQuestionCategoriesDialog: '[data-action="show-question-categories-dialog"]',
 };
 
 /**
  * Entry point of the module.
  */
 export const init = () => {
-    document.querySelector(SELECTORS.showQuestionBanksDialog).addEventListener('click', (e) => {
-        const idFormArg = e.target.dataset.id;
-        const courseIdFormArg = e.target.dataset.courseId;
+    // Use event delegation to handle both bank and category dialog buttons
+    // This prevents duplicate listeners even if init is called multiple times
+    document.addEventListener('click', (e) => {
+        const bankButton = e.target.closest(SELECTORS.showQuestionBanksDialog);
+        if (bankButton) {
+            e.preventDefault();
+            handleBankDialogClick(bankButton);
+            return;
+        }
 
-        const form = new ModalForm({
-            formClass: "mod_adaptivequiz\\form\\assign_question_bank_form",
-            args: {
-                id: idFormArg,
-                course: courseIdFormArg,
-            },
-            modalConfig: {
-                title: getString('itembankeditqbanks', 'adaptivequiz'),
-            },
-            saveButtonText: getString('itembankaddqbankbn', 'adaptivequiz'),
-        });
-
-        form.addEventListener(form.events.FORM_SUBMITTED, () => window.location.reload());
-        form.show();
-
+        const categoryButton = e.target.closest(SELECTORS.showQuestionCategoriesDialog);
+        if (categoryButton) {
+            e.preventDefault();
+            handleCategoryDialogClick(categoryButton);
+            return;
+        }
     });
 };
+
+/**
+ * Handle click on bank dialog button.
+ *
+ * @param {HTMLElement} button The clicked button element.
+ */
+function handleBankDialogClick(button) {
+    const idFormArg = button.dataset.id;
+    const courseIdFormArg = button.dataset.courseId;
+
+    const form = new ModalForm({
+        formClass: "mod_adaptivequiz\\form\\assign_question_bank_form",
+        args: {
+            id: idFormArg,
+            course: courseIdFormArg,
+        },
+        modalConfig: {
+            title: getString('itembankeditqbanks', 'adaptivequiz'),
+        },
+        saveButtonText: getString('itembankaddqbankbn', 'adaptivequiz'),
+    });
+
+    form.addEventListener(form.events.FORM_SUBMITTED, () => window.location.reload());
+    form.show();
+}
+
+/**
+ * Handle click on category dialog button.
+ *
+ * @param {HTMLElement} button The clicked button element.
+ */
+function handleCategoryDialogClick(button) {
+    const idFormArg = button.dataset.id;
+    const courseIdFormArg = button.dataset.courseId;
+
+    const form = new ModalForm({
+        formClass: "mod_adaptivequiz\\form\\assign_question_category_form",
+        args: {
+            id: idFormArg,
+            course: courseIdFormArg,
+        },
+        modalConfig: {
+            title: getString('itembankassignqcat', 'adaptivequiz'),
+        },
+        saveButtonText: getString('itembankaddqbankbn', 'adaptivequiz'),
+    });
+
+    form.addEventListener(form.events.FORM_SUBMITTED, () => window.location.reload());
+    form.show();
+}

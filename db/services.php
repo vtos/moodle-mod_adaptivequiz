@@ -31,4 +31,10 @@ $functions = [
         'type' => 'read',
         'ajax' => true,
     ],
+    'mod_adaptivequiz_search_question_categories' => [
+        'classname' => '\mod_adaptivequiz\external\search_question_categories',
+        'description' => 'Get a list of question categories for a given question bank.',
+        'type' => 'read',
+        'ajax' => true,
+    ],
 ];

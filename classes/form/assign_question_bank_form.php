@@ -32,7 +32,6 @@ use moodle_url;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class assign_question_bank_form extends dynamic_form {
-
     /**
      *  Implements the abstract method.
      */
@@ -107,7 +106,7 @@ class assign_question_bank_form extends dynamic_form {
      * Implements the abstract method.
      */
     protected function check_access_for_dynamic_submission(): void {
-        // TODO.
+        require_capability('mod/adaptivequiz:manage', $this->get_context_for_dynamic_submission());
     }
 
     /**

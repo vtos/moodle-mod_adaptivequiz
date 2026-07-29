@@ -248,6 +248,10 @@ $string['itembankqcatunlinkconfirm'] = 'Are you sure you want to unassign the qu
 $string['itembankqbankunassignsuccess'] = 'Question bank has been successfully unassigned.';
 
 $string['itembankselectqbank'] = 'Select question bank';
+$string['selectcategories'] = 'Select categories';
+$string['selectcategoriesplaceholder'] = 'Choose categories from the selected bank...';
+$string['selectquestionbank'] = 'Select a question bank';
+$string['selectquestionbankplaceholder'] = 'Choose a question bank...';
 $string['itembankthiscourseqbanks'] = 'Question banks in this course';
 $string['itembankthiscourseqcats'] = 'Question categories in question banks in this course';
 $string['itembankothercoursesqbanks'] = 'Question banks from other courses';
@@ -258,6 +262,7 @@ $string['itembankunlinksuccess'] = 'Successfully unassigned from the item bank.'
 $string['itembankunlinkqbank'] = 'Unassign from the item bank';
 
 $string['itembankunlinkitem'] = 'Unassign from the item bank';
+$string['categoriesassignedflash'] = 'Question categories have been successfully assigned.';
 $string['questionanalysisbtn'] = 'Question Analysis';
 $string['id'] = 'ID';
 $string['name'] = 'Name';

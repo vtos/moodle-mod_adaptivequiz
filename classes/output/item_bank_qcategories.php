@@ -39,7 +39,10 @@ class item_bank_qcategories implements renderable, templatable {
      * @param stdClass $adaptivequiz An instance of the adaptive quiz activity.
      * @param cm_info $cm The adaptivequiz course module.
      */
-    public function __construct(readonly stdClass $adaptivequiz, readonly cm_info $cm) {
+    public function __construct(
+        readonly stdClass $adaptivequiz,
+        readonly cm_info $cm
+    ) {
     }
 
     /**
@@ -61,6 +64,8 @@ class item_bank_qcategories implements renderable, templatable {
         $othercoursesqcats = [];
 
         return [
+            'id' => $this->cm->id,
+            'courseid' => $this->adaptivequiz->course,
             'hasthiscourseqcats' => $thiscourseqcats !== [],
             'hasothercoursesqcats' => $othercoursesqcats !== [],
             'hasanyqcats' => $thiscourseqcats !== [] || $othercoursesqcats !== [],

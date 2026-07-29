@@ -29,4 +29,14 @@
             <p>{{#str}} itembanknoqcats, adaptivequiz {{/str}}</p>
         {{/hasanyqcats}}
     {{/body}}
+    {{$footer}}
+        <button
+                class="btn btn-secondary"
+                data-action="show-question-categories-dialog"
+                data-id="{{id}}"
+                data-course-id="{{courseid}}"
+        >
+            {{#str}} itembankassignqcat, adaptivequiz {{/str}}
+        </button>
+    {{/footer}}
 {{/mod_adaptivequiz/item_bank_settings_block}}

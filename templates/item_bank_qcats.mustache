@@ -1,29 +1,72 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_adaptivequiz/item_bank_qcats
+
+    Renders question categories linked to the item bank.
+
+    Context variables required for this template:
+    * hasthiscourseqcats - whether there are linked question categories in the current course
+    * thiscourseqcats - a list of question categories in the current course, required when 'hasthiscourseqcats' is true
+    * hasothercoursesqcats - whether there are linked question categories in other courses
+    * othercoursesqcats - a list of question categories in other courses, required when 'hasothercoursesqcats' is true
+    * hasanyqcats - whether there are any question categories linked, either in this or other courses
+
+    Example context (json):
+    {
+        "hasthiscourseqcats": true,
+        "thiscourseqcats": [
+            {
+                "name": "Category 1",
+                "label": "Label",
+                "url": "/category",
+                "actions": []
+            }
+        ],
+        "hasothercoursesqcats": false,
+        "hasanyqcats": true
+    }
+}}
 {{< mod_adaptivequiz/item_bank_settings_block}}
     {{$title}}{{#str}} itembankassignedqcats, adaptivequiz {{/str}}{{/title}}
     {{$body}}
         {{#hasthiscourseqcats}}
-            {{< mod_adaptivequiz/question_banks_block }}
-                {{$qbankstitle}}
+            {{< mod_adaptivequiz/item_bank_linked_units }}
+                {{$unitstitle}}
                     {{#str}} itembankthiscourseqcats, adaptivequiz {{/str}}
-                {{/qbankstitle}}
-                {{$qbanks}}
+                {{/unitstitle}}
+                {{$units}}
                     {{#thiscourseqcats}}
-                        {{> mod_adaptivequiz/question_bank }}
+                        {{> mod_adaptivequiz/item_bank_linked_unit }}
                     {{/thiscourseqcats}}
-                {{/qbanks}}
-            {{/ mod_adaptivequiz/question_banks_block }}
+                {{/units}}
+            {{/ mod_adaptivequiz/item_bank_linked_units }}
         {{/hasthiscourseqcats}}
         {{#hasothercoursesqcats}}
-            {{< mod_adaptivequiz/question_banks_block }}
-                {{$qbankstitle}}
+            {{< mod_adaptivequiz/item_bank_linked_units }}
+                {{$unitstitle}}
                     {{#str}} itembankothercoursesqcats, adaptivequiz {{/str}}
-                {{/qbankstitle}}
-                {{$qbanks}}
+                {{/unitstitle}}
+                {{$units}}
                     {{#othercoursesqcats}}
-                        {{> mod_adaptivequiz/question_bank }}
+                        {{> mod_adaptivequiz/item_bank_linked_unit }}
                     {{/othercoursesqcats}}
-                {{/qbanks}}
-            {{/ mod_adaptivequiz/question_banks_block }}
+                {{/units}}
+            {{/ mod_adaptivequiz/item_bank_linked_units }}
         {{/hasothercoursesqcats}}
         {{^hasanyqcats}}
             <p>{{#str}} itembanknoqcats, adaptivequiz {{/str}}</p>

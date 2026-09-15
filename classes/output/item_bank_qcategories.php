@@ -74,10 +74,10 @@ class item_bank_qcategories implements renderable, templatable {
                         ]
                     ),
                     'actions' => [
-                        'url' => new moodle_url(
+                        'url' => (new moodle_url(
                             '/mod/adaptivequiz/itembank.php',
                             ['id' => $this->cm->id, 'unassignqcat' => $qcategory->id]
-                        ),
+                        ))->out(false),
                         'icon' => ['key' => 't/delete', 'component' => 'core'],
                         'title' => get_string('itembankunlinkitem', 'adaptivequiz'),
                     ],

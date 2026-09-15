@@ -15,16 +15,11 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template mod_adaptivequiz/question_bank
+    @template mod_adaptivequiz/item_bank_linked_units
 
-    Renders an assigned question bank item.
+    Renders a block of units linked to the item bank - question banks or question categories.
 }}
-<div class="pb-2">
-    <a href="{{{url}}}">{{{name}}}</a>
-    {{#label}}
-        <span class="badge bg-primary ml-1">{{label}}</span>
-    {{/label}}
-    {{#actions}}
-        {{> core/action_link }}
-    {{/actions}}
+<div id="{{$unitsid}}{{/unitsid}}" class="mb-4">
+    <h5>{{$unitstitle}}{{/unitstitle}}</h5>
+    {{$units}}{{/units}}
 </div>

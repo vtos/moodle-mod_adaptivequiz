@@ -18,6 +18,7 @@ namespace mod_adaptivequiz;
 
 use advanced_testcase;
 use context_module;
+use core\exception\invalid_parameter_exception;
 use mod_adaptivequiz_generator;
 use PHPUnit\Framework\Attributes\CoversClass;
 
@@ -29,35 +30,42 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 #[CoversClass(\mod_adaptivequiz\item_bank::class)]
-class item_bank_test extends advanced_testcase {
+final class item_bank_test extends advanced_testcase {
 
     public function test_it_assigns_question_banks_to_an_adaptive_quiz_instance(): void {
         global $DB;
 
         $this->resetAfterTest();
 
-        $course1 = $this->getDataGenerator()->create_course();
-        $course2 = $this->getDataGenerator()->create_course();
+        $coregenerator = $this->getDataGenerator();
+        /** @var mod_adaptivequiz_generator $adaptivequizgenerator */
+        $adaptivequizgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
 
-        $qbank1 = $this->getDataGenerator()
-            ->get_plugin_generator('mod_qbank')
-            ->create_instance(['course' => $course1->id]);
+        $course1 = $coregenerator->create_course();
+        $course2 = $coregenerator->create_course();
+
+        $qbank1 = $qbankgenerator->create_instance(['course' => $course1->id]);
 
         $qbank1cm = get_coursemodule_from_instance('qbank', $qbank1->id, 0, false, MUST_EXIST);
         $qbank1context = context_module::instance($qbank1cm->id);
 
-        $qbank2 = $this->getDataGenerator()
-            ->get_plugin_generator('mod_qbank')
-            ->create_instance(['course' => $course2->id]);
+        $qbank2 = $qbankgenerator->create_instance(['course' => $course2->id]);
 
         $qbank2cm = get_coursemodule_from_instance('qbank', $qbank2->id, 0, false, MUST_EXIST);
         $qbank2context = context_module::instance($qbank2cm->id);
 
-        $adaptivequiz = $this->getDataGenerator()
-            ->get_plugin_generator('mod_adaptivequiz')
-            ->create_instance(['course' => $course1->id]);
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
 
+        $manager = $coregenerator->create_user();
+        $coregenerator->enrol_user($manager->id, $course1->id, 'manager');
+        $coregenerator->enrol_user($manager->id, $course2->id, 'manager');
+
+        // End of setup.
+
+        self::setUser($manager);
         item_bank::assign_qbanks_to_adaptivequiz($adaptivequiz->id, [$qbank1->id, $qbank2->id]);
+
         $result = $DB->get_records(
             'adaptivequiz_qbank',
             ['adaptivequizid' => $adaptivequiz->id],
@@ -73,6 +81,98 @@ class item_bank_test extends advanced_testcase {
                 (object) ['qbankid' => $qbank2->id, 'qbankcontextid' => $qbank2context->id],
             ],
             $result
+        );
+    }
+
+    /**
+     * Tests a duplicate assignment will not be created.
+     */
+    public function test_it_will_not_reassign_a_question_bank_to_an_adaptive_quiz_instance(): void {
+        $this->resetAfterTest();
+
+        $coregenerator = $this->getDataGenerator();
+        /** @var mod_adaptivequiz_generator $adaptivequizgenerator */
+        $adaptivequizgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
+
+        $course1 = $coregenerator->create_course();
+
+        $qbank1 = $qbankgenerator->create_instance(['course' => $course1->id]);
+        $qbank2 = $qbankgenerator->create_instance(['course' => $course1->id]);
+
+        // Data randomization.
+
+        $randomadaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
+
+        foreach ([$qbank1->id, $qbank2->id] as $qbankid) {
+            $adaptivequizgenerator->create_link_with_question_bank([
+                'adaptivequizid' => $randomadaptivequiz->id,
+                'qbankid' => $qbankid,
+            ]);
+        }
+
+        // End of.
+
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
+
+        $adaptivequizgenerator->create_link_with_question_bank([
+            'adaptivequizid' => $adaptivequiz->id,
+            'qbankid' => $qbank1->id,
+        ]);
+
+        // End of setup.
+
+        self::expectException(invalid_parameter_exception::class);
+        self::expectExceptionMessage('Invalid parameter value detected (Attempt to add existing question bank assignments)');
+        item_bank::assign_qbanks_to_adaptivequiz($adaptivequiz->id, [$qbank1->id]);
+    }
+
+    public function test_it_will_not_assign_a_question_bank_to_an_adaptive_quiz_instance_with_no_permissions(): void {
+        $this->resetAfterTest();
+
+        $coregenerator = $this->getDataGenerator();
+        /** @var mod_adaptivequiz_generator $adaptivequizgenerator */
+        $adaptivequizgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
+
+        $course1 = $coregenerator->create_course();
+        $course2 = $coregenerator->create_course();
+        $course3 = $coregenerator->create_course();
+
+        $qbank1 = $qbankgenerator->create_instance(['course' => $course1->id]);
+        $qbank2 = $qbankgenerator->create_instance(['course' => $course1->id]);
+        $qbank3 = $qbankgenerator->create_instance(['course' => $course2->id]);
+        $qbank4 = $qbankgenerator->create_instance(['course' => $course3->id]);
+
+        // Data randomization.
+
+        $randomadaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
+
+        foreach ([$qbank1->id, $qbank2->id] as $qbankid) {
+            $adaptivequizgenerator->create_link_with_question_bank([
+                'adaptivequizid' => $randomadaptivequiz->id,
+                'qbankid' => $qbankid,
+            ]);
+        }
+
+        // End of.
+
+        $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
+
+        $manager = $coregenerator->create_user();
+        $coregenerator->enrol_user($manager->id, $course1->id, 'manager');
+        $coregenerator->enrol_user($manager->id, $course2->id, 'manager');
+
+        // End of setup.
+
+        self::setUser($manager);
+
+        self::expectException(invalid_parameter_exception::class);
+        self::expectExceptionMessage('Invalid parameter value detected (Attempt to assign question bank with no permissions)');
+
+        item_bank::assign_qbanks_to_adaptivequiz(
+            $adaptivequiz->id,
+            [$qbank1->id, $qbank2->id, $qbank3->id, $qbank4->id]
         );
     }
 
@@ -113,9 +213,9 @@ class item_bank_test extends advanced_testcase {
         $manager = $coregenerator->create_user();
         $coregenerator->enrol_user($manager->id, $course1->id, 'manager');
 
-        self::setUser($manager);
         // End of setup.
 
+        self::setUser($manager);
         item_bank::unassign_qbank_from_adaptivequiz($adaptivequiz1->id, $qbank1->id);
 
         $result = item_bank::get_question_banks_assigned_to_adaptivequiz($adaptivequiz1->id);

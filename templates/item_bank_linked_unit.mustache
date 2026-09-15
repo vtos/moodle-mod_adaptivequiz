@@ -15,14 +15,30 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template mod_adaptivequiz/question_banks_block
+    @template mod_adaptivequiz/item_bank_linked_unit
 
-    Renders a question banks block.
+    Renders a linked item bank unit (question bank or question category).
 
-    TODO: what this is for.
-    TODO: refactor to be used for both qbanks and qcategories.
+    Context variables required for this template:
+    * name
+    * url
+    * label - optional label to display after the name
+    * actions - see the included core template
+
+    Example context (json):
+    {
+        "name": "Question category",
+        "url": "/category",
+        "label": "Question bank 1",
+        "actons": []
+    }
 }}
-<div class="mb-4">
-    <h5>{{$qbankstitle}}{{/qbankstitle}}</h5>
-    {{$qbanks}}{{/qbanks}}
+<div class="pb-2">
+    <a href="{{{url}}}">{{{name}}}</a>
+    {{#label}}
+        <span class="badge bg-primary ml-1">{{label}}</span>
+    {{/label}}
+    {{#actions}}
+        {{> core/action_menu_link }}
+    {{/actions}}
 </div>

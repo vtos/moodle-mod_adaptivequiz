@@ -81,9 +81,9 @@ class search_question_banks extends external_api {
      * Main.
      *
      * @param int $contextid Context ID of the adaptive quiz module.
-     * @param string $search String to filter results by question bank name.
      * @param int|null $incourseid Specific course ID to get banks from.
      * @param int|null $notincourseid Course ID to exclude.
+     * @param string $search String to filter results by question bank name.
      */
     public static function execute(
         int $contextid,
@@ -116,9 +116,14 @@ class search_question_banks extends external_api {
 
         $excludeqbankidlist = array_map(fn (stdClass $qbank) => $qbank->id, $currentassignments);
 
+        // This limits the available banks to where the user has access to all questions only.
+        // This is because in the current version a question bank is bound entirely only.
+        $capoptions = ['moodle/question:useall'];
+
         $qbanks = question_bank_helper::get_activity_instances_with_shareable_questions(
             incourseids: $incourseid ? [$incourseid] : [],
             notincourseids: $notincourseid ? [$notincourseid] : [],
+            havingcap: $capoptions,
             filtercontext: $context,
             search: $search,
             limit: self::MAX_RESULTS + 1, // Return up to 1 extra result, so we know there are more.

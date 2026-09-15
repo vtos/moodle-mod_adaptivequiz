@@ -33,7 +33,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass(\mod_adaptivequiz_generator::class)]
 final class generator_test extends advanced_testcase {
 
-    public function test_generator() {
+    public function test_it_creates_an_adaptive_quiz_instance() {
         global $DB, $SITE;
 
         $this->resetAfterTest();
@@ -58,6 +58,14 @@ final class generator_test extends advanced_testcase {
 
         $context = context_module::instance($cm->id);
         $this->assertEquals($adaptivequiz->cmid, $context->instanceid);
+
+        // Test it has to any item administration parameters set when not passed explicitly.
+        $this->assertEmpty($adaptivequiz->highestlevel);
+        $this->assertEmpty($adaptivequiz->lowestlevel);
+        $this->assertEmpty($adaptivequiz->startinglevel);
+        $this->assertEmpty($adaptivequiz->minimumquestions);
+        $this->assertEmpty($adaptivequiz->maximumquestions);
+        $this->assertEquals(0, $adaptivequiz->standarderror);
     }
 
     public function test_it_creates_links_with_question_banks(): void {

@@ -64,6 +64,8 @@ $PAGE->set_title($title);
 
 require_login($course, true, $cm);
 
+require_capability('mod/adaptivequiz:manage', $context);
+
 /** @var mod_adaptivequiz_renderer $renderer */
 $renderer = $PAGE->get_renderer('mod_adaptivequiz');
 

@@ -21,6 +21,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
 use context_module;
+use core\exception\invalid_parameter_exception;
 use core_question\local\bank\question_bank_helper;
 use stdClass;
 
@@ -45,28 +46,50 @@ class item_bank {
     public static function assign_qbanks_to_adaptivequiz(int $adaptivequizid, array $qbankidlist): void {
         global $DB;
 
+        // Filter out what's added already.
+
+        $linkedqbankidlist = $DB->get_fieldset('adaptivequiz_qbank', 'qbankid', ['adaptivequizid' => $adaptivequizid]);
+
+        $assignmentexists = array_intersect($qbankidlist, $linkedqbankidlist);
+        if ($assignmentexists) {
+            throw new invalid_parameter_exception('Attempt to add existing question bank assignments');
+        }
+
         $cm = get_coursemodule_from_instance('adaptivequiz', $adaptivequizid, 0, false, MUST_EXIST);
         $context = context_module::instance($cm->id);
 
         // A way to validate the questions banks being assigned. We fetch what's available to match the passed
         // question banks against.
 
+        // Define the set of courses to get the query limited by.
+        $defaultqbankmod = question_bank_helper::get_default_question_bank_activity_name();
+        [$qbankidsql, $qbankidparams] = $DB->get_in_or_equal($qbankidlist);
+        $incourseids = $DB->get_fieldset_select($defaultqbankmod, 'course', "id $qbankidsql", $qbankidparams);
+
+        $capoptions = ['moodle/question:useall'];
+
         $availableqbanks = question_bank_helper::get_activity_instances_with_shareable_questions(
+            incourseids: $incourseids,
+            havingcap: $capoptions,
             filtercontext: $context
         );
 
-        $qbankidlist = array_intersect(
-            $qbankidlist,
-            array_map(fn($qbank): int => $qbank->cminfo->instance, $availableqbanks)
-        );
+        $availableqbankidlist = array_map(fn($qbank): int => $qbank->cminfo->instance, $availableqbanks);
 
-        // Filter out what's added already.
+        $notavailable = array_diff($qbankidlist, $availableqbankidlist);
+        if ($notavailable) {
+            throw new invalid_parameter_exception('Attempt to assign question bank with no permissions');
+        }
 
-        $linkedqbankidlist = $DB->get_fieldset('adaptivequiz_qbank', 'qbankid', ['adaptivequizid' => $adaptivequizid]);
-        $qbankidlist = array_diff($qbankidlist, $linkedqbankidlist);
+        $defaultqbankmod = question_bank_helper::get_default_question_bank_activity_name();
 
-        $insert = array_map(function(int $qbankid) use ($adaptivequizid): stdClass {
-            $qbankcm = get_coursemodule_from_instance('qbank', $qbankid, 0, false, MUST_EXIST);
+        $insert = array_map(function(int $qbankid) use ($adaptivequizid, $defaultqbankmod): stdClass {
+            $qbankcm = get_coursemodule_from_instance(
+                modulename: $defaultqbankmod,
+                instance: $qbankid,
+                strictness: MUST_EXIST
+            );
+
             $qbankcontext = context_module::instance($qbankcm->id);
 
             return (object) [
@@ -172,6 +195,10 @@ class item_bank {
     /**
      * Provides information about single question categories linked to the given adaptive quiz activity.
      *
+     * @param int $adaptivequizid
+     * @param string $fields The fields to return.
+     * @param int|null $incourseid Return only from this course.
+     * @param int|null $notincourseid Return outside this course only.
      * @return stdClass[] Each item is a record from {question_categories} + 'cmid' and 'qbankname' fields.
      */
     public static function get_question_categories_assigned_to_adaptivequiz(

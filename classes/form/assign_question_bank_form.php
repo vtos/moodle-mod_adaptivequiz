@@ -65,17 +65,19 @@ class assign_question_bank_form extends dynamic_form {
 
         $form->addElement('hidden', 'id');
         $form->setType('id', PARAM_INT);
+
+        $form->addElement('hidden', 'course');
+        $form->setType('course', PARAM_INT);
     }
 
-    /**
-     * Implements the abstract method.
-     */
-    public function process_dynamic_submission(): void {
+    #[\Override]
+    public function process_dynamic_submission() {
         global $DB;
 
         $id = $this->optional_param('id', null, PARAM_INT);
+        $courseid = $this->optional_param('course', null, PARAM_INT);
 
-        $cm = get_coursemodule_from_id('adaptivequiz', $id, 0, false, MUST_EXIST);
+        $cm = get_coursemodule_from_id('adaptivequiz', $id, $courseid, false, MUST_EXIST);
         $adaptivequiz  = $DB->get_record('adaptivequiz', ['id' => $cm->instance], '*', MUST_EXIST);
 
         $data = $this->get_data();
@@ -86,11 +88,23 @@ class assign_question_bank_form extends dynamic_form {
         notification::success(get_string('itembanknewassignflash', 'adaptivequiz'));
     }
 
-    /**
-     * Implements the abstract method.
-     */
+    #[\Override]
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+
+        if (empty($data['addqbanksthis']) && empty($data['addqbanksother'])) {
+            $errors['addqbanksthis'] = get_string('itembankchooseanyqbank', 'adaptivequiz');
+        }
+
+        return $errors;
+    }
+
+    #[\Override]
     public function set_data_for_dynamic_submission(): void {
-        $this->set_data((object) ['id' => $this->optional_param('id', null, PARAM_INT)]);
+        $this->set_data((object) [
+            'id' => $this->optional_param('id', null, PARAM_INT),
+            'course' => $this->optional_param('course', null, PARAM_INT),
+        ]);
     }
 
     /**
@@ -107,7 +121,8 @@ class assign_question_bank_form extends dynamic_form {
      * Implements the abstract method.
      */
     protected function check_access_for_dynamic_submission(): void {
-        // TODO.
+        $context = context_module::instance($this->optional_param('id', 0, PARAM_INT));
+        require_capability('mod/adaptivequiz:manage', $context);
     }
 
     /**

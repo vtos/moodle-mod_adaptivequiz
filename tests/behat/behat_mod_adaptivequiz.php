@@ -29,6 +29,39 @@ use Behat\Mink\Exception\ExpectationException;
 class behat_mod_adaptivequiz extends behat_base {
 
     /**
+     * Convert page names to URLs for steps like 'When I am on the "[identifier]" "[page type]" page'.
+     *
+     * @param string $type Identifies what particular page this is, e.g. 'Item bank'.
+     * @param string $identifier Identifier of the activity instance, e.g. its name.
+     */
+    protected function resolve_page_instance_url(string $type, string $identifier): moodle_url {
+        $type = strtolower($type);
+
+        if ($type == 'item bank') {
+            $cm = $this->get_cm_by_adaptivequiz_name($identifier);
+
+            return new moodle_url('/mod/adaptivequiz/itembank.php', ['id' => $cm->id]);
+        }
+
+        throw new Exception("Unrecognised adaptive quiz page type - {$type}");
+    }
+
+    /**
+     * Locates an item in the item bank assignments interface and triggers an action for it.
+     *
+     * @When /^I click on "(?P<action_string>(?:[^"]|\\")*)" action for "(?P<name_string>(?:[^"]|\\")*)" in assigned items$/
+     *
+     * @param string $action The action to take.
+     * @param string $name The name of the item (qbank/qcategory).
+     */
+    public function i_click_on_action_for_item_in_assigned_items($action, $name) {
+        $xpath = "//div[@id='qbanksthis']//a[text()='{$name}']//following-sibling::a[@title='{$action}']";
+        $node = $this->find('xpath', $xpath);
+
+        $node->click();
+    }
+
+    /**
      * Wraps testing of what's displayed as debugging info for the current attempt.
      *
      * @Then /^I should see the following debugging info for the attempt:$/
@@ -102,5 +135,34 @@ class behat_mod_adaptivequiz extends behat_base {
 
         $this->execute("behat_general::should_exist_in_the",
                 [ "//div[contains(text(), '{$stopcriteria}')]", 'xpath_element', '#attemptdebuginfo', 'css_element']);
+    }
+
+    /**
+     * Get an adaptive quiz by name.
+     *
+     * @param string $name
+     * @return stdClass The corresponding DB row from {adaptivequiz}.
+     */
+    private function get_adaptivequiz_by_name(string $name): stdClass {
+        global $DB;
+
+        return $DB->get_record('adaptivequiz', ['name' => $name], '*', MUST_EXIST);
+    }
+
+    /**
+     * Get an adaptive quiz course module from its name.
+     *
+     * @param string $name Adaptive quiz name.
+     * @return stdClass From get_coursemodule_from_instance().
+     */
+    private function get_cm_by_adaptivequiz_name(string $name): stdClass {
+        $adaptivequiz = $this->get_adaptivequiz_by_name($name);
+
+        return get_coursemodule_from_instance(
+            'adaptivequiz',
+            $adaptivequiz->id,
+            $adaptivequiz->course,
+            strictness: MUST_EXIST
+        );
     }
 }

@@ -15,8 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 use core\exception\coding_exception;
+use core_question\local\bank\question_bank_helper;
 use mod_adaptivequiz\attempt as read_attempt;
-use mod_adaptivequiz\item_bank;
 use mod_adaptivequiz\local\attempt as attempt_entity;
 
 /**
@@ -40,12 +40,14 @@ class mod_adaptivequiz_generator extends testing_module_generator {
      * @param array|null $options
      * @return stdClass
      */
-    public function create_instance($record = null, array $options = null) {
+    public function create_instance($record = null, ?array $options = null) {
         global $CFG;
 
         require_once($CFG->dirroot .'/mod/adaptivequiz/locallib.php');
 
         $record = (object)(array)$record;
+
+        $time = time();
 
         $defaultsettings = [
             'introformat' => FORMAT_MOODLE,
@@ -58,14 +60,8 @@ class mod_adaptivequiz_generator extends testing_module_generator {
             'showabilitymeasurefeedback' => 0,
             'showabilitymeasuresummary' => 0,
             'attemptonlast' => 0,
-            'highestlevel' => 111,
-            'lowestlevel' => 1,
-            'minimumquestions' => 1,
-            'maximumquestions' => 111,
-            'standarderror' => 1.1,
-            'startinglevel' => 11,
-            'timecreated' => time(),
-            'timemodified' => time(),
+            'timecreated' => $time,
+            'timemodified' => $time,
             'debuginfoenable' => 0,
         ];
 
@@ -86,6 +82,8 @@ class mod_adaptivequiz_generator extends testing_module_generator {
      * @param array $data 'adaptivequizid' and 'qbankid' are the required keys.
      */
     public function create_link_with_question_bank(array $data): void {
+        global $DB;
+
         if (!array_key_exists('adaptivequizid', $data)) {
             throw new coding_exception("Id of an 'adaptivequiz' instance is required when linking qbanks");
         }
@@ -94,7 +92,21 @@ class mod_adaptivequiz_generator extends testing_module_generator {
             throw new coding_exception("Id of a 'qbank' instance is required when linking qbanks");
         }
 
-        item_bank::assign_qbanks_to_adaptivequiz($data['adaptivequizid'], [$data['qbankid']]);
+        $defaultqbankmod = question_bank_helper::get_default_question_bank_activity_name();
+
+        $qbankcm = get_coursemodule_from_instance(
+            modulename: $defaultqbankmod,
+            instance: $data['qbankid'],
+            strictness: MUST_EXIST
+        );
+
+        $qbankcontext = context_module::instance($qbankcm->id);
+
+        $DB->insert_record('adaptivequiz_qbank', [
+            'adaptivequizid' => $data['adaptivequizid'],
+            'qbankid' => $data['qbankid'],
+            'qbankcontextid' => $qbankcontext->id,
+        ]);
     }
 
     /**

@@ -97,12 +97,15 @@ class item_bank_qbanks implements renderable, templatable {
                     'url' => $qbank->cminfo->get_url(),
                     'actions' => [
                         [
-                            'url' => new moodle_url(
+                            'url' => (new moodle_url(
                                 '/mod/adaptivequiz/itembank.php',
                                 ['id' => $this->cm->id, 'unassignqbank' => $qbank->id]
-                            ),
+                            ))->out(false),
                             'icon' => ['key' => 't/delete', 'component' => 'core'],
-                            'title' => get_string('itembankunlinkqbank', 'adaptivequiz'),
+                            'attributes' => [
+                                'name' => 'title',
+                                'value' => get_string('itembankunlinkqbank', 'adaptivequiz'),
+                            ],
                         ],
                     ],
                 ],
@@ -117,10 +120,10 @@ class item_bank_qbanks implements renderable, templatable {
                     'url' => $qbank->cminfo->get_url(),
                     'actions' => [
                         [
-                            'url' => new moodle_url(
+                            'url' => (new moodle_url(
                                 '/mod/adaptivequiz/itembank.php',
                                 ['id' => $this->cm->id, 'unassignqbank' => $qbank->id]
-                            ),
+                            ))->out(false),
                             'icon' => ['key' => 't/delete', 'component' => 'core'],
                             'title' => get_string('itembankunlinkqbank', 'adaptivequiz'),
                         ],

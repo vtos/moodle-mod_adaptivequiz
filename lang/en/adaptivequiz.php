@@ -227,6 +227,7 @@ $string['itembankassignedqbanks'] = 'Assigned question banks';
 $string['itembankassignqbank'] = 'Assign new question bank';
 $string['itembankassignqcat'] = 'Assign new question category';
 $string['itembankbtn'] = 'Item bank';
+$string['itembankchooseanyqbank'] = 'Please, choose a question bank to assign';
 $string['itembankeditqbanks'] = 'Edit question banks assignment';
 $string['itembankinvalidlevel'] = 'No questions of this level found in the item bank';
 $string['itembankitemadminvalidparams'] = 'Some item administration parameters for this module are invalid';

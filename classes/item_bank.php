@@ -20,7 +20,10 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
+use cm_info;
 use context_module;
+use core\context;
+use core\context_helper;
 use core\exception\invalid_parameter_exception;
 use core_question\local\bank\question_bank_helper;
 use stdClass;
@@ -36,21 +39,24 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class item_bank {
-
     /**
      * Creates new links between the given adaptive quiz instance and questions banks.
      *
      * @param int $adaptivequizid ID of the adaptive quiz instance to link the question banks to.
-     * @param int[] $qbankidlist List of ID of question bank instances to link.
+     * @param int[] $qbankcontextidlist List of question bank module context ID to link.
      */
-    public static function assign_qbanks_to_adaptivequiz(int $adaptivequizid, array $qbankidlist): void {
+    public static function assign_qbanks_to_adaptivequiz(int $adaptivequizid, array $qbankcontextidlist): void {
         global $DB;
 
         // Filter out what's added already.
 
-        $linkedqbankidlist = $DB->get_fieldset('adaptivequiz_qbank', 'qbankid', ['adaptivequizid' => $adaptivequizid]);
+        $linkedqbankcontextidlist = $DB->get_fieldset(
+            'adaptivequiz_qbank',
+            'qbankcontextid',
+            ['adaptivequizid' => $adaptivequizid]
+        );
 
-        $assignmentexists = array_intersect($qbankidlist, $linkedqbankidlist);
+        $assignmentexists = array_intersect($qbankcontextidlist, $linkedqbankcontextidlist);
         if ($assignmentexists) {
             throw new invalid_parameter_exception('Attempt to add existing question bank assignments');
         }
@@ -62,9 +68,12 @@ class item_bank {
         // question banks against.
 
         // Define the set of courses to get the query limited by.
-        $defaultqbankmod = question_bank_helper::get_default_question_bank_activity_name();
-        [$qbankidsql, $qbankidparams] = $DB->get_in_or_equal($qbankidlist);
-        $incourseids = $DB->get_fieldset_select($defaultqbankmod, 'course', "id $qbankidsql", $qbankidparams);
+        $incourseids = [];
+        context_helper::preload_contexts_by_id($qbankcontextidlist);
+        foreach ($qbankcontextidlist as $qbankcontextid) {
+            // A question bank module must always have a course context, we're OK to fatal here when it doesn't.
+            $incourseids[] = context::instance_by_id($qbankcontextid)->get_course_context()->instanceid;
+        }
 
         $capoptions = ['moodle/question:useall'];
 
@@ -74,30 +83,30 @@ class item_bank {
             filtercontext: $context
         );
 
-        $availableqbankidlist = array_map(fn($qbank): int => $qbank->cminfo->instance, $availableqbanks);
+        $availableqbankcontextidlist = array_map(
+            // The types returned by get_activity_instances_with_shareable_questions() are different across 5.x
+            // versions.
+            fn ($qbank): int => class_exists('\core_question\local\bank\formatted_bank')
+                ? $qbank->get_formatted()->contextid
+                : $qbank->contextid,
+            $availableqbanks
+        );
 
-        $notavailable = array_diff($qbankidlist, $availableqbankidlist);
+        $notavailable = array_diff($qbankcontextidlist, $availableqbankcontextidlist);
         if ($notavailable) {
             throw new invalid_parameter_exception('Attempt to assign question bank with no permissions');
         }
 
-        $defaultqbankmod = question_bank_helper::get_default_question_bank_activity_name();
-
-        $insert = array_map(function(int $qbankid) use ($adaptivequizid, $defaultqbankmod): stdClass {
-            $qbankcm = get_coursemodule_from_instance(
-                modulename: $defaultqbankmod,
-                instance: $qbankid,
-                strictness: MUST_EXIST
-            );
-
-            $qbankcontext = context_module::instance($qbankcm->id);
-
+        $insert = array_map(function (int $qbankcontextid) use ($adaptivequizid): stdClass {
             return (object) [
                 'adaptivequizid' => $adaptivequizid,
-                'qbankid' => $qbankid,
-                'qbankcontextid' => $qbankcontext->id,
+
+                // This field will be deprecated in future versions.
+                'qbankid' => 0,
+
+                'qbankcontextid' => $qbankcontextid,
             ];
-        }, $qbankidlist);
+        }, $qbankcontextidlist);
 
         $DB->insert_records('adaptivequiz_qbank', $insert);
     }
@@ -108,9 +117,9 @@ class item_bank {
      * Can be used as a high-level API method, contains all necessary permissions checks.
      *
      * @param int $adaptivequizid ID of the adaptive quiz instance to unlink the question bank from.
-     * @param int $qbankid ID of th question bank to unlink.
+     * @param int $qbankcmid ID of the question bank course module.
      */
-    public static function unassign_qbank_from_adaptivequiz(int $adaptivequizid, int $qbankid): void {
+    public static function unassign_qbank_from_adaptivequiz(int $adaptivequizid, int $qbankcmid): void {
         global $DB;
 
         $cm = get_coursemodule_from_instance(
@@ -122,7 +131,12 @@ class item_bank {
         $context = context_module::instance($cm->id);
         require_capability('mod/adaptivequiz:manage', $context);
 
-        $DB->delete_records('adaptivequiz_qbank', ['adaptivequizid' => $adaptivequizid, 'qbankid' => $qbankid]);
+        $qbankcontext = context_module::instance($qbankcmid);
+
+        $DB->delete_records(
+            'adaptivequiz_qbank',
+            ['adaptivequizid' => $adaptivequizid, 'qbankcontextid' => $qbankcontext->id]
+        );
     }
 
     /**
@@ -156,14 +170,12 @@ class item_bank {
      * the adaptive quiz instance.
      *
      * @param int $adaptivequizid
-     * @param string $fields Comma separated list of fields to return for each item.
      * @param int|null $incourseid A specific course question banks must be from.
      * @param int|null $notincourseid A specific course question banks must not be from.
-     * @return stdClass[] An array of question bank instances.
+     * @return cm_info[] A cm_info object per question bank.
      */
     public static function get_question_banks_assigned_to_adaptivequiz(
         int $adaptivequizid,
-        string $fields = '*',
         ?int $incourseid = null,
         ?int $notincourseid = null
     ): array {
@@ -173,37 +185,45 @@ class item_bank {
         $paramsextra = [];
 
         if ($incourseid) {
-            $whereextra .= "AND qb.course = ?";
-            $paramsextra[] = $incourseid;
+            $whereextra .= " AND cm.course = :incourse";
+            $paramsextra['incourse'] = $incourseid;
         }
 
         if ($notincourseid) {
-            $whereextra .= "AND qb.course != ?";
-            $paramsextra[] = $notincourseid;
+            $whereextra .= " AND cm.course != :notincourse";
+            $paramsextra['notincourse'] = $notincourseid;
         }
 
-        $sql = "SELECT qb.{$fields}
+        $sql = "SELECT cm.id, cm.course
                   FROM {adaptivequiz_qbank} aqb
-                  JOIN {qbank} qb ON qb.id = aqb.qbankid
-                 WHERE aqb.adaptivequizid = ?
+                  JOIN {context} ctx ON ctx.id = aqb.qbankcontextid
+                  JOIN {course_modules} cm ON cm.id = ctx.instanceid AND ctx.contextlevel = :contextlevel
+                 WHERE aqb.adaptivequizid = :instance
+                       AND cm.deletioninprogress = :deletion
                        {$whereextra}";
-        $params = array_merge([$adaptivequizid], $paramsextra);
+        $paramsbase = ['contextlevel' => CONTEXT_MODULE, 'instance' => $adaptivequizid, 'deletion' => 0];
 
-        return $DB->get_records_sql($sql, $params);
+        $records = $DB->get_records_sql($sql, array_merge($paramsbase, $paramsextra));
+
+        $return = array_map(fn (stdClass $record): cm_info => cm_info::create($record), $records);
+        sort($return);
+
+        return $return;
     }
 
     /**
      * Provides information about single question categories linked to the given adaptive quiz activity.
      *
+     * Besides the question category properties, each returned item will contain a 'qbank' property
+     * with the question bank the current category is from. The 'qbank' property will be an instance of {@see \cm_info}.
+     *
      * @param int $adaptivequizid
-     * @param string $fields The fields to return.
      * @param int|null $incourseid Return only from this course.
      * @param int|null $notincourseid Return outside this course only.
-     * @return stdClass[] Each item is a record from {question_categories} + 'cmid' and 'qbankname' fields.
+     * @return stdClass[] Each item is a record from {question_categories} + 'qbank' property.
      */
     public static function get_question_categories_assigned_to_adaptivequiz(
         int $adaptivequizid,
-        string $fields = '*',
         ?int $incourseid = null,
         ?int $notincourseid = null
     ): array {
@@ -213,32 +233,46 @@ class item_bank {
         $paramsextra = [];
 
         if ($incourseid) {
-            $whereextra .= "AND cm.course = ?";
-            $paramsextra[] = $incourseid;
+            $whereextra .= "AND cm.course = :incourse";
+            $paramsextra['incourse'] = $incourseid;
         }
 
         if ($notincourseid) {
-            $whereextra .= "AND cm.course != ?";
-            $paramsextra[] = $notincourseid;
+            $whereextra .= "AND cm.course != :notincourse";
+            $paramsextra['notincourse'] = $notincourseid;
         }
 
-        // Add a prefix to the fields to be returned.
-        $fieldlist = array_map(fn (string $field) => 'qc.' . $field, explode(',', $fields));
-        $fields = implode(',', $fieldlist);
+        $cmfieldprefix = 'cmf_';
 
-        // TODO: consider post-loading of cm_info instances for categories' qbanks.
-
-        $sql = "SELECT {$fields}, cm.id AS cmid, qb.name AS qbankname
+        $sql = "SELECT qc.*, cm.id AS {$cmfieldprefix}id, cm.course AS {$cmfieldprefix}course
                   FROM {adaptivequiz_question} aq
                   JOIN {question_categories} qc ON qc.id = aq.questioncategory
                   JOIN {context} c ON c.id = qc.contextid
-                  JOIN {course_modules} cm ON cm.id = c.instanceid AND c.contextlevel = ?
-                  JOIN {qbank} qb ON qb.id = cm.instance
-                 WHERE aq.instance = ?
+                  JOIN {course_modules} cm ON cm.id = c.instanceid AND c.contextlevel = :contextlevel
+                 WHERE aq.instance = :instance
+                       AND cm.deletioninprogress = :deletion
                        {$whereextra}";
-        $params = array_merge([CONTEXT_MODULE, $adaptivequizid], $paramsextra);
+        $paramsbase = ['contextlevel' => CONTEXT_MODULE, 'instance' => $adaptivequizid, 'deletion' => 0];
 
-        return $DB->get_records_sql($sql, $params);
+        $return = $DB->get_records_sql($sql, array_merge($paramsbase, $paramsextra));
+
+        array_walk($return, function (stdClass $qcat) use ($cmfieldprefix) {
+            $cm = new stdClass();
+            foreach ($qcat as $property => $value) {
+                if (!str_contains($property, $cmfieldprefix)) {
+                    continue;
+                }
+
+                $cmproperty = str_replace($cmfieldprefix, '', $property);
+                $cm->{$cmproperty} = $value;
+                unset($qcat->{$property});
+            }
+
+            $qcat->qbank = cm_info::create($cm);
+        });
+        sort($return);
+
+        return $return;
     }
 
     /**

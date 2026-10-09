@@ -32,8 +32,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
  */
 #[CoversClass(\mod_adaptivequiz_generator::class)]
 final class generator_test extends advanced_testcase {
-
-    public function test_it_creates_an_adaptive_quiz_instance() {
+    /**
+     * Tests how an instance of the adaptive quiz activity is created.
+     */
+    public function test_it_creates_an_adaptive_quiz_instance(): void {
         global $DB, $SITE;
 
         $this->resetAfterTest();
@@ -84,16 +86,31 @@ final class generator_test extends advanced_testcase {
         $qbank1 = $qbankgenerator->create_instance(['course' => $course->id]);
         $qbank2 = $qbankgenerator->create_instance(['course' => $course->id]);
 
-        foreach ([$qbank1->id, $qbank2->id] as $qbankid) {
+        $qbank1cm = get_coursemodule_from_instance(
+            modulename: 'qbank',
+            instance: $qbank1->id,
+            strictness: MUST_EXIST
+        );
+
+        $qbank2cm = get_coursemodule_from_instance(
+            modulename: 'qbank',
+            instance: $qbank2->id,
+            strictness: MUST_EXIST
+        );
+
+        $qbank1context = context_module::instance($qbank1cm->id);
+        $qbank2context = context_module::instance($qbank2cm->id);
+
+        foreach ([$qbank1context->id, $qbank2context->id] as $qbankcontextid) {
             $generator->create_link_with_question_bank([
                 'adaptivequizid' => $adaptivequiz->id,
-                'qbankid' => $qbankid,
+                'qbankcontextid' => $qbankcontextid,
             ]);
         }
 
-        $result = $DB->get_fieldset('adaptivequiz_qbank', 'qbankid', ['adaptivequizid' => $adaptivequiz->id]);
+        $result = $DB->get_fieldset('adaptivequiz_qbank', 'qbankcontextid', ['adaptivequizid' => $adaptivequiz->id]);
         self::assertCount(2, $result);
-        self::assertEqualsCanonicalizing([$qbank1->id, $qbank2->id], $result);
+        self::assertEqualsCanonicalizing([$qbank1context->id, $qbank2context->id], $result);
     }
 
     public function test_it_creates_links_with_single_question_categories(): void {
@@ -182,7 +199,7 @@ final class generator_test extends advanced_testcase {
 
         $generator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank->id,
+            'qbankcontextid' => $qbankcontext->id,
         ]);
 
         $user = $coregenerator->create_user();
@@ -233,7 +250,7 @@ final class generator_test extends advanced_testcase {
 
         $generator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank->id,
+            'qbankcontextid' => $qbankcontext->id,
         ]);
 
         $user = $coregenerator->create_user();

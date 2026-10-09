@@ -29,8 +29,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 #[CoversClass(\mod_adaptivequiz\item_bank_helper::class)]
-class item_bank_helper_test extends advanced_testcase {
-
+final class item_bank_helper_test extends advanced_testcase {
+    /**
+     * Tests how it calculates the number of questions which are available for the given difficulty level.
+     */
     public function test_it_counts_questions_with_the_given_difficulty_level_for_an_adaptivequiz_instance(): void {
         $this->resetAfterTest();
 
@@ -51,10 +53,16 @@ class item_bank_helper_test extends advanced_testcase {
 
         $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
 
-        foreach ([$qbank1->id, $qbank2->id] as $qbankid) {
+        $qbank1cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank1->id, strictness: MUST_EXIST);
+        $qbank1context = context_module::instance($qbank1cm->id);
+
+        $qbank2cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank2->id, strictness: MUST_EXIST);
+        $qbank2context = context_module::instance($qbank2cm->id);
+
+        foreach ([$qbank1context->id, $qbank2context->id] as $qbankid) {
             $adaptivequizgenerator->create_link_with_question_bank([
                 'adaptivequizid' => $adaptivequiz->id,
-                'qbankid' => $qbankid,
+                'qbankcontextid' => $qbankid,
             ]);
         }
 
@@ -157,12 +165,12 @@ class item_bank_helper_test extends advanced_testcase {
 
         $adaptivequizgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank1->id,
+            'qbankcontextid' => $qbank1context->id,
         ]);
 
         $adaptivequizgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank2->id,
+            'qbankcontextid' => $qbank2context->id,
         ]);
 
         $adaptivequizgenerator->create_link_with_question_category([

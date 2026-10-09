@@ -23,8 +23,6 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 use core_question\local\bank\question_bank_helper;
-use mod_adaptivequiz\item_bank;
-use stdClass;
 
 /**
  * Returns a list of filtered question banks.
@@ -34,7 +32,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class search_question_banks extends external_api {
-
     /**
      * @var int The maximum number of banks to return.
      */
@@ -91,6 +88,8 @@ class search_question_banks extends external_api {
         ?int $notincourseid = null,
         string $search = ''
     ): array {
+        global $DB;
+
         [
             'contextid' => $contextid,
             'incourseid' => $incourseid,
@@ -107,14 +106,12 @@ class search_question_banks extends external_api {
         self::validate_context($context);
 
         $cm = get_coursemodule_from_id(modulename: 'adaptivequiz', cmid: $context->instanceid, strictness: MUST_EXIST);
-        $currentassignments = item_bank::get_question_banks_assigned_to_adaptivequiz(
-            $cm->instance,
-            'id',
-            $incourseid,
-            $notincourseid
-        );
 
-        $excludeqbankidlist = array_map(fn (stdClass $qbank) => $qbank->id, $currentassignments);
+        $excludeqbankcontextidlist = $DB->get_fieldset(
+            'adaptivequiz_qbank',
+            'qbankcontextid',
+            ['adaptivequizid' => $cm->instance]
+        );
 
         // This limits the available banks to where the user has access to all questions only.
         // This is because in the current version a question bank is bound entirely only.
@@ -129,21 +126,25 @@ class search_question_banks extends external_api {
             limit: self::MAX_RESULTS + 1, // Return up to 1 extra result, so we know there are more.
         );
 
-        $qbanks = array_filter($qbanks, function ($qbank) use ($excludeqbankidlist) {
-            return !in_array($qbank->cminfo->instance, $excludeqbankidlist);
+        $qbanks = array_filter($qbanks, function ($qbank) use ($excludeqbankcontextidlist) {
+            /** @var \cm_info $qbankcminfo */
+            $qbankcminfo = $qbank->cminfo;
+
+            return !in_array($qbankcminfo->context->id, $excludeqbankcontextidlist);
         });
 
         $suggestions = array_map(function ($qbank) {
             // The types returned by get_activity_instances_with_shareable_questions() are different across 5.x
             // versions.
-            if ($qbank instanceof stdClass) {
-                return ['value' => $qbank->cminfo->instance, 'label' => $qbank->coursenamebankname];
-            }
+            $label = call_user_func(
+                fn ($arg): string => class_exists('\core_question\local\bank\formatted_bank')
+                    ? $arg->get_formatted()->coursenamebankname
+                    : $arg->coursenamebankname,
+                $qbank
+            );
 
-            /** @var \core_question\local\bank\formatted_bank $qbank */
-            return ['value' => $qbank->cminfo->instance, 'label' => $qbank->get_formatted()->coursenamebankname];
+            return ['value' => $qbank->cminfo->context->id, 'label' => $label];
         }, $qbanks);
-
         sort($suggestions);
 
         if (count($suggestions) > self::MAX_RESULTS) {

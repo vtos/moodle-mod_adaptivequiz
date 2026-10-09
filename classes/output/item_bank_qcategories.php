@@ -32,14 +32,18 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class item_bank_qcategories implements renderable, templatable {
-
     /**
      * The constructor.
      *
      * @param stdClass $adaptivequiz An instance of the adaptive quiz activity.
      * @param cm_info $cm The adaptivequiz course module.
      */
-    public function __construct(readonly stdClass $adaptivequiz, readonly cm_info $cm) {
+    public function __construct(
+        /** @var stdClass $adaptivequiz An instance of the adaptive quiz activity. */
+        public readonly stdClass $adaptivequiz,
+        /** @var cm_info $cm The adaptivequiz course module. */
+        public readonly cm_info $cm
+    ) {
     }
 
     /**
@@ -51,12 +55,8 @@ class item_bank_qcategories implements renderable, templatable {
     public function export_for_template(renderer_base $output) {
         $thiscourseqcats = item_bank::get_question_categories_assigned_to_adaptivequiz(
             adaptivequizid: $this->adaptivequiz->id,
-            fields: 'id, name, contextid',
             incourseid: $this->adaptivequiz->course
         );
-
-        // Reset keys for the template.
-        sort($thiscourseqcats);
 
         $othercoursesqcats = [];
 
@@ -67,9 +67,10 @@ class item_bank_qcategories implements renderable, templatable {
             'thiscourseqcats' => array_map(
                 fn (stdClass $qcategory): array => [
                     'name' => $qcategory->name,
-                    'url' => new moodle_url('/question/edit.php',
+                    'url' => new moodle_url(
+                        '/question/edit.php',
                         [
-                            'cmid' => $qcategory->cmid,
+                            'cmid' => $qcategory->qbank->id,
                             'cat' => "{$qcategory->id},{$qcategory->contextid}",
                         ]
                     ),
@@ -81,7 +82,7 @@ class item_bank_qcategories implements renderable, templatable {
                         'icon' => ['key' => 't/delete', 'component' => 'core'],
                         'title' => get_string('itembankunlinkitem', 'adaptivequiz'),
                     ],
-                    'label' => $qcategory->qbankname,
+                    'label' => $qcategory->qbank->get_formatted_name(),
                 ],
                 $thiscourseqcats
             ),

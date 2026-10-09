@@ -32,14 +32,18 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class item_bank_qbanks implements renderable, templatable {
-
     /**
      * The constructor.
      *
      * @param stdClass $adaptivequiz An instance of the adaptive quiz activity.
      * @param cm_info $cm The adaptivequiz course module.
      */
-    public function __construct(readonly stdClass $adaptivequiz, readonly cm_info $cm) {
+    public function __construct(
+        /** @var stdClass $adaptivequiz An instance of the adaptive quiz activity */
+        public readonly stdClass $adaptivequiz,
+        /** @var cm_info $cm The adaptivequiz course module. */
+        public readonly cm_info $cm
+    ) {
     }
 
     /**
@@ -51,39 +55,13 @@ class item_bank_qbanks implements renderable, templatable {
     public function export_for_template(renderer_base $output) {
         $thiscourseqbanks = item_bank::get_question_banks_assigned_to_adaptivequiz(
             adaptivequizid: $this->adaptivequiz->id,
-            fields: 'id, name',
             incourseid: $this->adaptivequiz->course
         );
 
-        // TODO: preload a cm in the item_bank API.
-        array_walk(
-            $thiscourseqbanks,
-            function($qbank) {
-                $cm = get_coursemodule_from_instance('qbank', $qbank->id);
-                $qbank->cminfo = cm_info::create($cm);
-            }
-        );
-
-        // Reset keys for the template.
-        sort($thiscourseqbanks);
-
         $othercoursesqbanks = item_bank::get_question_banks_assigned_to_adaptivequiz(
             adaptivequizid:$this->adaptivequiz->id,
-            fields: 'id, name',
             notincourseid: $this->adaptivequiz->course
         );
-
-        // TODO: preload a cm in the item_bank API.
-        array_walk(
-            $othercoursesqbanks,
-            function($qbank) {
-                $cm = get_coursemodule_from_instance('qbank', $qbank->id);
-                $qbank->cminfo = cm_info::create($cm);
-            }
-        );
-
-        // Reset keys for the template.
-        sort($othercoursesqbanks);
 
         return [
             'id' => $this->cm->id,
@@ -92,9 +70,9 @@ class item_bank_qbanks implements renderable, templatable {
 
             // TODO: consider extracting this to an exporter.
             'thiscourseqbanks' => array_map(
-                fn(stdClass $qbank): array => [
-                    'name' => $qbank->name,
-                    'url' => $qbank->cminfo->get_url(),
+                fn (cm_info $qbank): array => [
+                    'name' => $qbank->get_formatted_name(),
+                    'url' => $qbank->get_url(),
                     'actions' => [
                         [
                             'url' => (new moodle_url(
@@ -115,9 +93,9 @@ class item_bank_qbanks implements renderable, templatable {
 
             // TODO: consider extracting this to an exporter.
             'othercoursesqbanks' => array_map(
-                fn(stdClass $qbank): array => [
-                    'name' => $qbank->name,
-                    'url' => $qbank->cminfo->get_url(),
+                fn (cm_info $qbank): array => [
+                    'name' => $qbank->get_formatted_name(),
+                    'url' => $qbank->get_url(),
                     'actions' => [
                         [
                             'url' => (new moodle_url(

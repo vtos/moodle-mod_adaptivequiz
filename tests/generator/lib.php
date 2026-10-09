@@ -15,7 +15,6 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 use core\exception\coding_exception;
-use core_question\local\bank\question_bank_helper;
 use mod_adaptivequiz\attempt as read_attempt;
 use mod_adaptivequiz\local\attempt as attempt_entity;
 
@@ -28,7 +27,6 @@ use mod_adaptivequiz\local\attempt as attempt_entity;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_adaptivequiz_generator extends testing_module_generator {
-
     /**
      * Creates new module instance.
      *
@@ -43,9 +41,9 @@ class mod_adaptivequiz_generator extends testing_module_generator {
     public function create_instance($record = null, ?array $options = null) {
         global $CFG;
 
-        require_once($CFG->dirroot .'/mod/adaptivequiz/locallib.php');
+        require_once($CFG->dirroot . '/mod/adaptivequiz/locallib.php');
 
-        $record = (object)(array)$record;
+        $record = (object)(array) $record;
 
         $time = time();
 
@@ -79,7 +77,7 @@ class mod_adaptivequiz_generator extends testing_module_generator {
      *
      * Note, the question banks data passed is not validated.
      *
-     * @param array $data 'adaptivequizid' and 'qbankid' are the required keys.
+     * @param array $data 'adaptivequizid' and 'qbankcontextid' are the required keys.
      */
     public function create_link_with_question_bank(array $data): void {
         global $DB;
@@ -88,24 +86,17 @@ class mod_adaptivequiz_generator extends testing_module_generator {
             throw new coding_exception("Id of an 'adaptivequiz' instance is required when linking qbanks");
         }
 
-        if (!array_key_exists('qbankid', $data)) {
-            throw new coding_exception("Id of a 'qbank' instance is required when linking qbanks");
+        if (!array_key_exists('qbankcontextid', $data)) {
+            throw new coding_exception("Id of a qbank context is required when linking qbanks");
         }
-
-        $defaultqbankmod = question_bank_helper::get_default_question_bank_activity_name();
-
-        $qbankcm = get_coursemodule_from_instance(
-            modulename: $defaultqbankmod,
-            instance: $data['qbankid'],
-            strictness: MUST_EXIST
-        );
-
-        $qbankcontext = context_module::instance($qbankcm->id);
 
         $DB->insert_record('adaptivequiz_qbank', [
             'adaptivequizid' => $data['adaptivequizid'],
-            'qbankid' => $data['qbankid'],
-            'qbankcontextid' => $qbankcontext->id,
+
+            // This field will be deprecated in future versions.
+            'qbankid' => 0,
+
+            'qbankcontextid' => $data['qbankcontextid'],
         ]);
     }
 
@@ -194,12 +185,24 @@ class mod_adaptivequiz_generator extends testing_module_generator {
         $standarderror = array_key_exists('standarderror', $attemptdata) ? $attemptdata['standarderror'] : 0.0;
 
         if (array_key_exists('measure', $attemptdata)) {
-            adaptivequiz_update_attempt_data($uniqueid, $adaptivequizid, $userid, $difflogit = 0, $standarderror,
-                $attemptdata['measure']);
+            adaptivequiz_update_attempt_data(
+                uniqueid: $uniqueid,
+                instance: $adaptivequizid,
+                userid: $userid,
+                level: 0,
+                standarderror: $standarderror,
+                measure: $attemptdata['measure']
+            );
         }
 
-        adaptivequiz_complete_attempt(uniqueid: $uniqueid, adaptivequiz: $adaptivequiz, context: $context, userid: $userid,
-            standarderror: $standarderror, statusmessage: $stoppagereason);
+        adaptivequiz_complete_attempt(
+            uniqueid: $uniqueid,
+            adaptivequiz: $adaptivequiz,
+            context: $context,
+            userid: $userid,
+            standarderror: $standarderror,
+            statusmessage: $stoppagereason
+        );
 
         return read_attempt::get_record(['uniqueid' => $uniqueid], MUST_EXIST);
     }

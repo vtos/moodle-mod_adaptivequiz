@@ -132,7 +132,6 @@ function xmldb_adaptivequiz_upgrade($oldversion) {
 
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
         $table->add_key('adaptivequizid', XMLDB_KEY_FOREIGN, ['adaptivequizid'], 'adaptivequiz', ['id']);
-        $table->add_key('qbankid', XMLDB_KEY_FOREIGN, ['qbankid'], 'qbank', ['id']);
         $table->add_key('qbankcontextid', XMLDB_KEY_FOREIGN, ['qbankcontextid'], 'context', ['id']);
 
         $table->add_index('adaptivequiz-qbank', XMLDB_INDEX_UNIQUE, ['adaptivequizid', 'qbankid', 'qbankcontextid']);
@@ -154,6 +153,17 @@ function xmldb_adaptivequiz_upgrade($oldversion) {
         }
 
         upgrade_mod_savepoint(true, 2026030101, 'adaptivequiz');
+    }
+
+    if ($oldversion < 2026090100) {
+        $table = new xmldb_table('adaptivequiz_qbank');
+
+        // Remove the qbank key reference if exists to decouple from mod_qbank.
+        $qbankkey = new xmldb_key('qbankid', XMLDB_KEY_FOREIGN, ['qbankid'], 'qbank', ['id']);
+        // This call is safe when no key exists.
+        $dbman->drop_key($table, $qbankkey);
+
+        upgrade_mod_savepoint(true, 2026090100, 'adaptivequiz');
     }
 
     return true;

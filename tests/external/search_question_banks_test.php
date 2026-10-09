@@ -34,7 +34,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
  */
 #[CoversClass(\mod_adaptivequiz\external\search_question_banks::class)]
 final class search_question_banks_test extends externallib_advanced_testcase {
-
+    /**
+     * Tests how Moodle question banks are suggested to be assigned to an adaptive quiz instance.
+     */
     public function test_it_returns_qbanks_for_assignment_in_adaptive_quiz_instance(): void {
         global $DB, $SITE;
 
@@ -98,18 +100,24 @@ final class search_question_banks_test extends externallib_advanced_testcase {
         self::assertArrayHasKey('questionbanks', $result);
         self::assertCount(3, $result['questionbanks']);
 
+        $qbank1cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank1->id);
+        $qbank1context = context_module::instance($qbank1cm->id);
+
+        $qbank2cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank2->id);
+        $qbank2context = context_module::instance($qbank2cm->id);
+
         self::assertContainsEquals(
-            ['value' => (int) $qbank1->id, 'label' => "$course1->shortname - This Course Question Bank"],
+            ['value' => $qbank1context->id, 'label' => "$course1->shortname - This Course Question Bank"],
             $result['questionbanks']
         );
 
         self::assertContainsEquals(
-            ['value' => (int) $qbank2->id, 'label' => "$course2->shortname - Another Course Question Bank 1"],
+            ['value' => $qbank2context->id, 'label' => "$course2->shortname - Another Course Question Bank 1"],
             $result['questionbanks']
         );
 
         self::assertContainsEquals(
-            ['value' => (int) $qbank3->id, 'label' => "$SITE->shortname - System Question Bank"],
+            ['value' => $sytemqbankcontext->id, 'label' => "$SITE->shortname - System Question Bank"],
             $result['questionbanks']
         );
 
@@ -126,10 +134,11 @@ final class search_question_banks_test extends externallib_advanced_testcase {
 
         self::assertEqualsCanonicalizing(
             [
-                ['value' => $qbank2->id, 'label' => "$course2->shortname - $qbank2->name"],
-                ['value' => $qbank3->id, 'label' => "$SITE->shortname - $qbank3->name"],
+                ['value' => $qbank2context->id, 'label' => "$course2->shortname - $qbank2->name"],
+                ['value' => $sytemqbankcontext->id, 'label' => "$SITE->shortname - $qbank3->name"],
             ],
-            $result['questionbanks']);
+            $result['questionbanks']
+        );
 
         // Test it filters by a search term.
         $result = search_question_banks::execute(contextid: $context->id, notincourseid: $course1->id, search: 'sys');
@@ -168,12 +177,21 @@ final class search_question_banks_test extends externallib_advanced_testcase {
             ['course' => $course3->id, 'name' => 'Another Course Question Bank 2']
         );
 
+        $qbank1cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank1->id, strictness: MUST_EXIST);
+        $qbank1context = context_module::instance($qbank1cm->id);
+
+        $qbank4cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank4->id, strictness: MUST_EXIST);
+        $qbank4context = context_module::instance($qbank4cm->id);
+
+        $qbank5cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank5->id, strictness: MUST_EXIST);
+        $qbank5context = context_module::instance($qbank5cm->id);
+
         $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
 
-        foreach ([$qbank1->id, $qbank4->id, $qbank5->id] as $qbankid) {
+        foreach ([$qbank1context->id, $qbank4context->id, $qbank5context->id] as $qbankid) {
             $adaptivequizgenerator->create_link_with_question_bank([
                 'adaptivequizid' => $adaptivequiz->id,
-                'qbankid' => $qbankid,
+                'qbankcontextid' => $qbankid,
             ]);
         }
 

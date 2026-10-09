@@ -22,7 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class behat_mod_adaptivequiz_generator extends behat_generator_base {
-
     /**
      * Get a list of the entities that can be created for this component.
      */
@@ -50,7 +49,7 @@ class behat_mod_adaptivequiz_generator extends behat_generator_base {
     }
 
     /**
-     * Preprocess discussion data.
+     * Pre-process question bank link.
      *
      * @param array $data Raw data.
      * @return array Processed data.
@@ -59,7 +58,7 @@ class behat_mod_adaptivequiz_generator extends behat_generator_base {
         $cminfo = $this->get_cm_by_activity_name('qbank', $data['idnumber']);
 
         unset($data['idnumber']);
-        $data['qbankid'] = $cminfo->instance;
+        $data['qbankcontextid'] = $cminfo->context->id;
 
         return $data;
     }

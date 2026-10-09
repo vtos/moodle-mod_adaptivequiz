@@ -123,7 +123,7 @@ final class attempt_test extends advanced_testcase {
 
         $modgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank->id,
+            'qbankcontextid' => $qbankcontext->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -236,7 +236,7 @@ final class attempt_test extends advanced_testcase {
 
         $modgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank->id,
+            'qbankcontextid' => $qbankcontext->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -317,7 +317,7 @@ final class attempt_test extends advanced_testcase {
 
         $modgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank->id,
+            'qbankcontextid' => $qbankcontext->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -436,7 +436,7 @@ final class attempt_test extends advanced_testcase {
 
         $modgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank->id,
+            'qbankcontextid' => $qbankcontext->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -502,7 +502,7 @@ final class attempt_test extends advanced_testcase {
 
         $modgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank->id,
+            'qbankcontextid' => $qbankcontext->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -925,7 +925,7 @@ final class attempt_test extends advanced_testcase {
 
         $modgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank->id,
+            'qbankcontextid' => $qbankcontext->id,
         ]);
 
         $context = context_module::instance($adaptivequiz->cmid);
@@ -1010,7 +1010,7 @@ final class attempt_test extends advanced_testcase {
 
         $modgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank->id,
+            'qbankcontextid' => $qbankcontext->id,
         ]);
 
         $adaptivequizforattempt = clone($adaptivequiz);

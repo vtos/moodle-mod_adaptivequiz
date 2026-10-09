@@ -32,7 +32,6 @@ use moodle_url;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class assign_question_bank_form extends dynamic_form {
-
     /**
      *  Implements the abstract method.
      */
@@ -82,8 +81,8 @@ class assign_question_bank_form extends dynamic_form {
 
         $data = $this->get_data();
 
-        $addqbankidlist = array_merge($data->addqbanksthis, $data->addqbanksother);
-        item_bank::assign_qbanks_to_adaptivequiz($adaptivequiz->id, $addqbankidlist);
+        $addqbankcontextidlist = array_merge($data->addqbanksthis, $data->addqbanksother);
+        item_bank::assign_qbanks_to_adaptivequiz($adaptivequiz->id, $addqbankcontextidlist);
 
         notification::success(get_string('itembanknewassignflash', 'adaptivequiz'));
     }

@@ -29,14 +29,14 @@ use core_question\local\bank\question_bank_helper;
 use mod_adaptivequiz\item_bank;
 
 $id = required_param('id', PARAM_INT);
-$unassignqbankid = optional_param('unassignqbank', 0, PARAM_INT);
+$unassignqbank = optional_param('unassignqbank', 0, PARAM_INT);
 $unassignqcatid = optional_param('unassignqcat', 0, PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
 
 [$course, $cm] = get_course_and_cm_from_cmid($id, 'adaptivequiz');
 
-if ($unassignqbankid && $confirm) {
-    item_bank::unassign_qbank_from_adaptivequiz($cm->instance, $unassignqbankid);
+if ($unassignqbank && $confirm) {
+    item_bank::unassign_qbank_from_adaptivequiz($cm->instance, $unassignqbank);
 
     redirect(
         new moodle_url('/mod/adaptivequiz/itembank.php', ['id' => $id]),
@@ -85,16 +85,17 @@ if (!$qbankmigrated) {
     exit;
 }
 
-if ($unassignqbankid || $unassignqcatid) {
+if ($unassignqbank || $unassignqcatid) {
     $confirmurl = clone($PAGE->url);
     $confirmurl->param('confirm', 1);
 
-    if ($unassignqbankid) {
-        $qbankcm = get_coursemodule_from_instance('qbank', $unassignqbankid, 0, false, MUST_EXIST);
-        $qbankcminfo = cm_info::create($qbankcm);
+    if ($unassignqbank) {
+        $courseandcm = get_course_and_cm_from_cmid($unassignqbank);
+        /** @var \cm_info $qbankcminfo */
+        $qbankcminfo = $courseandcm[1];
 
         $confirmmessage = get_string('itembankqbankunassignconfirm', 'adaptivequiz', $qbankcminfo->get_formatted_name());
-        $confirmurl->param('unassignqbank', $unassignqbankid);
+        $confirmurl->param('unassignqbank', $unassignqbank);
     }
 
     if ($unassignqcatid) {

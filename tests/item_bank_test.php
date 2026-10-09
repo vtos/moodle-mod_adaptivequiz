@@ -17,10 +17,12 @@
 namespace mod_adaptivequiz;
 
 use advanced_testcase;
+use cm_info;
 use context_module;
 use core\exception\invalid_parameter_exception;
 use mod_adaptivequiz_generator;
 use PHPUnit\Framework\Attributes\CoversClass;
+use stdClass;
 
 /**
  * A test class.
@@ -31,7 +33,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
  */
 #[CoversClass(\mod_adaptivequiz\item_bank::class)]
 final class item_bank_test extends advanced_testcase {
-
+    /**
+     * Tests a Moodle question bank can be assigned to an adaptive quiz instance to build up the item bank.
+     */
     public function test_it_assigns_question_banks_to_an_adaptive_quiz_instance(): void {
         global $DB;
 
@@ -47,12 +51,12 @@ final class item_bank_test extends advanced_testcase {
 
         $qbank1 = $qbankgenerator->create_instance(['course' => $course1->id]);
 
-        $qbank1cm = get_coursemodule_from_instance('qbank', $qbank1->id, 0, false, MUST_EXIST);
+        $qbank1cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank1->id, strictness: MUST_EXIST);
         $qbank1context = context_module::instance($qbank1cm->id);
 
         $qbank2 = $qbankgenerator->create_instance(['course' => $course2->id]);
 
-        $qbank2cm = get_coursemodule_from_instance('qbank', $qbank2->id, 0, false, MUST_EXIST);
+        $qbank2cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank2->id, strictness: MUST_EXIST);
         $qbank2context = context_module::instance($qbank2cm->id);
 
         $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
@@ -64,21 +68,21 @@ final class item_bank_test extends advanced_testcase {
         // End of setup.
 
         self::setUser($manager);
-        item_bank::assign_qbanks_to_adaptivequiz($adaptivequiz->id, [$qbank1->id, $qbank2->id]);
+        item_bank::assign_qbanks_to_adaptivequiz($adaptivequiz->id, [$qbank1context->id, $qbank2context->id]);
 
         $result = $DB->get_records(
             'adaptivequiz_qbank',
             ['adaptivequizid' => $adaptivequiz->id],
             '',
-            'qbankid, qbankcontextid'
+            'qbankcontextid'
         );
 
         self::assertCount(2, $result);
 
         self::assertEqualsCanonicalizing(
             [
-                (object) ['qbankid' => $qbank1->id, 'qbankcontextid' => $qbank1context->id],
-                (object) ['qbankid' => $qbank2->id, 'qbankcontextid' => $qbank2context->id],
+                (object) ['qbankcontextid' => $qbank1context->id],
+                (object) ['qbankcontextid' => $qbank2context->id],
             ],
             $result
         );
@@ -100,14 +104,20 @@ final class item_bank_test extends advanced_testcase {
         $qbank1 = $qbankgenerator->create_instance(['course' => $course1->id]);
         $qbank2 = $qbankgenerator->create_instance(['course' => $course1->id]);
 
+        $qbank1cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank1->id, strictness: MUST_EXIST);
+        $qbank1context = context_module::instance($qbank1cm->id);
+
+        $qbank2cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank2->id, strictness: MUST_EXIST);
+        $qbank2context = context_module::instance($qbank2cm->id);
+
         // Data randomization.
 
         $randomadaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
 
-        foreach ([$qbank1->id, $qbank2->id] as $qbankid) {
+        foreach ([$qbank1context->id, $qbank2context->id] as $qbankcontextid) {
             $adaptivequizgenerator->create_link_with_question_bank([
                 'adaptivequizid' => $randomadaptivequiz->id,
-                'qbankid' => $qbankid,
+                'qbankcontextid' => $qbankcontextid,
             ]);
         }
 
@@ -117,14 +127,14 @@ final class item_bank_test extends advanced_testcase {
 
         $adaptivequizgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz->id,
-            'qbankid' => $qbank1->id,
+            'qbankcontextid' => $qbank1context->id,
         ]);
 
         // End of setup.
 
         self::expectException(invalid_parameter_exception::class);
         self::expectExceptionMessage('Invalid parameter value detected (Attempt to add existing question bank assignments)');
-        item_bank::assign_qbanks_to_adaptivequiz($adaptivequiz->id, [$qbank1->id]);
+        item_bank::assign_qbanks_to_adaptivequiz($adaptivequiz->id, [$qbank1context->id]);
     }
 
     public function test_it_will_not_assign_a_question_bank_to_an_adaptive_quiz_instance_with_no_permissions(): void {
@@ -144,14 +154,20 @@ final class item_bank_test extends advanced_testcase {
         $qbank3 = $qbankgenerator->create_instance(['course' => $course2->id]);
         $qbank4 = $qbankgenerator->create_instance(['course' => $course3->id]);
 
+        $qbank1cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank1->id, strictness: MUST_EXIST);
+        $qbank1context = context_module::instance($qbank1cm->id);
+
+        $qbank2cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank2->id, strictness: MUST_EXIST);
+        $qbank2context = context_module::instance($qbank2cm->id);
+
         // Data randomization.
 
         $randomadaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
 
-        foreach ([$qbank1->id, $qbank2->id] as $qbankid) {
+        foreach ([$qbank1context->id, $qbank2context->id] as $qbankcontextid) {
             $adaptivequizgenerator->create_link_with_question_bank([
                 'adaptivequizid' => $randomadaptivequiz->id,
-                'qbankid' => $qbankid,
+                'qbankcontextid' => $qbankcontextid,
             ]);
         }
 
@@ -170,9 +186,15 @@ final class item_bank_test extends advanced_testcase {
         self::expectException(invalid_parameter_exception::class);
         self::expectExceptionMessage('Invalid parameter value detected (Attempt to assign question bank with no permissions)');
 
+        $qbank3cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank3->id, strictness: MUST_EXIST);
+        $qbank3context = context_module::instance($qbank3cm->id);
+
+        $qbank4cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank4->id, strictness: MUST_EXIST);
+        $qbank4context = context_module::instance($qbank4cm->id);
+
         item_bank::assign_qbanks_to_adaptivequiz(
             $adaptivequiz->id,
-            [$qbank1->id, $qbank2->id, $qbank3->id, $qbank4->id]
+            [$qbank1context->id, $qbank2context->id, $qbank3context->id, $qbank4context->id]
         );
     }
 
@@ -192,21 +214,33 @@ final class item_bank_test extends advanced_testcase {
         $qbank3 = $qbankgenerator->create_instance(['course' => $course2->id]);
         $qbank4 = $qbankgenerator->create_instance(['course' => $course2->id]);
 
+        $qbank1cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank1->id, strictness: MUST_EXIST);
+        $qbank1context = context_module::instance($qbank1cm->id);
+
+        $qbank2cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank2->id, strictness: MUST_EXIST);
+        $qbank2context = context_module::instance($qbank2cm->id);
+
         $adaptivequiz1 = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
 
-        foreach ([$qbank1->id, $qbank2->id] as $qbankid) {
+        foreach ([$qbank1context->id, $qbank2context->id] as $qbankcontextid) {
             $adaptivequizgenerator->create_link_with_question_bank([
                 'adaptivequizid' => $adaptivequiz1->id,
-                'qbankid' => $qbankid,
+                'qbankcontextid' => $qbankcontextid,
             ]);
         }
 
+        $qbank3cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank3->id, strictness: MUST_EXIST);
+        $qbank3context = context_module::instance($qbank3cm->id);
+
+        $qbank4cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank4->id, strictness: MUST_EXIST);
+        $qbank4context = context_module::instance($qbank4cm->id);
+
         $adaptivequiz2 = $adaptivequizgenerator->create_instance(['course' => $course2->id]);
 
-        foreach ([$qbank3->id, $qbank4->id] as $qbankid) {
+        foreach ([$qbank3context->id, $qbank4context->id] as $qbankcontextid) {
             $adaptivequizgenerator->create_link_with_question_bank([
                 'adaptivequizid' => $adaptivequiz2->id,
-                'qbankid' => $qbankid,
+                'qbankcontextid' => $qbankcontextid,
             ]);
         }
 
@@ -215,26 +249,28 @@ final class item_bank_test extends advanced_testcase {
 
         // End of setup.
 
+        $qbank1cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank1->id, strictness: MUST_EXIST);
+
         self::setUser($manager);
-        item_bank::unassign_qbank_from_adaptivequiz($adaptivequiz1->id, $qbank1->id);
+        item_bank::unassign_qbank_from_adaptivequiz($adaptivequiz1->id, $qbank1cm->id);
 
         $result = item_bank::get_question_banks_assigned_to_adaptivequiz($adaptivequiz1->id);
         self::assertCount(1, $result);
 
         $remainingqbank = $result[array_key_first($result)];
-        self::assertEquals($qbank2->id, $remainingqbank->id);
+
+        // Pick the essential info for making assertions.
+        $assertable = [
+            'id' => $remainingqbank->get_course_module_record()->id,
+            'course' => $remainingqbank->get_course()->id,
+        ];
+
+        $qbank2cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank2->id, strictness: MUST_EXIST);
+        self::assertEquals(['id' => $qbank2cm->id, 'course' => $course1->id], $assertable);
 
         // Assert other instances are not affected.
-        $result = item_bank::get_question_banks_assigned_to_adaptivequiz($adaptivequiz2->id, 'id, name, course');
+        $result = item_bank::get_question_banks_assigned_to_adaptivequiz($adaptivequiz2->id);
         self::assertCount(2, $result);
-
-        self::assertEqualsCanonicalizing(
-            [
-                (object) ['id' => $qbank3->id, 'name' => $qbank3->name, 'course' => $course2->id],
-                (object) ['id' => $qbank4->id, 'name' => $qbank4->name, 'course' => $course2->id],
-            ],
-            $result
-        );
     }
 
     public function test_it_unassigns_a_single_question_category_from_an_adaptive_quiz_instance(): void {
@@ -307,41 +343,31 @@ final class item_bank_test extends advanced_testcase {
 
         item_bank::unassign_question_category_from_adaptivequiz($adaptivequiz1->id, $qcat3->id);
 
-        $result = item_bank::get_question_categories_assigned_to_adaptivequiz($adaptivequiz1->id, 'id, name');
+        $result = item_bank::get_question_categories_assigned_to_adaptivequiz($adaptivequiz1->id);
+
+        $assertable = array_map(function (stdClass $qcat): array {
+            /** @var \cm_info $qbank */
+            $qbank = $qcat->qbank;
+
+            return [
+                'qcatid' => $qcat->id,
+                'qbankcmid' => $qbank->get_course_module_record()->id,
+                'qbankcmcourse' => $qbank->get_course()->id,
+            ];
+        }, $result);
 
         self::assertEqualsCanonicalizing(
             [
-                (object) [
-                    'id' => $qcat1->id,
-                    'name' => $qcat1->name,
-                    'cmid' => $qbankcm->id,
-                    'qbankname' => $qbank->name,
-                ],
-                (object) [
-                    'id' => $qcat2->id,
-                    'name' => $qcat2->name,
-                    'cmid' => $qbankcm->id,
-                    'qbankname' => $qbank->name,
-                ],
+                ['qcatid' => $qcat1->id, 'qbankcmid' => $qbankcm->id, 'qbankcmcourse' => $course->id],
+                ['qcatid' => $qcat2->id, 'qbankcmid' => $qbankcm->id, 'qbankcmcourse' => $course->id],
             ],
-            $result
+            $assertable
         );
 
         // Assert other instances are not affected.
 
-        $result = item_bank::get_question_categories_assigned_to_adaptivequiz($adaptivequiz2->id, 'id, name');
-
-        self::assertEqualsCanonicalizing(
-            [
-                (object) [
-                    'id' => $qcat4->id,
-                    'name' => $qcat4->name,
-                    'cmid' => $qbankcm->id,
-                    'qbankname' => $qbank->name,
-                ],
-            ],
-            $result
-        );
+        $result = item_bank::get_question_categories_assigned_to_adaptivequiz($adaptivequiz2->id);
+        self::assertCount(1, $result);
     }
 
     public function test_it_gets_question_banks_assigned_to_an_adaptive_quiz_instance(): void {
@@ -350,6 +376,7 @@ final class item_bank_test extends advanced_testcase {
         $coregenerator = $this->getDataGenerator();
         /** @var mod_adaptivequiz_generator $adaptivequizgenerator */
         $adaptivequizgenerator = $coregenerator->get_plugin_generator('mod_adaptivequiz');
+        /** @var \mod_qbank_generator $qbankgenerator */
         $qbankgenerator = $coregenerator->get_plugin_generator('mod_qbank');
 
         $course1 = $coregenerator->create_course();
@@ -362,57 +389,76 @@ final class item_bank_test extends advanced_testcase {
         $qbank3 = $qbankgenerator->create_instance(['course' => $course3->id]);
         $qbankgenerator->create_instance(['course' => $course4->id]);
 
+        $qbank1cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank1->id, strictness: MUST_EXIST);
+        $qbank1context = context_module::instance($qbank1cm->id);
+
+        $qbank2cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank2->id, strictness: MUST_EXIST);
+        $qbank2context = context_module::instance($qbank2cm->id);
+
+        $qbank3cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank3->id, strictness: MUST_EXIST);
+        $qbank3context = context_module::instance($qbank3cm->id);
+
         $adaptivequiz = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
 
-        foreach ([$qbank1->id, $qbank2->id, $qbank3->id] as $qbankid) {
+        foreach ([$qbank1context->id, $qbank2context->id, $qbank3context->id] as $qbankcontextid) {
             $adaptivequizgenerator->create_link_with_question_bank([
                 'adaptivequizid' => $adaptivequiz->id,
-                'qbankid' => $qbankid,
+                'qbankcontextid' => $qbankcontextid,
             ]);
         }
 
-        $result = item_bank::get_question_banks_assigned_to_adaptivequiz($adaptivequiz->id, 'id, name, course');
-
+        $result = item_bank::get_question_banks_assigned_to_adaptivequiz($adaptivequiz->id);
         self::assertCount(3, $result);
+
+        $assertable = array_map(fn (cm_info $qbankcm): array => [
+            'id' => $qbankcm->get_course_module_record()->id,
+            'course' => $qbankcm->get_course()->id,
+        ], $result);
 
         self::assertEqualsCanonicalizing(
             [
-                (object) ['id' => $qbank1->id, 'name' => $qbank1->name, 'course' => $course1->id],
-                (object) ['id' => $qbank2->id, 'name' => $qbank2->name, 'course' => $course2->id],
-                (object) ['id' => $qbank3->id, 'name' => $qbank3->name, 'course' => $course3->id],
+                ['id' => $qbank1cm->id, 'course' => $course1->id],
+                ['id' => $qbank2cm->id, 'course' => $course2->id],
+                ['id' => $qbank3cm->id, 'course' => $course3->id],
             ],
-            $result
+            $assertable
         );
 
         // Test filtering by courses.
 
-        $result = item_bank::get_question_banks_assigned_to_adaptivequiz(
-            $adaptivequiz->id,
-            'id, name, course',
-            incourseid: $course1->id
-        );
-
+        $result = item_bank::get_question_banks_assigned_to_adaptivequiz($adaptivequiz->id, incourseid: $course1->id);
         self::assertCount(1, $result);
 
+        $assertable = array_map(fn (cm_info $qbankcm): array => [
+            'id' => $qbankcm->get_instance_record()->id,
+            'course' => $qbankcm->get_course()->id,
+        ], $result);
+
         self::assertEqualsCanonicalizing(
-            [(object) ['id' => $qbank1->id, 'name' => $qbank1->name, 'course' => $course1->id]],
-            $result
+            [
+                ['id' => $qbank1->id, 'course' => $course1->id],
+            ],
+            $assertable
         );
 
         $result = item_bank::get_question_banks_assigned_to_adaptivequiz(
             $adaptivequiz->id,
-            'id, name, course',
             notincourseid: $course1->id
         );
 
         self::assertCount(2, $result);
 
+        $assertable = array_map(fn (cm_info $qbankcm): array => [
+            'id' => $qbankcm->get_instance_record()->id,
+            'course' => $qbankcm->get_course()->id,
+        ], $result);
+
         self::assertEqualsCanonicalizing(
             [
-                (object) ['id' => $qbank2->id, 'name' => $qbank2->name, 'course' => $course2->id],
-                (object) ['id' => $qbank3->id, 'name' => $qbank3->name, 'course' => $course3->id],
+                ['id' => $qbank2->id, 'course' => $course2->id],
+                ['id' => $qbank3->id, 'course' => $course3->id],
             ],
-            $result
+            $assertable
         );
     }
 
@@ -483,24 +529,26 @@ final class item_bank_test extends advanced_testcase {
 
         // End of setup.
 
-        $result = item_bank::get_question_categories_assigned_to_adaptivequiz($adaptivequiz1->id, 'id, name');
+        $result = item_bank::get_question_categories_assigned_to_adaptivequiz($adaptivequiz1->id);
+        self::assertCount(2, $result);
+
+        $assertable = array_map(function (stdClass $qcat): array {
+            /** @var \cm_info $qbank */
+            $qbank = $qcat->qbank;
+
+            return [
+                'qcatid' => $qcat->id,
+                'qbankcmid' => $qbank->get_course_module_record()->id,
+                'qbankcmcourse' => $qbank->get_course()->id,
+            ];
+        }, $result);
 
         self::assertEqualsCanonicalizing(
             [
-                (object) [
-                    'id' => $qcat1->id,
-                    'name' => $qcat1->name,
-                    'cmid' => $qbank1cm->id,
-                    'qbankname' => $qbank1->name,
-                ],
-                (object) [
-                    'id' => $qcat2->id,
-                    'name' => $qcat2->name,
-                    'cmid' => $qbank1cm->id,
-                    'qbankname' => $qbank1->name,
-                ],
+                ['qcatid' => $qcat1->id, 'qbankcmid' => $qbank1cm->id, 'qbankcmcourse' => $course1->id],
+                ['qcatid' => $qcat2->id, 'qbankcmid' => $qbank1cm->id, 'qbankcmcourse' => $course1->id],
             ],
-            $result
+            $assertable
         );
     }
 
@@ -522,18 +570,23 @@ final class item_bank_test extends advanced_testcase {
         $qbank2 = $qbankgenerator->create_instance(['course' => $course2->id]);
         $qbank3 = $qbankgenerator->create_instance(['course' => $course2->id]);
 
-        $adaptivequiz1 = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
+        $qbank1cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank1->id, strictness: MUST_EXIST);
+        $qbank1context = context_module::instance($qbank1cm->id);
 
+        $qbank2cm = get_coursemodule_from_instance(modulename: 'qbank', instance: $qbank2->id, strictness: MUST_EXIST);
+        $qbank2context = context_module::instance($qbank2cm->id);
+
+        $adaptivequiz1 = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
         $adaptivequiz2 = $adaptivequizgenerator->create_instance(['course' => $course1->id]);
 
         $adaptivequizgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz2->id,
-            'qbankid' => $qbank1->id,
+            'qbankcontextid' => $qbank1context->id,
         ]);
 
         $adaptivequizgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz2->id,
-            'qbankid' => $qbank2->id,
+            'qbankcontextid' => $qbank2context->id,
         ]);
 
         $adaptivequiz3 = $adaptivequizgenerator->create_instance(['course' => $course2->id]);
@@ -555,7 +608,7 @@ final class item_bank_test extends advanced_testcase {
 
         $adaptivequizgenerator->create_link_with_question_bank([
             'adaptivequizid' => $adaptivequiz4->id,
-            'qbankid' => $qbank2->id,
+            'qbankcontextid' => $qbank2context->id,
         ]);
 
         $adaptivequizgenerator->create_link_with_question_category([

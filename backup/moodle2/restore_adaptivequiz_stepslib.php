@@ -30,7 +30,7 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
      * @return backup_nested_element The $activitystructure wrapped by the common 'activity' element.
      */
     protected function define_structure() {
-        $paths = array();
+        $paths = [];
         $userinfo = $this->get_setting_value('userinfo');
 
         $adaptivequiz = new restore_path_element('adaptivequiz', '/activity/adaptivequiz');
@@ -38,6 +38,11 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
 
         $paths[] = new restore_path_element('adaptivequiz_question',
             '/activity/adaptivequiz/adatpivequestioncats/adatpivequestioncat');
+
+        $paths[] = new restore_path_element(
+            'adaptivequiz_qbank',
+            '/activity/adaptivequiz/itembankqbanks/itembankqbank'
+        );
 
         if ($userinfo) {
             $attempt = new restore_path_element('adaptivequiz_attempt', '/activity/adaptivequiz/adaptiveattempts/adaptiveattempt');
@@ -54,7 +59,7 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
     /**
      * Process the adaptivequiz element.
      *
-     * @param stdClass An object whose properties are nodes in the adatpviequiz structure.
+     * @param stdClass $data An object whose properties are nodes in the adatpviequiz structure.
      */
     protected function process_adaptivequiz($data) {
         global $CFG, $DB;
@@ -74,7 +79,7 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
     /**
      * Process the activity instance to question categories relation structure.
      *
-     * @param stdClass An object whose properties are nodes in the adatpviequiz_question structure.
+     * @param stdClass $data An object whose properties are nodes in the adatpviequiz_question structure.
      */
     protected function process_adaptivequiz_question($data) {
         global $DB;
@@ -92,9 +97,25 @@ class restore_adaptivequiz_activity_structure_step extends restore_questions_act
     }
 
     /**
+     * Process assigned question banks.
+     *
+     * @param stdClass $data
+     */
+    protected function process_adaptivequiz_qbank($data) {
+        global $DB;
+
+        $data = (object) $data;
+        unset($data->id);
+
+        $data->adaptivequizid = $this->get_new_parentid('adaptivequiz');
+
+        $DB->insert_record('adaptivequiz_qbank', $data);
+    }
+
+    /**
      * Process the activity instance to question categories relation structure.
      *
-     * @param stdClass An object whose properties are nodes in the adatpviequiz_attempt structure.
+     * @param stdClass $data An object whose properties are nodes in the adatpviequiz_attempt structure.
      */
     protected function process_adaptivequiz_attempt($data) {
         $data = (object)$data;

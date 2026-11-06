@@ -86,8 +86,8 @@ final class questions_repository {
                 FROM {question_versions}
                 WHERE status = ?
                 GROUP BY questionbankentryid
-            ) questionlatestversion ON questionlatestversion.questionbankentryid = qv.questionbankentryid
-            JOIN {question_bank_entries} qbe ON qbe.id = questionlatestversion.questionbankentryid
+            ) queslatver ON queslatver.questionbankentryid = qv.questionbankentryid AND qv.version = queslatver.latestversion
+            JOIN {question_bank_entries} qbe ON qbe.id = queslatver.questionbankentryid
             WHERE ti.itemtype = ?
             AND ti.tagid {$tagidlistsql}
             AND qbe.questioncategoryid {$categoryidlistsql}

@@ -24,10 +24,6 @@ College][3] and [Remote Learner][4]. The current repository was forked from
 
 The current branch of the repository is compatible with Moodle 5.0, 5.1, 5.2 and 5.3.
 
-**<span style="font-size:1.25em">IMPORTANT: the current branch is not an official plugin release for Moodle 5! It is
-an alpha and is intended for test sites only. Use the current branch at your own risk for any public Moodle
-sites.</span>**
-
 [3]: http://www.middlebury.edu/
 [4]: http://remote-learner.net/
 [5]: https://github.com/middlebury/moodle-mod_adaptivequiz
